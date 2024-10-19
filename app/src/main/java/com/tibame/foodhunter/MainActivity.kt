@@ -1,5 +1,6 @@
 package com.tibame.foodhunter
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -23,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -30,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
@@ -39,39 +44,35 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
+            FoodHunterTheme {
                 Main()
             }
         }
     }
 }
-/** 將 **不顯示** TopBar的route寫進list裡 */
-@Composable
-fun checkTopBarNoShow(destination: NavDestination?): Boolean {
-    val context = LocalContext.current
-    return !listOf(""
-    ).contains(destination?.route)
-}
-/** 將 **要顯示** BackButton的route寫進list裡 */
-@Composable
-fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
-    val context = LocalContext.current
-    return listOf(
-        context.getString(R.string.str_group) + "/2",
-    ).contains(destination?.route)
-}
-/** 將 **要顯示** BottomBar的route寫進list裡 */
-@Composable
-fun checkBottomButtonShow(destination: NavDestination?): Boolean {
-    val context = LocalContext.current
-    return listOf(
-        context.getString(R.string.str_home),
-        context.getString(R.string.str_search),
-        context.getString(R.string.str_post),
-        context.getString(R.string.str_group),
-        context.getString(R.string.str_member)
-    ).contains(destination?.route)
-}
+
+//@Composable
+//fun checkBottomButtonShow(destination: NavDestination?):Boolean{
+//    val context = LocalContext.current
+//    return !listOf(
+//        context.getString(R.string.str_home),
+//        context.getString(R.string.str_search),
+//        context.getString(R.string.str_post),
+//        context.getString(R.string.str_group),
+//        context.getString(R.string.str_member)
+//        ).contains(destination?.route)
+//}
+//@Composable
+//fun checkBackButtonShow(destination: NavDestination?):Boolean{
+//    val context = LocalContext.current
+//    return !listOf(
+//        context.getString(R.string.str_home),
+//        context.getString(R.string.str_search),
+//        context.getString(R.string.str_post),
+//        context.getString(R.string.str_group),
+//        context.getString(R.string.str_member)
+//    ).contains(destination?.route)
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,40 +81,19 @@ fun Main(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_home)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
-
+    var isTopBarShow by remember { mutableStateOf(false) }
+    var isbottomBarShow by remember { mutableStateOf(true) }
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .weight(1f),
             topBar = {
-                if (checkTopBarNoShow(destination)) {
-                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController)
-                }
-            },
-            bottomBar = {
-                if (checkBottomButtonShow(destination)) {
-                    BottomFunctionBar(
-                        onHomeClick = {
-                            currectScene = context.getString(R.string.str_home)
-                        },
-                        onSearchClick = {
-                            currectScene = context.getString(R.string.str_search)
-                        },
-                        onPostClick = {
-                            currectScene = context.getString(R.string.str_post)
-                        },
-                        onGroupClick = {
-                            currectScene = context.getString(R.string.str_group)
-                        },
-                        onMemberClick = {
-                            currectScene = context.getString(R.string.str_member)
-                        },
-                        selectScene = currectScene
-                    )
-                }
+                TopFunctionBar(isTopBarShow,navController)
             }
-        ) { innerPadding ->
+        ){innerPadding ->
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -121,75 +101,66 @@ fun Main(
             ) {
                 NavHost(
                     navController = navController,
-                    startDestination = currectScene
+                    // 設定起始頁面
+                    startDestination = mainSceneName,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    composable(context.getString(R.string.str_home)) {
-                        Text(text = destination?.route.toString())
-                    }
+                    composable(
+                        route = mainSceneName
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f)
+                        ) {
+                            when (mainSceneName) {
+                                stringResource(R.string.str_home) -> {
+                                    Text(text = destination?.route.toString())
+                                }
 
+                                stringResource(R.string.str_search) -> {
+                                    Text(text = destination?.route.toString())
+                                }
 
+                                stringResource(R.string.str_post) -> {
+                                    Text(text = destination?.route.toString())
+                                }
 
+                                stringResource(R.string.str_group) -> {
+                                    Text(text = destination?.route.toString())
+                                    Group(navController)
+                                }
 
-
-
-
-
-
-
-                    composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
-                    }
-
-
-
-
-
-
-
-
-
-
-                    composable(context.getString(R.string.str_post)) {
-                        Text(text = destination?.route.toString())
-                    }
-
-
-
-
-
-
-
-
-
-
-                    composable(context.getString(R.string.str_group)) {
-                        Group1(navController) {
-                            Text(text = destination?.route.toString())
+                                stringResource(R.string.str_member) -> {
+                                    Text(text = destination?.route.toString())
+                                }
+                            }
                         }
+
                     }
-                    composable(context.getString(R.string.str_group) + "/2") {
-                        Group2(navController) {
-                            Text(text = destination?.route.toString())
-                        }
-                    }
-
-
-
-
-
-
-
-
-
-
-                    composable(context.getString(R.string.str_member)) {
-                        Text(text = destination?.route.toString())
-                    }
-
                 }
             }
         }
-
+        if (isbottomBarShow) {
+            BottomFunctionBar(
+                onHomeClick = {
+                    mainSceneName = context.getString(R.string.str_home)
+                },
+                onSearchClick = {
+                    mainSceneName = context.getString(R.string.str_search)
+                },
+                onPostClick = {
+                    mainSceneName = context.getString(R.string.str_post)
+                },
+                onGroupClick = {
+                    mainSceneName = context.getString(R.string.str_group)
+                },
+                onMemberClick = {
+                    mainSceneName = context.getString(R.string.str_member)
+                },
+                selectScene = mainSceneName
+            )
+        }
     }
 }
 
@@ -197,7 +168,7 @@ fun Main(
 @Preview(showBackground = true)
 @Composable
 fun FoodHunterPreview() {
-    MaterialTheme {
+    FoodHunterTheme {
         Main()
     }
 }
