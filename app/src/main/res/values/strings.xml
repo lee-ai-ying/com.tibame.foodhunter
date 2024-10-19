@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">FoodHunter</string>
+    <string name="str_home">主頁</string>
+    <string name="str_search">搜尋</string>
+    <string name="str_post">發文</string>
+    <string name="str_group">揪團</string>
+    <string name="str_member">會員</string>
+    <string name="str_back">返回</string>
+    <string name="str_notice">通知</string>
+    <string name="str_chat">私聊</string>
 </resources>
