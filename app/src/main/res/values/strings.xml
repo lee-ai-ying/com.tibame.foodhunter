@@ -8,4 +8,8 @@
     <string name="str_back">返回</string>
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
+    <string name="album_name">相簿名稱</string>
+    <string name="recommend">推薦</string>
+    <string name="search">搜尋</string>
+    <string name="next">下一步</string>
 </resources>

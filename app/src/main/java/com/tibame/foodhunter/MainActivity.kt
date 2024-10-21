@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.zoe.Home
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -124,8 +125,11 @@ fun Main(
                     startDestination = currectScene
                 ) {
                     composable(context.getString(R.string.str_home)) {
-                        Text(text = destination?.route.toString())
+                        Home(navController) {
+                            Text(text = destination?.route.toString())
+                        }
                     }
+
 
 
 
