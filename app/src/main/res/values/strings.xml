@@ -8,4 +8,7 @@
     <string name="str_back">返回</string>
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
+    <string name="str_calendar">日曆</string>
+    <string name="str_note">手札</string>
+    <string name="str_favorite">收藏</string>
 </resources>
