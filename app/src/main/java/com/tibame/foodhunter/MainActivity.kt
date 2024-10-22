@@ -45,13 +45,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 /** 將 **不顯示** TopBar的route寫進list裡 */
 @Composable
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
-    return !listOf(""
+    return !listOf(
+        ""
     ).contains(destination?.route)
 }
+
 /** 將 **要顯示** BackButton的route寫進list裡 */
 @Composable
 fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
@@ -60,6 +63,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_group) + "/2",
     ).contains(destination?.route)
 }
+
 /** 將 **要顯示** BottomBar的route寫進list裡 */
 @Composable
 fun checkBottomButtonShow(destination: NavDestination?): Boolean {
@@ -88,7 +92,7 @@ fun Main(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 if (checkTopBarNoShow(destination)) {
-                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController)
+                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController, scrollBehavior)
                 }
             },
             bottomBar = {
@@ -114,18 +118,17 @@ fun Main(
                 }
             }
         ) { innerPadding ->
-            Column(
+            NavHost(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .background(Color.LightGray)
+                    .fillMaxSize()
+                    .background(Color.LightGray),
+                navController = navController,
+                startDestination = currectScene
             ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = currectScene
-                ) {
-                    composable(context.getString(R.string.str_home)) {
-                        Text(text = destination?.route.toString())
-                    }
+                composable(context.getString(R.string.str_home)) {
+                    Text(text = destination?.route.toString())
+                }
 
 
 
@@ -136,9 +139,9 @@ fun Main(
 
 
 
-                    composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
-                    }
+                composable(context.getString(R.string.str_search)) {
+                    Text(text = destination?.route.toString())
+                }
 
 
 
@@ -149,9 +152,9 @@ fun Main(
 
 
 
-                    composable(context.getString(R.string.str_post)) {
-                        Text(text = destination?.route.toString())
-                    }
+                composable(context.getString(R.string.str_post)) {
+                    Text(text = destination?.route.toString())
+                }
 
 
 
@@ -162,35 +165,31 @@ fun Main(
 
 
 
-                    composable(context.getString(R.string.str_group)) {
-                        Group1(navController) {
-                            Text(text = destination?.route.toString())
-                        }
-                    }
-                    composable(context.getString(R.string.str_group) + "/2") {
-                        Group2(navController) {
-                            Text(text = destination?.route.toString())
-                        }
-                    }
-
-
-
-
-
-
-
-
-
-
-                    composable(context.getString(R.string.str_member)) {
-                        Text(text = destination?.route.toString())
-                    }
+                composable(context.getString(R.string.str_group)) {
+                    GroupMain()
+                }
+                composable(context.getString(R.string.str_group) + "/2") {
 
                 }
+
+
+
+
+
+
+
+
+
+
+                composable(context.getString(R.string.str_member)) {
+                    Text(text = destination?.route.toString())
+                }
+
             }
         }
-
     }
+
+
 }
 
 
