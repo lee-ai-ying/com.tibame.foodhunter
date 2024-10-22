@@ -1,6 +1,5 @@
 package com.tibame.foodhunter
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,12 +8,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -26,53 +25,75 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.ui.theme.FoodHunterTheme
+import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
+import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
+import com.tibame.foodhunter.a871208s.LoginScreen
+import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+
+import com.tibame.foodhunter.zoe.Home
+
+import com.tibame.foodhunter.andysearch.SearchScreen
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FoodHunterTheme {
+            MaterialTheme {
                 Main()
             }
         }
     }
 }
 
-//@Composable
-//fun checkBottomButtonShow(destination: NavDestination?):Boolean{
-//    val context = LocalContext.current
-//    return !listOf(
-//        context.getString(R.string.str_home),
-//        context.getString(R.string.str_search),
-//        context.getString(R.string.str_post),
-//        context.getString(R.string.str_group),
-//        context.getString(R.string.str_member)
-//        ).contains(destination?.route)
-//}
-//@Composable
-//fun checkBackButtonShow(destination: NavDestination?):Boolean{
-//    val context = LocalContext.current
-//    return !listOf(
-//        context.getString(R.string.str_home),
-//        context.getString(R.string.str_search),
-//        context.getString(R.string.str_post),
-//        context.getString(R.string.str_group),
-//        context.getString(R.string.str_member)
-//    ).contains(destination?.route)
-//}
+/** 將 **不顯示** TopBar的route寫進list裡 */
+@Composable
+fun checkTopBarNoShow(destination: NavDestination?): Boolean {
+    val context = LocalContext.current
+    return !listOf(
+        "",
+        context.getString(R.string.str_login),
+        context.getString(R.string.str_login)+ "/2",
+        context.getString(R.string.str_login)+ "/3",
+        context.getString(R.string.str_login)+ "/4"
+
+    ).contains(destination?.route)
+}
+
+/** 將 **要顯示** BackButton的route寫進list裡 */
+@Composable
+fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
+    val context = LocalContext.current
+    return listOf(
+        context.getString(R.string.str_group) + "/2",
+    ).contains(destination?.route)
+}
+
+/** 將 **要顯示** BottomBar的route寫進list裡 */
+@Composable
+fun checkBottomButtonShow(destination: NavDestination?): Boolean {
+    val context = LocalContext.current
+    return listOf(
+        context.getString(R.string.str_home),
+        context.getString(R.string.str_search),
+        context.getString(R.string.str_post),
+        context.getString(R.string.str_group),
+        context.getString(R.string.str_member)
+    ).contains(destination?.route)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,94 +102,151 @@ fun Main(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_home)) }
+    var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
-    var isTopBarShow by remember { mutableStateOf(false) }
-    var isbottomBarShow by remember { mutableStateOf(true) }
-    Column(modifier = Modifier.fillMaxSize()) {
+
         Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .weight(1f),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopFunctionBar(isTopBarShow,navController)
+                if (checkTopBarNoShow(destination)) {
+                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController, scrollBehavior)
+                }
+            },
+            bottomBar = {
+                if (checkBottomButtonShow(destination)) {
+                    BottomFunctionBar(
+                        onHomeClick = {
+                            currectScene = context.getString(R.string.str_home)
+                        },
+                        onSearchClick = {
+                            currectScene = context.getString(R.string.str_search)
+                        },
+                        onPostClick = {
+                            currectScene = context.getString(R.string.str_post)
+                        },
+                        onGroupClick = {
+                            currectScene = context.getString(R.string.str_group)
+                        },
+                        onMemberClick = {
+                            currectScene = context.getString(R.string.str_member)
+                        },
+                        selectScene = currectScene
+                    )
+                }
             }
-        ){innerPadding ->
-            Column(
+        ) { innerPadding ->
+            NavHost(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .background(Color.LightGray)
+                    .fillMaxSize()
+                    .background(Color.LightGray),
+                navController = navController,
+                startDestination = currectScene
             ) {
-                NavHost(
-                    navController = navController,
-                    // 設定起始頁面
-                    startDestination = mainSceneName,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    composable(
-                        route = mainSceneName
+
+                composable(context.getString(R.string.str_login)) {
+                    LoginScreen(navController = navController,{})
+                }
+                composable(context.getString(R.string.str_login)+ "/2") {
+                    RegisterScreen(navController = navController)
+                }
+                composable(context.getString(R.string.str_login)+ "/3") {
+                    ForgetPassword1Screen(navController = navController,{})
+                }
+                composable(context.getString(R.string.str_login)+ "/4") {
+                    ForgetPassword2Screen(navController = navController,{})
+                }
+                composable(context.getString(R.string.str_home)) {
+                    Text(text = destination?.route.toString())
+                }
+
+
+
+
+
+
+
+
+
+                composable(context.getString(R.string.str_search)) {
+                    Text(text = destination?.route.toString())
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                composable(context.getString(R.string.str_post)) {
+                    Text(text = destination?.route.toString())
+                }
+
+                    composable(context.getString(R.string.str_search)) {
+                        SearchScreen(
+                            navController
+                        )
+                    }
+
+
+
+
+
+
+
+
+
+
+
+                composable(context.getString(R.string.str_group)) {
+                    GroupMain()
+                }
+                composable(context.getString(R.string.str_group) + "/2") {
+
+                }
+
+
+
+
+
+
+
+
+
+
+                composable(context.getString(R.string.str_member)) {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Column(
+                        Button(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f)
+                                .size(120.dp, 60.dp)
+                                .padding(8.dp),
+                            onClick = { navController.navigate(context.getString(R.string.str_login)) }
                         ) {
-                            when (mainSceneName) {
-                                stringResource(R.string.str_home) -> {
-                                    Text(text = destination?.route.toString())
-                                }
-
-                                stringResource(R.string.str_search) -> {
-                                    Text(text = destination?.route.toString())
-                                }
-
-                                stringResource(R.string.str_post) -> {
-                                    Text(text = destination?.route.toString())
-                                }
-
-                                stringResource(R.string.str_group) -> {
-                                    Text(text = destination?.route.toString())
-                                    Group(navController)
-                                }
-
-                                stringResource(R.string.str_member) -> {
-                                    Text(text = destination?.route.toString())
-                                }
-                            }
+                            Text(text = "登出")
                         }
-
                     }
                 }
             }
         }
-        if (isbottomBarShow) {
-            BottomFunctionBar(
-                onHomeClick = {
-                    mainSceneName = context.getString(R.string.str_home)
-                },
-                onSearchClick = {
-                    mainSceneName = context.getString(R.string.str_search)
-                },
-                onPostClick = {
-                    mainSceneName = context.getString(R.string.str_post)
-                },
-                onGroupClick = {
-                    mainSceneName = context.getString(R.string.str_group)
-                },
-                onMemberClick = {
-                    mainSceneName = context.getString(R.string.str_member)
-                },
-                selectScene = mainSceneName
-            )
-        }
-    }
+
+
+
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun FoodHunterPreview() {
-    FoodHunterTheme {
+    MaterialTheme {
         Main()
     }
 }
