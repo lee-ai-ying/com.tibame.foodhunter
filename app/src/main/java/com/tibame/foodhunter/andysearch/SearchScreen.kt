@@ -215,7 +215,7 @@ fun ShowRestaurantLists(restaurants: List<Restaurant>, state: Boolean){
                 Card (
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     colors = CardColors(
-                        containerColor = colorResource(R.color.orange),
+                        containerColor = colorResource(R.color.orange_d2),
                         contentColor = Color.Black,
                         disabledContentColor = Color.Black,
                         disabledContainerColor = Color.Gray)
