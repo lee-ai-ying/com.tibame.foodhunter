@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -61,7 +62,8 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
 fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
-        context.getString(R.string.str_group) + "/2",
+        context.getString(R.string.str_create_group),
+        "gotoGroupChatRoom/{groudId}"
     ).contains(destination?.route)
 }
 
@@ -74,7 +76,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
-        context.getString(R.string.str_member)
+        context.getString(R.string.str_member),
+        "gotoGroupChatRoom/{groudId}"
     ).contains(destination?.route)
 }
 
@@ -88,129 +91,114 @@ fun Main(
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                if (checkTopBarNoShow(destination)) {
-                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController, scrollBehavior)
-                }
-            },
-            bottomBar = {
-                if (checkBottomButtonShow(destination)) {
-                    BottomFunctionBar(
-                        onHomeClick = {
-                            currectScene = context.getString(R.string.str_home)
-                        },
-                        onSearchClick = {
-                            currectScene = context.getString(R.string.str_search)
-                        },
-                        onPostClick = {
-                            currectScene = context.getString(R.string.str_post)
-                        },
-                        onGroupClick = {
-                            currectScene = context.getString(R.string.str_group)
-                        },
-                        onMemberClick = {
-                            currectScene = context.getString(R.string.str_member)
-                        },
-                        selectScene = currectScene
-                    )
-                }
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            if (checkTopBarNoShow(destination)) {
+                TopFunctionBar(
+                    checkTopBarBackButtonShow(destination),
+                    navController,
+                    scrollBehavior
+                )
             }
-        ) { innerPadding ->
-            NavHost(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color.LightGray),
-                navController = navController,
-                startDestination = currectScene
-            ) {
-<<<<<<< HEAD
-                composable(context.getString(R.string.str_home)) {
-                    Text(text = destination?.route.toString())
-                }
-=======
-                NavHost(
-                    navController = navController,
-                    startDestination = currectScene
-                ) {
-                    composable(context.getString(R.string.str_home)) {
-                        Home(navController)
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
-
-
-
-
-
-
-
-
-
-
-<<<<<<< HEAD
-                composable(context.getString(R.string.str_search)) {
-                    Text(text = destination?.route.toString())
-                }
-=======
-
-                    composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_post)) {
-                    Text(text = destination?.route.toString())
-                }
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_group)) {
-                    GroupMain()
-                }
-                composable(context.getString(R.string.str_group) + "/2") {
-
-                }
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_member)) {
-                    Text(text = destination?.route.toString())
-                }
-
+        },
+        bottomBar = {
+            if (checkBottomButtonShow(destination)) {
+                BottomFunctionBar(
+                    onHomeClick = {
+                        currectScene = context.getString(R.string.str_home)
+                    },
+                    onSearchClick = {
+                        currectScene = context.getString(R.string.str_search)
+                    },
+                    onPostClick = {
+                        currectScene = context.getString(R.string.str_post)
+                    },
+                    onGroupClick = {
+                        currectScene = context.getString(R.string.str_group)
+                    },
+                    onMemberClick = {
+                        currectScene = context.getString(R.string.str_member)
+                    },
+                    selectScene = currectScene
+                )
             }
         }
-<<<<<<< HEAD
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.LightGray),
+            navController = navController,
+            startDestination = currectScene
+        ) {
+            composable(context.getString(R.string.str_home)) {
+                Home(navController)
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_search)) {
+                Text(text = destination?.route.toString())
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_post)) {
+                Text(text = destination?.route.toString())
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_group)) {
+                GroupMain(navController)
+            }
+            composable(context.getString(R.string.str_create_group)) {
+                GroupCreate(navController)
+            }
+            composable("gotoGroupChatRoom/{groudId}") {
+                GroupChatRoom(navController)
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_member)) {
+                Text(text = destination?.route.toString())
+            }
+
+        }
     }
-=======
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
-
-
 }
+
 
 
 @Preview(showBackground = true)
