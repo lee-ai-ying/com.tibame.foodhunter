@@ -40,6 +40,8 @@ import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.sharon.CalendarScreen
+import com.tibame.foodhunter.sharon.TabMainScreen
 
 import com.tibame.foodhunter.zoe.Home
 
@@ -64,12 +66,16 @@ class MainActivity : ComponentActivity() {
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return !listOf(
+<<<<<<< HEAD
+        context.getString(R.string.str_calendar),
+=======
         "",
         context.getString(R.string.str_login),
         context.getString(R.string.str_login)+ "/2",
         context.getString(R.string.str_login)+ "/3",
         context.getString(R.string.str_login)+ "/4"
 
+>>>>>>> main
     ).contains(destination?.route)
 }
 
@@ -79,6 +85,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_group) + "/2",
+//        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
 
@@ -234,6 +241,43 @@ fun Main(
                             Text(text = "登出")
                         }
                     }
+<<<<<<< HEAD
+                    composable(context.getString(R.string.str_group) + "/2") {
+                        Group2(navController) {
+                            Text(text = destination?.route.toString())
+                        }
+                    }
+
+
+
+
+
+
+
+
+
+
+                    composable(context.getString(R.string.str_member)) {
+                        Text(text = destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_calendar)) {
+                        TabMainScreen(navController,0)
+                        Text(text= destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_note)) {
+                        TabMainScreen(navController,1)
+                        Text(text= destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_favorite)) {
+                        TabMainScreen(navController,2)
+                        Text(text= destination?.route.toString())
+                    }
+
+=======
+>>>>>>> main
                 }
             }
         }
