@@ -88,127 +88,105 @@ fun Main(
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                if (checkTopBarNoShow(destination)) {
-                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController, scrollBehavior)
-                }
-            },
-            bottomBar = {
-                if (checkBottomButtonShow(destination)) {
-                    BottomFunctionBar(
-                        onHomeClick = {
-                            currectScene = context.getString(R.string.str_home)
-                        },
-                        onSearchClick = {
-                            currectScene = context.getString(R.string.str_search)
-                        },
-                        onPostClick = {
-                            currectScene = context.getString(R.string.str_post)
-                        },
-                        onGroupClick = {
-                            currectScene = context.getString(R.string.str_group)
-                        },
-                        onMemberClick = {
-                            currectScene = context.getString(R.string.str_member)
-                        },
-                        selectScene = currectScene
-                    )
-                }
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            if (checkTopBarNoShow(destination)) {
+                TopFunctionBar(
+                    checkTopBarBackButtonShow(destination),
+                    navController,
+                    scrollBehavior
+                )
             }
-        ) { innerPadding ->
-            NavHost(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color.LightGray),
-                navController = navController,
-                startDestination = currectScene
-            ) {
-<<<<<<< HEAD
-                composable(context.getString(R.string.str_home)) {
-                    Text(text = destination?.route.toString())
-                }
-=======
-                NavHost(
-                    navController = navController,
-                    startDestination = currectScene
-                ) {
-                    composable(context.getString(R.string.str_home)) {
-                        Home(navController)
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
-
-
-
-
-
-
-
-
-
-
-<<<<<<< HEAD
-                composable(context.getString(R.string.str_search)) {
-                    Text(text = destination?.route.toString())
-                }
-=======
-
-                    composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_post)) {
-                    Text(text = destination?.route.toString())
-                }
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_group)) {
-                    GroupMain()
-                }
-                composable(context.getString(R.string.str_group) + "/2") {
-
-                }
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_member)) {
-                    Text(text = destination?.route.toString())
-                }
-
+        },
+        bottomBar = {
+            if (checkBottomButtonShow(destination)) {
+                BottomFunctionBar(
+                    onHomeClick = {
+                        currectScene = context.getString(R.string.str_home)
+                    },
+                    onSearchClick = {
+                        currectScene = context.getString(R.string.str_search)
+                    },
+                    onPostClick = {
+                        currectScene = context.getString(R.string.str_post)
+                    },
+                    onGroupClick = {
+                        currectScene = context.getString(R.string.str_group)
+                    },
+                    onMemberClick = {
+                        currectScene = context.getString(R.string.str_member)
+                    },
+                    selectScene = currectScene
+                )
             }
         }
-<<<<<<< HEAD
-    }
-=======
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.LightGray),
+            navController = navController,
+            startDestination = currectScene
+        ) {
 
+            composable(context.getString(R.string.str_home)) {
+                Home(navController)
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_search)) {
+                Text(text = destination?.route.toString())
+            }
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_post)) {
+                Text(text = destination?.route.toString())
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_group)) {
+                GroupMain()
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_member)) {
+                Text(text = destination?.route.toString())
+            }
+
+        }
+    }
 
 }
 
