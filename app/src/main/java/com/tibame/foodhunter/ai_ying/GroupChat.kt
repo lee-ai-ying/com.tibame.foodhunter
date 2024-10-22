@@ -5,4 +5,5 @@ data class GroupChat(
     var groupName: String = "GroupChatName",
     var groupState: Int = 1
 ) {
+
 }
