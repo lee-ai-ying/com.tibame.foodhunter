@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.zoe.Home
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +88,6 @@ fun Main(
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
-    Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -126,9 +126,19 @@ fun Main(
                 navController = navController,
                 startDestination = currectScene
             ) {
+<<<<<<< HEAD
                 composable(context.getString(R.string.str_home)) {
                     Text(text = destination?.route.toString())
                 }
+=======
+                NavHost(
+                    navController = navController,
+                    startDestination = currectScene
+                ) {
+                    composable(context.getString(R.string.str_home)) {
+                        Home(navController)
+                    }
+>>>>>>> 23659019639d00f544403af633cd3c5488397ae8
 
 
 
@@ -139,9 +149,16 @@ fun Main(
 
 
 
+<<<<<<< HEAD
                 composable(context.getString(R.string.str_search)) {
                     Text(text = destination?.route.toString())
                 }
+=======
+
+                    composable(context.getString(R.string.str_search)) {
+                        Text(text = destination?.route.toString())
+                    }
+>>>>>>> 23659019639d00f544403af633cd3c5488397ae8
 
 
 
@@ -187,7 +204,10 @@ fun Main(
 
             }
         }
+<<<<<<< HEAD
     }
+=======
+>>>>>>> 23659019639d00f544403af633cd3c5488397ae8
 
 
 }
