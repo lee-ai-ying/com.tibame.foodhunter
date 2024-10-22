@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,12 +26,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
+import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
+import com.tibame.foodhunter.a871208s.LoginScreen
+import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
@@ -52,7 +59,12 @@ class MainActivity : ComponentActivity() {
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return !listOf(
-        ""
+        "",
+        context.getString(R.string.str_login),
+        context.getString(R.string.str_login)+ "/2",
+        context.getString(R.string.str_login)+ "/3",
+        context.getString(R.string.str_login)+ "/4"
+
     ).contains(destination?.route)
 }
 
@@ -85,7 +97,7 @@ fun Main(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
+    var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
         Scaffold(
@@ -126,19 +138,22 @@ fun Main(
                 navController = navController,
                 startDestination = currectScene
             ) {
-<<<<<<< HEAD
+
+                composable(context.getString(R.string.str_login)) {
+                    LoginScreen(navController = navController,{})
+                }
+                composable(context.getString(R.string.str_login)+ "/2") {
+                    RegisterScreen(navController = navController)
+                }
+                composable(context.getString(R.string.str_login)+ "/3") {
+                    ForgetPassword1Screen(navController = navController,{})
+                }
+                composable(context.getString(R.string.str_login)+ "/4") {
+                    ForgetPassword2Screen(navController = navController,{})
+                }
                 composable(context.getString(R.string.str_home)) {
                     Text(text = destination?.route.toString())
                 }
-=======
-                NavHost(
-                    navController = navController,
-                    startDestination = currectScene
-                ) {
-                    composable(context.getString(R.string.str_home)) {
-                        Home(navController)
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
 
 
 
@@ -148,17 +163,12 @@ fun Main(
 
 
 
-
-<<<<<<< HEAD
                 composable(context.getString(R.string.str_search)) {
                     Text(text = destination?.route.toString())
                 }
-=======
 
-                    composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
-                    }
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
+
+
 
 
 
@@ -199,15 +209,22 @@ fun Main(
 
 
                 composable(context.getString(R.string.str_member)) {
-                    Text(text = destination?.route.toString())
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Button(
+                            modifier = Modifier
+                                .size(120.dp, 60.dp)
+                                .padding(8.dp),
+                            onClick = { navController.navigate(context.getString(R.string.str_login)) }
+                        ) {
+                            Text(text = "登出")
+                        }
+                    }
                 }
-
             }
         }
-<<<<<<< HEAD
-    }
-=======
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
+
 
 
 }

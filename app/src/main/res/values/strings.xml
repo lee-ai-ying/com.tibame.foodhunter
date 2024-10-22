@@ -8,26 +8,18 @@
     <string name="str_back">返回</string>
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
-<<<<<<< HEAD
-<<<<<<< HEAD
+    <string name="str_login">登入</string>
+
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
     <string name="str_favorite">收藏</string>
-=======
     <string name="str_my_group">我的揪團</string>
     <string name="str_search_group">搜尋揪團</string>
     <string name="str_group_in_progress">進行中</string>
     <string name="str_group_complete">已結束</string>
->>>>>>> ai-ying
-=======
     <string name="album_name">相簿名稱</string>
     <string name="recommend">推薦</string>
     <string name="search">搜尋</string>
     <string name="next">下一步</string>
-=======
-    <string name="str_calendar">日曆</string>
-    <string name="str_note">手札</string>
-    <string name="str_favorite">收藏</string>
->>>>>>> ce612ef3be4c65216903b356746e02fe83691486
->>>>>>> 23659019639d00f544403af633cd3c5488397ae8
+
 </resources>
