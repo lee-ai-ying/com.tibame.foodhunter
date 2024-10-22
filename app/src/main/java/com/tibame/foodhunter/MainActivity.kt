@@ -33,6 +33,8 @@ import androidx.navigation.compose.rememberNavController
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.sharon.CalendarScreen
+import com.tibame.foodhunter.sharon.TabMainScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +51,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
-    return !listOf(""
+    return !listOf(
+        context.getString(R.string.str_calendar),
     ).contains(destination?.route)
 }
 /** 將 **要顯示** BackButton的route寫進list裡 */
@@ -58,6 +61,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_group) + "/2",
+//        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
 /** 將 **要顯示** BottomBar的route寫進list裡 */
@@ -184,6 +188,21 @@ fun Main(
 
                     composable(context.getString(R.string.str_member)) {
                         Text(text = destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_calendar)) {
+                        TabMainScreen(navController,0)
+                        Text(text= destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_note)) {
+                        TabMainScreen(navController,1)
+                        Text(text= destination?.route.toString())
+                    }
+
+                    composable(context.getString(R.string.str_favorite)) {
+                        TabMainScreen(navController,2)
+                        Text(text= destination?.route.toString())
                     }
 
                 }
