@@ -137,7 +137,6 @@ fun RestaurantDetail(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .weight(1f),
             topBar = {
-                TopFunctionBar(isTopBarShow,navController)
             }
         ){innerPadding ->
             Column(

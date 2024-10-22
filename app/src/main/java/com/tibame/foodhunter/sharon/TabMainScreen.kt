@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,20 +45,21 @@ fun MemberScreen(navController: NavHostController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabMainScreen(navController: NavHostController,initTab: Int) {
     // 獲取當前導航棧中的目的地，用於判斷是否顯示 TopBar 和返回按鈕
     val destination = navController.currentBackStackEntryAsState().value?.destination
     // 當前選到的Tab
     var selectedTab by remember { mutableIntStateOf(initTab) }
-
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     // Scaffold 結構是整個頁面的骨架，包含 TopBar、BottomBar、內容等
     Scaffold(
         topBar = {
             // 根據 checkTopBarNoShow 函數的結果判斷是否顯示 TopBar
             if (checkTopBarNoShow(destination)) {
                 // 顯示 TopFunctionBar，並根據 checkTopBarBackButtonShow 函數結果決定是否顯示返回按鈕
-                TopFunctionBar(checkTopBarBackButtonShow(destination), navController)
+                TopFunctionBar(checkTopBarBackButtonShow(destination), navController,scrollBehavior)
             }
         },
     ) { innerPadding -> // innerPadding 是 Scaffold 自動提供的內邊距，通常會包括 TopBar、BottomBar 的高度
