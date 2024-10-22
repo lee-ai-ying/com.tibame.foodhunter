@@ -189,11 +189,11 @@ fun Main(
                     Text(text = destination?.route.toString())
                 }
 
-                    composable(context.getString(R.string.str_search)) {
-                        SearchScreen(
-                            navController
-                        )
-                    }
+                composable(context.getString(R.string.str_search)) {
+                    SearchScreen(
+                        navController
+                    )
+                }
 
 
 
