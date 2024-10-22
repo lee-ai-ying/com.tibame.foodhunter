@@ -72,6 +72,7 @@ dependencies {
 
     implementation(libs.accompanist.permissions)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
