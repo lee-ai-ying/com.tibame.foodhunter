@@ -16,7 +16,7 @@ import com.tibame.foodhunter.R
 
 @Composable
 fun GroupCreate(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     groupViewModel: GroupViewModel = viewModel()
 ) {
     Text(text = stringResource(R.string.str_create_group))
@@ -26,6 +26,6 @@ fun GroupCreate(
 @Composable
 fun GroupCreatePreview() {
     MaterialTheme {
-        GroupCreate()
+        GroupCreate(rememberNavController())
     }
 }

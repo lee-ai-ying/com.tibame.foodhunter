@@ -80,7 +80,8 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
 fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
-        context.getString(R.string.str_group) + "/2",
+        context.getString(R.string.str_create_group),
+        "gotoGroupChatRoom/{groudId}",
 //        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
@@ -94,7 +95,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
-        context.getString(R.string.str_member)
+        context.getString(R.string.str_member),
+        "gotoGroupChatRoom/{groudId}",
     ).contains(destination?.route)
 }
 
@@ -107,6 +109,7 @@ fun Main(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
+
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -164,24 +167,8 @@ fun Main(
                 ForgetPassword2Screen(navController = navController, {})
             }
             composable(context.getString(R.string.str_home)) {
-                Text(text = destination?.route.toString())
+                Home(navController)
             }
-
-
-
-
-
-
-
-
-
-            composable(context.getString(R.string.str_search)) {
-                Text(text = destination?.route.toString())
-            }
-
-
-
-
 
 
 
@@ -213,10 +200,16 @@ fun Main(
 
 
             composable(context.getString(R.string.str_group)) {
-                GroupMain()
+                GroupMain(navController = navController)
             }
-            composable(context.getString(R.string.str_group) + "/2") {
-
+            composable(context.getString(R.string.str_create_group)) {
+                GroupCreate(navController = navController)
+            }
+            composable("gotoGroupChatRoom/{groudId}") {
+                GroupChatRoom(
+                    navController = navController,
+                    groupRoomId = it.arguments?.getInt("groudId") ?: 0
+                )
             }
 
 
