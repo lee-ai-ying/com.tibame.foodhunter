@@ -9,6 +9,7 @@
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
 
+<<<<<<< HEAD
     <string name="str_backToSearch">返回地圖</string>
     <string name="str_searchdetail">餐廳詳細</string>
 
@@ -16,6 +17,8 @@
     <string name="str_login">登入</string>
 
 
+=======
+>>>>>>> Zoe
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
     <string name="str_favorite">收藏</string>
@@ -25,6 +28,7 @@
     <string name="str_group_in_progress">進行中</string>
     <string name="str_group_complete">已結束</string>
 
+<<<<<<< HEAD
    <string name="album_name">相簿名稱</string>
     <string name="recommend">推薦</string>
     <string name="search">搜尋</string>
@@ -33,6 +37,15 @@
     <string name="str_create_group">建立揪團</string>
     <string name="str_group_search">搜尋揪團</string>
 
+=======
+    <string name="album_name">相簿名稱</string>
+    <string name="recommend">推薦</string>
+    <string name="search">搜尋</string>
+    <string name="next">下一步</string>
+    <string name="only_friend">僅限好友</string>
+    <string name="for_public">公開</string>
+    <string name="Share_with">分享對象</string>
+>>>>>>> Zoe
 
 
 </resources>
