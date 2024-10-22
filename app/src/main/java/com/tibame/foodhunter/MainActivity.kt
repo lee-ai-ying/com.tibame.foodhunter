@@ -33,6 +33,8 @@ import androidx.navigation.compose.rememberNavController
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.andysearch.SearchScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,7 +87,7 @@ fun Main(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+//            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 if (checkTopBarNoShow(destination)) {
                     TopFunctionBar(checkTopBarBackButtonShow(destination), navController)
@@ -137,7 +139,9 @@ fun Main(
 
 
                     composable(context.getString(R.string.str_search)) {
-                        Text(text = destination?.route.toString())
+                        SearchScreen(
+                            navController
+                        )
                     }
 
 
