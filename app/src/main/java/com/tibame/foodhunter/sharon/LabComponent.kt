@@ -16,9 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tibame.foodhunter.R
 
 @Composable
 fun NiaTab(
@@ -66,6 +68,29 @@ fun NiaTabRow(
         },
         tabs = tabs,
     )
+}
+
+/** 日曆、手札、收藏的切換 **/
+@Composable
+fun TabBarComponent(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val tabList = listOf(
+        stringResource(id = R.string.str_calendar),
+        stringResource(id = R.string.str_note),
+        stringResource(id = R.string.str_favorite)
+    )
+
+    NiaTabRow(selectedTabIndex = selectedTab) {
+        tabList.forEachIndexed { index, title ->
+            NiaTab(
+                text = { Text(text = title) },
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) }
+            )
+        }
+    }
 }
 
 // 呼叫並預覽
