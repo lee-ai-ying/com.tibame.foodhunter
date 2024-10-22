@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.map.serect)
 }
 
 android {
@@ -61,8 +62,14 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
+
     implementation(libs.androidx.ui.test.android)
-    implementation(libs.androidx.ui.test.android)
+
+
+    implementation(libs.gson)
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+
     implementation(libs.accompanist.permissions)
     implementation(libs.coil.compose)
     testImplementation(libs.junit)

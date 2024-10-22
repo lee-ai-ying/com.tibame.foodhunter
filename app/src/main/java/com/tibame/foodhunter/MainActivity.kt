@@ -40,7 +40,12 @@ import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+
 import com.tibame.foodhunter.zoe.Home
+
+import com.tibame.foodhunter.andysearch.SearchScreen
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -179,9 +184,17 @@ fun Main(
 
 
 
+
                 composable(context.getString(R.string.str_post)) {
                     Text(text = destination?.route.toString())
                 }
+
+                    composable(context.getString(R.string.str_search)) {
+                        SearchScreen(
+                            navController
+                        )
+                    }
+
 
 
 
