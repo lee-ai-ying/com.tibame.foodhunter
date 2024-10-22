@@ -12,4 +12,9 @@
     <string name="recommend">推薦</string>
     <string name="search">搜尋</string>
     <string name="next">下一步</string>
+=======
+    <string name="str_calendar">日曆</string>
+    <string name="str_note">手札</string>
+    <string name="str_favorite">收藏</string>
+>>>>>>> ce612ef3be4c65216903b356746e02fe83691486
 </resources>

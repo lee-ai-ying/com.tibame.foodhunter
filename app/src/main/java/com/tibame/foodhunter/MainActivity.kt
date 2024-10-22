@@ -84,7 +84,6 @@ fun Main(
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_home)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
-    Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -125,9 +124,7 @@ fun Main(
                     startDestination = currectScene
                 ) {
                     composable(context.getString(R.string.str_home)) {
-                        Home(navController) {
-                            Text(text = destination?.route.toString())
-                        }
+                        Home(navController)
                     }
 
 
@@ -194,7 +191,7 @@ fun Main(
             }
         }
 
-    }
+
 }
 
 

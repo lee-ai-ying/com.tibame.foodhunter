@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,19 +60,25 @@ data class CarouselItem(
     val contentDescription: String
 )
 
-
+data class Post(
+    val publisher: String,
+    val content: String,
+    val visibility: Int,
+    val location: String,
+    val publisherImage: Int,
+    val postTag:String,
+    val carouselItems: List<CarouselItem>
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(navController: NavHostController = rememberNavController(), callback: @Composable () -> Unit) {
+fun Home(navController: NavHostController = rememberNavController()) {
     val samplePosts: List<Post> = getSamplePosts()
-
-    // 狀態用於儲存選中的篩選標籤
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
 
-    // 過濾貼文，根據 postTag 來篩選符合條件的貼文
+    // 根據選擇的篩選標籤過濾貼文
     val filteredPosts = if (selectedFilters.isEmpty()) {
-        samplePosts // 沒有選擇篩選時，顯示所有貼文
+        samplePosts
     } else {
         samplePosts.filter { post -> selectedFilters.contains(post.postTag) }
     }
@@ -79,218 +86,34 @@ fun Home(navController: NavHostController = rememberNavController(), callback: @
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-
+        modifier = Modifier.fillMaxSize()
     ) {
-        // TabRow 區塊
         PrimaryTabRow(selectedTabIndex = 0) {
             Tab(
                 selected = true,
                 onClick = { },
-                text = {
-                    Text(
-                        text = stringResource(id= R.string.recommend),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                text = { Text(text = stringResource(id = R.string.recommend)) }
             )
             Tab(
                 selected = false,
                 onClick = { },
-                text = { Text(text = stringResource(id= R.string.search),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis) }
+                text = { Text(text = stringResource(id = R.string.search)) }
             )
         }
 
-        // 篩選區塊
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val filters = listOf("早午餐", "午餐", "晚餐")
-            filters.forEach { filter ->
-                val isSelected = selectedFilters.contains(filter)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        // 更新選中的篩選標籤
-                        selectedFilters = if (isSelected) {
-                            selectedFilters - filter
-                        } else {
-                            selectedFilters + filter
-                        }
-                    },
-                    label = { Text(filter) },
-                    leadingIcon = if (isSelected) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Done,
-                                contentDescription = "Done icon",
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else {
-                        null
-                    }
-                )
-            }
-        }
+        // 使用 FilterChips 函數
+        FilterChips(
+            filters = listOf("早午餐", "午餐", "晚餐"),
+            selectedFilters = selectedFilters,
+            onFilterChange = { updatedFilters -> selectedFilters = updatedFilters }
+        )
 
         // 顯示過濾後的貼文列表
         PostList(posts = filteredPosts)
-    }
-}
-
-@Composable
-fun PostList(posts: List<Post>) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(posts) { post ->
-            PostItem(post = post)
-        }
-    }
-}
-
-@Composable
-fun ImageCarousel(images: List<CarouselItem>, modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState(pageCount = { images.size })
-
-    Column(
-        modifier = modifier.fillMaxWidth(), // 保持外部容器填充寬度
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()  // 填滿寬度
-                .fillMaxHeight()  // 指定具體的高度
-        ) { page ->
-            Image(
-                painter = painterResource(id = images[page].imageResId),
-                contentDescription = images[page].contentDescription,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        // 指示器
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(images.size) { iteration ->
-                val color = if (pagerState.currentPage == iteration) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(8.dp)
-                )
-            }
-        }
-    }
-}
-
-
-
-@Composable
-fun PostItem(post: Post) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color(0xFFFFFFFF), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
-    ) {
-        // User info section
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Image(
-                    painter = painterResource(id = post.publisherImage),
-                    contentDescription = "Publisher avatar",
-                    contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
-                    modifier = Modifier
-                        .size(30.dp) // 設置圖片的大小
-                        .clip(CircleShape) // 裁剪成圓形
-                )
-            }
-
-
-            Column {
-                Text(text = post.publisher)
-                Text(text = post.location)
-            }
-        }
-
-
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 使用輪播顯示圖片
-        ImageCarousel(images = post.carouselItems)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier
-                .width(350.dp)
-                .height(52.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 用於顯示 Favorite 和 Check 圖標的 Row
-            Row(
-                modifier = Modifier.weight(1f), // 使這個 Row 占據剩餘空間
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Outlined.Favorite,
-                    contentDescription = "Favorite" // 添加有效的內容描述
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.chat_bubble),  // 使用你的 bookmark 資源
-                    contentDescription = "chat_bubble",
-                    modifier = Modifier.size(22.dp)  // 可以調整大小
-                )
-            }
-
-            // 靠右的 Edit 圖標
-
-                Icon(
-                    painter = painterResource(id = R.drawable.bookmark),  // 使用你的 bookmark 資源
-                    contentDescription = "Bookmark",
-                    modifier = Modifier.size(22.dp)  // 可以調整大小
-                )
-
-        }
-
-        Text(
-            text = post.content,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis
-        )
 
     }
 }
+
 
 // 示例數據
 fun getSamplePosts(): List<Post> {
@@ -300,7 +123,7 @@ fun getSamplePosts(): List<Post> {
             content = "今天吃了美味的早餐！",
             visibility = 0,
             location = "Taipei",
-            postTag = "早餐",
+            postTag = "早午餐",
             publisherImage = R.drawable.user1,
             carouselItems = listOf(
                 CarouselItem(0, R.drawable.user1, "Breakfast image 1"),
@@ -340,6 +163,6 @@ fun getSamplePosts(): List<Post> {
 @Composable
 fun HomePreview() {
     FoodHunterTheme  {
-        Main()
+       Home()
     }
 }
