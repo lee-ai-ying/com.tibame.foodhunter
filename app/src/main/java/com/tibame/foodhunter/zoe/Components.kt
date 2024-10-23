@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -132,7 +133,7 @@ fun ImageCarousel(images: List<CarouselItem>, modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-//                .padding(vertical = 8.dp)
+                .padding(vertical = 8.dp)
             ,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -277,3 +278,4 @@ fun ImageItem(imageResId: Int, contentDescription: String) {
         )
     }
 }
+

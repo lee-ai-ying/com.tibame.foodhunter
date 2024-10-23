@@ -113,156 +113,178 @@ fun RestaurantDetail(
 ) {
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_searchdetail)) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .background(Color.White)
-    ) {
-        NavHost(    //裡面放lazyColumn
-            navController = navController,
-            // 設定起始頁面
-            startDestination = mainSceneName,
-            modifier = Modifier.weight(1f)
-        ) {
-            composable(
-                route = mainSceneName
-            ) {
-                HorizontalDivider(modifier = Modifier, thickness = 3.dp, Color(0xFFFE724C))
+    Column(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .weight(1f),
+            topBar = {}
+        ){innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .background(Color.White)
+            ){
                 Column(
                     modifier = Modifier
-                        .padding(20.dp),
-
-                    verticalArrangement = Arrangement.spacedBy(15.dp),
+                        .background(Color.White)
                 ) {
-                    Spacer(modifier = Modifier)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
+                    NavHost(    //裡面放lazyColumn
+                        navController = navController,
+                        // 設定起始頁面
+                        startDestination = mainSceneName,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.mapimage),
-                            contentDescription = "餐廳照片",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .border(
-                                    BorderStroke(3.dp, Color(0xFF000000)),
-                                    RoundedCornerShape(12)
-                                )
-                                .clip(RoundedCornerShape(12)),
-                            contentScale = ContentScale.Crop
-                        )
+                        composable(
+                            route = mainSceneName
 
-                        Spacer(modifier = Modifier.weight(0.1f))
-                        Column(
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.Top
                         ) {
-                            Text(
-                                text = "餐廳名稱",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold, // 字體樣式: 粗體
-                                color = Color.Black // 字的顏色: 藍色
+                            HorizontalDivider(
+                                modifier = Modifier,
+                                thickness = 3.dp,
+                                Color(0xFFFE724C)
                             )
+                            Column(
+                                modifier = Modifier
+                                    .padding(20.dp),
 
-                            Text(
-                                text = "餐廳描述1",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
-                            )
+                                verticalArrangement = Arrangement.spacedBy(15.dp),
+                            ) {
+                                Spacer(modifier = Modifier)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.mapimage),
+                                        contentDescription = "餐廳照片",
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .border(
+                                                BorderStroke(3.dp, Color(0xFF000000)),
+                                                RoundedCornerShape(12)
+                                            )
+                                            .clip(RoundedCornerShape(12)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Spacer(modifier = Modifier.weight(0.1f))
+                                    Column(
+                                        horizontalAlignment = Alignment.Start,
+                                        verticalArrangement = Arrangement.Top
+                                    ) {
+                                        Text(
+                                            text = "餐廳名稱",
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold, // 字體樣式: 粗體
+                                            color = Color.Black // 字的顏色: 藍色
+                                        )
 
-                            Text(
-                                text = "餐廳描述2",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
-                            )
+                                        Text(
+                                            text = "餐廳描述1",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.Black
+                                        )
+
+                                        Text(
+                                            text = "餐廳描述2",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.Black
+                                        )
 
 
-                        }
+                                    }
 
-                        Spacer(modifier = Modifier.weight(1f)) // 使用Spacer將剩餘空間分配給它
+                                    Spacer(modifier = Modifier.weight(1f)) // 使用Spacer將剩餘空間分配給它
 
-                        // 將兩個Icon放在Row的右側
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            verticalArrangement = Arrangement.Top
-                        ) {
-                            //加入收藏
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        // 呼叫showSnackbar()會改變SnackbarHostState狀態並顯示Snackbar
-                                        snackbarHostState.showSnackbar(
-                                            "成功加入收藏！",
-                                            // 建議加上取消按鈕
-                                            withDismissAction = true,
-                                            // 不設定duration，預設為Short(停留短暫並自動消失)
+                                    // 將兩個Icon放在Row的右側
+                                    Column(
+                                        horizontalAlignment = Alignment.End,
+                                        verticalArrangement = Arrangement.Top
+                                    ) {
+                                        //加入收藏
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    // 呼叫showSnackbar()會改變SnackbarHostState狀態並顯示Snackbar
+                                                    snackbarHostState.showSnackbar(
+                                                        "成功加入收藏！",
+                                                        // 建議加上取消按鈕
+                                                        withDismissAction = true,
+                                                        // 不設定duration，預設為Short(停留短暫並自動消失)
+                                                    )
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                // 設定按鈕容器顏色
+                                                containerColor = Color.Transparent,
+                                                // 設定按鈕內容顏色
+                                                contentColor = Color.Black
+                                            )
+                                        ) {
+                                            Icon(
+                                                // 使用指定圖檔資源
+                                                painter = painterResource(id = R.drawable.bookmark),
+                                                contentDescription = "bookmark",
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+
+                                        }
+
+                                        //更多功能
+
+                                        Button(
+                                            onClick = {
+                                                /** 還沒寫 */
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                // 設定按鈕容器顏色
+                                                containerColor = Color.Transparent,
+                                                // 設定按鈕內容顏色
+                                                contentColor = Color.Black
+                                            )
+                                        ) {
+                                            Icon(
+                                                // 使用指定圖檔資源
+                                                painter = painterResource(id = R.drawable.baseline_more_horiz_24),
+                                                contentDescription = "bookmark",
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                        }
+                                        HorizontalDivider(
+                                            modifier = Modifier,
+                                            thickness = 1.5.dp,
+                                            Color(0xFFFE724C)
                                         )
                                     }
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    // 設定按鈕容器顏色
-                                    containerColor = Color.Transparent,
-                                    // 設定按鈕內容顏色
-                                    contentColor = Color.Black
-                                )
-                            ) {
-                                Icon(
-                                    // 使用指定圖檔資源
-                                    painter = painterResource(id = R.drawable.bookmark),
-                                    contentDescription = "bookmark",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-
+                                }
                             }
-
-                            //更多功能
-
-                            Button(
-                                onClick = {
-                                    /** 還沒寫 */
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    // 設定按鈕容器顏色
-                                    containerColor = Color.Transparent,
-                                    // 設定按鈕內容顏色
-                                    contentColor = Color.Black
-                                )
-                            ) {
-                                Icon(
-                                    // 使用指定圖檔資源
-                                    painter = painterResource(id = R.drawable.baseline_more_horiz_24),
-                                    contentDescription = "bookmark",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-
-                            }
-
                         }
-
                     }
-                    HorizontalDivider(modifier = Modifier, thickness = 1.5.dp, Color(0xFFFE724C))
-
-
                 }
-
             }
+
         }
     }
-
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun RestaurantDetailPreview() {
-    RestaurantDetail(navController = rememberNavController())
-}
+
+
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun RestaurantDetailPreview() {
+//    RestaurantDetail(navController = rememberNavController())
+//}

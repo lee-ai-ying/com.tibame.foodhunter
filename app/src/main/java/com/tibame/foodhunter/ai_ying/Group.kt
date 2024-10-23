@@ -49,7 +49,7 @@ import com.tibame.foodhunter.R
 
 @Composable
 fun GroupMain(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     groupViewModel: GroupViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -161,6 +161,6 @@ fun GroupSearchBar() {
 @Composable
 fun GroupMainPreview() {
     MaterialTheme {
-        GroupMain()
+        GroupMain(rememberNavController())
     }
 }

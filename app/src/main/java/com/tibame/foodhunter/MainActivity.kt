@@ -40,11 +40,12 @@ import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.sharon.CalendarScreen
+import com.tibame.foodhunter.sharon.TabMainScreen
 
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
-
 
 
 class MainActivity : ComponentActivity() {
@@ -65,10 +66,11 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return !listOf(
         "",
+        context.getString(R.string.str_calendar),
         context.getString(R.string.str_login),
-        context.getString(R.string.str_login)+ "/2",
-        context.getString(R.string.str_login)+ "/3",
-        context.getString(R.string.str_login)+ "/4"
+        context.getString(R.string.str_login) + "/2",
+        context.getString(R.string.str_login) + "/3",
+        context.getString(R.string.str_login) + "/4"
 
     ).contains(destination?.route)
 }
@@ -78,7 +80,9 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
 fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
-        context.getString(R.string.str_group) + "/2",
+        context.getString(R.string.str_create_group),
+        "gotoGroupChatRoom/{groudId}",
+//        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
 
@@ -91,7 +95,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
-        context.getString(R.string.str_member)
+        context.getString(R.string.str_member),
+        "gotoGroupChatRoom/{groudId}",
     ).contains(destination?.route)
 }
 
@@ -105,95 +110,65 @@ fun Main(
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                if (checkTopBarNoShow(destination)) {
-                    TopFunctionBar(checkTopBarBackButtonShow(destination), navController, scrollBehavior)
-                }
-            },
-            bottomBar = {
-                if (checkBottomButtonShow(destination)) {
-                    BottomFunctionBar(
-                        onHomeClick = {
-                            currectScene = context.getString(R.string.str_home)
-                        },
-                        onSearchClick = {
-                            currectScene = context.getString(R.string.str_search)
-                        },
-                        onPostClick = {
-                            currectScene = context.getString(R.string.str_post)
-                        },
-                        onGroupClick = {
-                            currectScene = context.getString(R.string.str_group)
-                        },
-                        onMemberClick = {
-                            currectScene = context.getString(R.string.str_member)
-                        },
-                        selectScene = currectScene
-                    )
-                }
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            if (checkTopBarNoShow(destination)) {
+                TopFunctionBar(
+                    checkTopBarBackButtonShow(destination),
+                    navController,
+                    scrollBehavior
+                )
             }
-        ) { innerPadding ->
-            NavHost(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color.LightGray),
-                navController = navController,
-                startDestination = currectScene
-            ) {
+        },
+        bottomBar = {
+            if (checkBottomButtonShow(destination)) {
+                BottomFunctionBar(
+                    onHomeClick = {
+                        currectScene = context.getString(R.string.str_home)
+                    },
+                    onSearchClick = {
+                        currectScene = context.getString(R.string.str_search)
+                    },
+                    onPostClick = {
+                        currectScene = context.getString(R.string.str_post)
+                    },
+                    onGroupClick = {
+                        currectScene = context.getString(R.string.str_group)
+                    },
+                    onMemberClick = {
+                        currectScene = context.getString(R.string.str_member)
+                    },
+                    selectScene = currectScene
+                )
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.LightGray),
+            navController = navController,
+            startDestination = currectScene
+        ) {
 
-                composable(context.getString(R.string.str_login)) {
-                    LoginScreen(navController = navController,{})
-                }
-                composable(context.getString(R.string.str_login)+ "/2") {
-                    RegisterScreen(navController = navController)
-                }
-                composable(context.getString(R.string.str_login)+ "/3") {
-                    ForgetPassword1Screen(navController = navController,{})
-                }
-                composable(context.getString(R.string.str_login)+ "/4") {
-                    ForgetPassword2Screen(navController = navController,{})
-                }
-                composable(context.getString(R.string.str_home)) {
-                    Text(text = destination?.route.toString())
-                }
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_search)) {
-                    Text(text = destination?.route.toString())
-                }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                composable(context.getString(R.string.str_post)) {
-                    Text(text = destination?.route.toString())
-                }
-
-                    composable(context.getString(R.string.str_search)) {
-                        SearchScreen(
-                            navController
-                        )
-                    }
+            composable(context.getString(R.string.str_login)) {
+                LoginScreen(navController = navController, {})
+            }
+            composable(context.getString(R.string.str_login) + "/2") {
+                RegisterScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_login) + "/3") {
+                ForgetPassword1Screen(navController = navController, {})
+            }
+            composable(context.getString(R.string.str_login) + "/4") {
+                ForgetPassword2Screen(navController = navController, {})
+            }
+            composable(context.getString(R.string.str_home)) {
+                Home(navController)
+            }
 
 
 
@@ -204,40 +179,64 @@ fun Main(
 
 
 
+            composable(context.getString(R.string.str_post)) {
+                Text(text = destination?.route.toString())
+            }
 
-                composable(context.getString(R.string.str_group)) {
-                    GroupMain()
-                }
-                composable(context.getString(R.string.str_group) + "/2") {
-
-                }
-
-
-
-
+            composable(context.getString(R.string.str_search)) {
+                SearchScreen(
+                    navController
+                )
+            }
 
 
 
 
 
 
-                composable(context.getString(R.string.str_member)) {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
+
+
+
+
+
+            composable(context.getString(R.string.str_group)) {
+                GroupMain(navController = navController)
+            }
+            composable(context.getString(R.string.str_create_group)) {
+                GroupCreate(navController = navController)
+            }
+            composable("gotoGroupChatRoom/{groudId}") {
+                GroupChatRoom(
+                    navController = navController,
+                    groupRoomId = it.arguments?.getInt("groudId") ?: 0
+                )
+            }
+
+
+
+
+
+
+
+
+
+
+            composable(context.getString(R.string.str_member)) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Button(
+                        modifier = Modifier
+                            .size(120.dp, 60.dp)
+                            .padding(8.dp),
+                        onClick = { navController.navigate(context.getString(R.string.str_login)) }
                     ) {
-                        Button(
-                            modifier = Modifier
-                                .size(120.dp, 60.dp)
-                                .padding(8.dp),
-                            onClick = { navController.navigate(context.getString(R.string.str_login)) }
-                        ) {
-                            Text(text = "登出")
-                        }
+                        Text(text = "登出")
                     }
                 }
             }
         }
-
+    }
 
 
 }
