@@ -9,10 +9,15 @@
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
 
+<<<<<<< HEAD
 
     <string name="str_backToSearch">返回地圖</string>
     <string name="str_searchdetail">餐廳詳細</string>
 
+=======
+    <string name="str_backToSearch">返回地圖</string>
+    <string name="str_searchdetail">餐廳詳細</string>
+>>>>>>> jessey
 
     <string name="str_login">登入</string>
 
