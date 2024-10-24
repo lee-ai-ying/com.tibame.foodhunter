@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,20 +23,28 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import coil.compose.rememberAsyncImagePainter
 import com.tibame.foodhunter.R
 
 
@@ -107,37 +117,101 @@ fun FilterChips(
 }
 
 
-@Composable
-fun ImageCarousel(images: List<CarouselItem>, modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState(pageCount = { images.size })
 
+sealed class ImageSource {
+    data class UriSource(val uris: List<Uri>) : ImageSource()
+    data class CarouselSource(val items: List<CarouselItem>) : ImageSource()
+}
+//兩種格式都適用
+@Composable
+fun ImageDisplay(
+    imageSource: ImageSource,
+    modifier: Modifier = Modifier
+) {
+    when (imageSource) {
+        is ImageSource.UriSource -> {
+            ImageCarouselUri(
+                uris = imageSource.uris,
+
+            )
+        }
+        is ImageSource.CarouselSource -> {
+            ImageCarouselResource(
+                items = imageSource.items,
+                modifier = modifier
+                    .width(394.dp)
+                    .height(319.dp)
+            )
+        }
+    }
+}
+//從Uri拿照片
+@Composable
+private fun ImageCarouselUri(uris: List<Uri>, modifier: Modifier = Modifier) {
+    val pagerState = rememberPagerState(pageCount = { uris.size })
+
+    ImageCarouselLayout(
+        pageCount = uris.size,
+        pagerState = pagerState,
+        modifier = modifier
+    ) { page ->
+        Image(
+            painter = rememberAsyncImagePainter(uris[page]),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+        )
+    }
+}
+//拿貼文照片
+@Composable
+private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier = Modifier) {
+    val pagerState = rememberPagerState(pageCount = { items.size })
+
+    ImageCarouselLayout(
+        pageCount = items.size,
+        pagerState = pagerState,
+        modifier = modifier
+    ) { page ->
+        Image(
+            painter = painterResource(id = items[page].imageResId),
+            contentDescription = items[page].contentDescription,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+        )
+    }
+}
+//左右滑動的圖片顯示
+@Composable
+private fun ImageCarouselLayout(
+    pageCount: Int,
+    pagerState: PagerState,
+    modifier: Modifier = Modifier,
+    content: @Composable (Int) -> Unit
+) {
     Column(
-        modifier = modifier.fillMaxWidth(), // 保持外部容器填充寬度
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()  // 填滿寬度
-                .fillMaxHeight()  // 指定具體的高度
+            modifier = Modifier.weight(1f)
         ) { page ->
-            Image(
-                painter = painterResource(id = images[page].imageResId),
-                contentDescription = images[page].contentDescription,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            content(page)
         }
 
         // 指示器
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
-            ,
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            repeat(images.size) { iteration ->
+            repeat(pageCount) { iteration ->
                 val color = if (pagerState.currentPage == iteration) {
                     MaterialTheme.colorScheme.primary
                 } else {
@@ -148,18 +222,18 @@ fun ImageCarousel(images: List<CarouselItem>, modifier: Modifier = Modifier) {
                         .padding(2.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .size(8.dp).zIndex(1f)
+                        .size(8.dp)
+                        .zIndex(1f)
                 )
             }
         }
     }
 }
-
-
-
+//貼文部分
 @Composable
-fun PostItem(post: Post) {
-    Log.d("PostItem", "Displaying post from: ${post.publisher}, Location: ${post.location}, Content: ${post.content}")
+fun PostItem(post: Post
+) {
+        Log.d("PostItem", "Displaying post from: ${post.publisher}, Location: ${post.location}, Content: ${post.content}")
     Column(
 
         modifier = Modifier
@@ -195,8 +269,9 @@ fun PostItem(post: Post) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 使用輪播顯示圖片
-        ImageCarousel(images = post.carouselItems)
+
+ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
+
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
@@ -212,21 +287,23 @@ fun PostItem(post: Post) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Outlined.Favorite,
-                    contentDescription = "Favorite" // 添加有效的內容描述
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.chat_bubble),  // 使用你的 bookmark 資源
-                    contentDescription = "chat_bubble",
-                    modifier = Modifier.size(22.dp)  // 可以調整大小
-                )
+                FavoriteIcon()
+
+                IconButton(onClick = {
+                    // 處理點擊 chat bubble 的事件
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                        contentDescription = "chat_bubble",
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
 
 
 
             Icon(
-                painter = painterResource(id = R.drawable.bookmark),  // 使用你的 bookmark 資源
+                painter = painterResource(id = R.drawable.baseline_bookmark_24),  // 使用你的 bookmark 資源
                 contentDescription = "Bookmark",
                 modifier = Modifier.size(22.dp)  // 可以調整大小
             )
@@ -278,4 +355,54 @@ fun ImageItem(imageResId: Int, contentDescription: String) {
         )
     }
 }
+
+@Composable
+fun FavoriteIcon() {
+    // 使用 remember 保存按下的狀態
+    var isFavorite by remember { mutableStateOf(false) }
+
+    // IconButton 包裹 Icon
+    IconButton(onClick = {
+        isFavorite = !isFavorite  // 切換狀態
+    }) {
+        Icon(
+            painter = painterResource(
+                id = if (isFavorite) R.drawable.baseline_favorite_24
+                else R.drawable.baseline_favorite_border_24
+            ),
+            contentDescription = if (isFavorite) "favorite" else "not_favorite",
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+@Composable
+fun HomeHeader(post: Post) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(id = post.publisherImage),
+                contentDescription = "Publisher avatar",
+                contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
+                modifier = Modifier
+                    .size(30.dp) // 設置圖片的大小
+                    .clip(CircleShape) // 裁剪成圓形
+            )
+        }
+
+        Column {
+            Text(text = post.publisher)
+            Text(text = post.location)
+        }
+    }
+}
+
+
+
 

@@ -1,5 +1,6 @@
 package com.tibame.foodhunter
 
+import NewPost
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +47,7 @@ import com.tibame.foodhunter.sharon.TabMainScreen
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
+import com.tibame.foodhunter.zoe.Post
 
 
 class MainActivity : ComponentActivity() {
@@ -109,7 +111,6 @@ fun Main(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
-
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -178,9 +179,25 @@ fun Main(
 
 
 
+            composable(context.getString(R.string.str_search)) {
+                Text(text = destination?.route.toString())
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             composable(context.getString(R.string.str_post)) {
-                Text(text = destination?.route.toString())
+                NewPost(navController)
             }
 
             composable(context.getString(R.string.str_search)) {
