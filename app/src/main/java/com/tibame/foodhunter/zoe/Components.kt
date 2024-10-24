@@ -2,6 +2,7 @@ package com.tibame.foodhunter.zoe
 
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +59,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.tibame.foodhunter.R
 
-
+//貼文列表
 @Composable
 fun PostList(posts: List<Post>) {
 
@@ -76,6 +77,53 @@ fun PostList(posts: List<Post>) {
     }
 }
 
+@Composable
+fun PostHeader(post: Post) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(id = post.publisherImage),
+                contentDescription = "Publisher avatar",
+                contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
+                modifier = Modifier
+                    .size(30.dp) // 設置圖片的大小
+                    .clip(CircleShape) // 裁剪成圓形
+            )
+        }
+
+        Column {
+            Text(text = post.publisher)
+            Text(text = post.location)
+        }
+    }
+}
+
+
+data class CarouselItem(
+    val id: Int,
+    @DrawableRes val imageResId: Int,
+    val contentDescription: String
+)
+
+data class Post(
+    val publisher: String,
+    val content: String,
+    val visibility: Int,
+    val location: String,
+    val publisherImage: Int,
+    val postTag:String,
+    val carouselItems: List<CarouselItem>
+)
+
+
+//標籤篩選貼文
 @Composable
 fun FilterChips(
     filters: List<String>,
@@ -303,7 +351,7 @@ ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
 
 
             Icon(
-                painter = painterResource(id = R.drawable.baseline_bookmark_24),  // 使用你的 bookmark 資源
+                painter = painterResource(id = R.drawable.baseline_bookmark_border_24),  // 使用你的 bookmark 資源
                 contentDescription = "Bookmark",
                 modifier = Modifier.size(22.dp)  // 可以調整大小
             )

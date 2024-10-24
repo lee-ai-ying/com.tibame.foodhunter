@@ -23,21 +23,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
-)
-
-data class Post(
-    val publisher: String,
-    val content: String,
-    val visibility: Int,
-    val location: String,
-    val publisherImage: Int,
-    val postTag:String,
-    val carouselItems: List<CarouselItem>
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
