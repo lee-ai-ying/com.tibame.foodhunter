@@ -236,7 +236,7 @@ fun NewPost(navController: NavHostController) {
                 }
 
                 Button(
-                    
+
                     onClick = { /* 發文邏輯 */ },
                     modifier = Modifier.fillMaxWidth()
                 ) {

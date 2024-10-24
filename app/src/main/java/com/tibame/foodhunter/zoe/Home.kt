@@ -71,47 +71,75 @@ fun Home(navController: NavHostController) {
 
 // 示例數據
 fun getSamplePosts(): List<Post> {
+    // 示例 Publisher 資料
+    val alice = Publisher(
+        id = "1",
+        name = "Alice",
+        avatarImage = R.drawable.user1,
+        joinDate = "2023-01-01",
+        followers = emptyList(),
+        following = emptyList()
+    )
+
+    val bob = Publisher(
+        id = "2",
+        name = "Bob",
+        avatarImage = R.drawable.user2,
+        joinDate = "2022-12-15",
+        followers = emptyList(),
+        following = emptyList()
+    )
+
+    val cathy = Publisher(
+        id = "3",
+        name = "Cathy",
+        avatarImage = R.drawable.user3,
+        joinDate = "2021-11-20",
+        followers = emptyList(),
+        following = emptyList()
+    )
+
+    // 示例 Post 資料
     return listOf(
         Post(
-            publisher = "Alice",
+            id = "p1",
+            publisher = alice,
             content = "今天吃了美味的早餐！",
-            visibility = 0,
             location = "Taipei",
+            timestamp = "2 小時前",
             postTag = "早午餐",
-            publisherImage = R.drawable.user1,
             carouselItems = listOf(
-                CarouselItem(0, R.drawable.user1, "Breakfast image 1"),
+                CarouselItem(0, R.drawable.breakfast_image_1, "Breakfast image 1"),
                 CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2"),
                 CarouselItem(2, R.drawable.breakfast_image_3, "Breakfast image 3")
             )
         ),
         Post(
-            publisher = "Bob",
+            id = "p2",
+            publisher = bob,
             content = "午餐是超棒的壽司！",
-            visibility = 1,
             location = "Kaohsiung",
+            timestamp = "5 小時前",
             postTag = "午餐",
-            publisherImage = R.drawable.user2,
             carouselItems = listOf(
                 CarouselItem(0, R.drawable.sushi_image_1, "Sushi image 1"),
-                CarouselItem(1, R.drawable.sushi_image_2, "Sushi image 2"),
-
-                )
+                CarouselItem(1, R.drawable.sushi_image_2, "Sushi image 2")
+            )
         ),
         Post(
-            publisher = "Cathy",
+            id = "p3",
+            publisher = cathy,
             content = "晚餐牛排超好吃！",
-            visibility = 0,
             location = "Taichung",
+            timestamp = "1 天前",
             postTag = "晚餐",
-            publisherImage = R.drawable.user3,
             carouselItems = listOf(
-                CarouselItem(0, R.drawable.steak_image, "Steak image 1"),
-
-                )
+                CarouselItem(0, R.drawable.steak_image, "Steak image 1")
+            )
         )
     )
 }
+
 
 @Preview(showBackground = true)
 @Composable

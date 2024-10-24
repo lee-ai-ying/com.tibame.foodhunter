@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,9 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -52,12 +50,53 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.tibame.foodhunter.R
+
+data class Comment(
+    val id: String,
+    val commenter: Commenter, // 留言者
+    val content: String,
+    val timestamp: String
+)
+
+data class Commenter(
+    val id: String,
+    val name: String,
+    val avatarImage: Int // 圖片資源ID
+)
+data class Publisher(
+    val id: String,
+    val name: String,
+    val avatarImage: Int, // 圖片資源ID
+    val joinDate: String,
+    val followers: List<Publisher> = emptyList(), // 追蹤者列表
+    val following: List<Publisher> = emptyList()  // 被追蹤者列表
+)
+
+
+data class CarouselItem(
+    val id: Int,
+    @DrawableRes val imageResId: Int,
+    val contentDescription: String
+)
+
+data class Post(
+    val id: String,
+    val publisher: Publisher,
+    val content: String,
+    val location: String,
+    val timestamp: String,
+    val postTag:String,
+    val carouselItems: List<CarouselItem>
+)
+
 
 //貼文列表
 @Composable
@@ -76,51 +115,56 @@ fun PostList(posts: List<Post>) {
         }
     }
 }
-
 @Composable
-fun PostHeader(post: Post) {
+
+fun PostHeader(publisher: Publisher) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
+        Image(
+            painter = painterResource(id = publisher.avatarImage),
+            contentDescription = "Publisher avatar",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
-            Image(
-                painter = painterResource(id = post.publisherImage),
-                contentDescription = "Publisher avatar",
-                contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
-                modifier = Modifier
-                    .size(30.dp) // 設置圖片的大小
-                    .clip(CircleShape) // 裁剪成圓形
+            Text(
+                text = publisher.name,  // 保持使用 publisher.name
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             )
+            Text(text = "追蹤者: ${publisher.followers.size} | 追蹤中: ${publisher.following.size}")
+
         }
 
-        Column {
-            Text(text = post.publisher)
-            Text(text = post.location)
+        Button(
+            onClick = { /* 點擊追蹤按鈕時的處理 */ },
+            colors = ButtonDefaults.buttonColors(
+                Color(0xFFF15A24)  // 修改為橘色
+            ),
+            modifier = Modifier.padding(end = 16.dp)
+        ) {
+            Text(
+                text = "追蹤",
+                color = Color.White,
+                style = TextStyle(
+                    fontSize = 14.sp
+                )
+            )
         }
     }
 }
 
 
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
-)
-
-data class Post(
-    val publisher: String,
-    val content: String,
-    val visibility: Int,
-    val location: String,
-    val publisherImage: Int,
-    val postTag:String,
-    val carouselItems: List<CarouselItem>
-)
 
 
 //標籤篩選貼文
@@ -279,11 +323,10 @@ private fun ImageCarouselLayout(
 }
 //貼文部分
 @Composable
-fun PostItem(post: Post
-) {
-        Log.d("PostItem", "Displaying post from: ${post.publisher}, Location: ${post.location}, Content: ${post.content}")
-    Column(
+fun PostItem(post: Post) {
+    Log.d("PostItem", "Displaying post from: ${post.publisher.name}, Location: ${post.location}, Content: ${post.content}")
 
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(color = Color(0xFFFFFFFF), shape = RoundedCornerShape(16.dp))
@@ -299,7 +342,7 @@ fun PostItem(post: Post
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
-                    painter = painterResource(id = post.publisherImage),
+                    painter = painterResource(id = post.publisher.avatarImage),
                     contentDescription = "Publisher avatar",
                     contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
                     modifier = Modifier
@@ -308,17 +351,16 @@ fun PostItem(post: Post
                 )
             }
 
-
             Column {
-                Text(text = post.publisher)
+                Text(text = post.publisher.name)  // 使用發文者名稱
                 Text(text = post.location)
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-
-ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
+        // 顯示圖片輪播
+        ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -348,14 +390,11 @@ ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
                 }
             }
 
-
-
             Icon(
                 painter = painterResource(id = R.drawable.baseline_bookmark_border_24),  // 使用你的 bookmark 資源
                 contentDescription = "Bookmark",
                 modifier = Modifier.size(22.dp)  // 可以調整大小
             )
-
         }
 
         Text(
@@ -363,9 +402,9 @@ ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
             maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
-
     }
 }
+
 
 @Composable
 fun ImageList(posts: List<Post>, modifier: Modifier = Modifier) {
@@ -421,33 +460,6 @@ fun FavoriteIcon() {
             contentDescription = if (isFavorite) "favorite" else "not_favorite",
             modifier = Modifier.size(22.dp)
         )
-    }
-}
-
-@Composable
-fun HomeHeader(post: Post) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                painter = painterResource(id = post.publisherImage),
-                contentDescription = "Publisher avatar",
-                contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
-                modifier = Modifier
-                    .size(30.dp) // 設置圖片的大小
-                    .clip(CircleShape) // 裁剪成圓形
-            )
-        }
-
-        Column {
-            Text(text = post.publisher)
-            Text(text = post.location)
-        }
     }
 }
 

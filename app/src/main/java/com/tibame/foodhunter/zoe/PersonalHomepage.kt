@@ -2,7 +2,10 @@ package com.tibame.foodhunter.zoe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,27 +18,21 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 @Composable
 fun PersonHomepage() {
-    // 構建一個 Post 對象
-    val samplePost = Post(
-        publisher = "Cathy",
-        content = "晚餐牛排超好吃！",
-        visibility = 0,
-        location = "Taichung",
-        postTag = "晚餐",
-        publisherImage = R.drawable.user3,
-        carouselItems = listOf(
-            CarouselItem(0, R.drawable.steak_image, "Steak image 1"),
-
-            )
-    )
+    val bob = Publisher(id = "2", name = "Bob", avatarImage = R.drawable.user1, joinDate = "2023-09-01")
+    val samplePosts: List<Post> = getSamplePosts()
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+        verticalArrangement = Arrangement.spacedBy(50.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        // 傳入 samplePost 作為參數
-        PostHeader(post = samplePost)
+        Spacer(modifier = Modifier.height(20.dp))
+        PostHeader(publisher = bob)
+        ImageList(posts = samplePosts)
+
+
     }
 }
 
