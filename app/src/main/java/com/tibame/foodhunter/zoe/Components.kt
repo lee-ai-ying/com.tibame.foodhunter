@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -149,7 +150,7 @@ fun PostHeader(publisher: Publisher) {
         Button(
             onClick = { /* 點擊追蹤按鈕時的處理 */ },
             colors = ButtonDefaults.buttonColors(
-                Color(0xFFF15A24)  // 修改為橘色
+                colorResource(id = R.color.orange_1st)
             ),
             modifier = Modifier.padding(end = 16.dp)
         ) {

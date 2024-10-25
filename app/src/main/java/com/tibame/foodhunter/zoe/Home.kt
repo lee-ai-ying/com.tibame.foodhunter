@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 fun Home(navController: NavHostController) {
     val samplePosts: List<Post> = getSamplePosts()
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
+    val context = LocalContext.current
 
     // 根據選擇的篩選標籤過濾貼文
     val filteredPosts = if (selectedFilters.isEmpty()) {
@@ -45,12 +47,12 @@ fun Home(navController: NavHostController) {
         PrimaryTabRow(selectedTabIndex = 0) {
             Tab(
                 selected = true,
-                onClick = { },
+                onClick = { navController.navigate(context.getString(R.string.str_home))},
                 text = { Text(text = stringResource(id = R.string.recommend)) }
             )
             Tab(
                 selected = false,
-                onClick = { },
+                onClick = {navController.navigate(context.getString(R.string.str_searchpost)) },
                 text = { Text(text = stringResource(id = R.string.search)) }
             )
         }

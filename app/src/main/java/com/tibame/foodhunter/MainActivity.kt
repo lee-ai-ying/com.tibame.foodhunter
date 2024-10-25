@@ -48,6 +48,7 @@ import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.zoe.Post
+import com.tibame.foodhunter.zoe.SearchPost
 
 
 class MainActivity : ComponentActivity() {
@@ -99,6 +100,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
         "gotoGroupChatRoom/{groudId}",
+        context.getString(R.string.str_searchpost),
     ).contains(destination?.route)
 }
 
@@ -150,7 +152,7 @@ fun Main(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color.LightGray),
+                .background(Color.White),
             navController = navController,
             startDestination = currectScene
         ) {
@@ -179,9 +181,7 @@ fun Main(
 
 
 
-            composable(context.getString(R.string.str_search)) {
-                Text(text = destination?.route.toString())
-            }
+
 
 
 
@@ -198,6 +198,9 @@ fun Main(
 
             composable(context.getString(R.string.str_post)) {
                 NewPost(navController)
+            }
+            composable(context.getString(R.string.str_searchpost)) {
+                SearchPost(navController)
             }
 
             composable(context.getString(R.string.str_search)) {
