@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -44,8 +43,7 @@ import com.tibame.foodhunter.R
 
 @Composable
 fun LoginScreen(
-    navController: NavHostController = rememberNavController(),
-    callback: @Composable () -> Unit
+    navController: NavHostController = rememberNavController()
 ) {
     val context = LocalContext.current
     var uid by remember { mutableStateOf("") }

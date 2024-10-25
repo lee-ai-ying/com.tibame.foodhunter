@@ -41,6 +41,7 @@ import androidx.navigation.navArgument
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
 import com.tibame.foodhunter.a871208s.LoginScreen
+import com.tibame.foodhunter.a871208s.MemberMainScreen
 import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
@@ -89,7 +90,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_create_group),
-        context.getString(R.string.SearchToGoogleMap)+"/{id}",
+        context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood),
         "gotoGroupChatRoom/{groudId}",
         context.getString(R.string.str_group) + "/2",
@@ -108,7 +109,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
         "gotoGroupChatRoom/{groudId}",
-        context.getString(R.string.SearchToGoogleMap)+"/{id}",
+        context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood)
     ).contains(destination?.route)
 }
@@ -117,7 +118,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
 @Composable
 fun Main(
     navController: NavHostController = rememberNavController(),
-    gChatVM: GroupViewModel= viewModel()
+    gChatVM: GroupViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -128,8 +129,12 @@ fun Main(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            if (destination?.route=="GroupChatRoom/{groupId}"){
-                GroupChatRoomTopBar(navController,TopAppBarDefaults.pinnedScrollBehavior(),gChatVM)
+            if (destination?.route == "GroupChatRoom/{groupId}") {
+                GroupChatRoomTopBar(
+                    navController,
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    gChatVM
+                )
                 return@Scaffold
             }
             if (checkTopBarNoShow(destination)) {
@@ -141,7 +146,7 @@ fun Main(
             }
         },
         bottomBar = {
-            if (destination?.route=="GroupChatRoom/{groupId}"){
+            if (destination?.route == "GroupChatRoom/{groupId}") {
                 GroupChatRoomBottomBar(gChatVM)
                 return@Scaffold
             }
@@ -177,7 +182,7 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController, {})
+                LoginScreen(navController = navController)
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController)
@@ -201,6 +206,20 @@ fun Main(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             composable(context.getString(R.string.str_post)) {
                 NewPost(navController)
             }
@@ -211,17 +230,16 @@ fun Main(
             composable(context.getString(R.string.str_search)) {
                 SearchScreen(navController)
             }
-            composable("${context.getString(R.string.SearchToGoogleMap)}/{id}"){
-                backStackEntry ->
+            composable("${context.getString(R.string.SearchToGoogleMap)}/{id}") { backStackEntry ->
                 SearchResult(
                     navController = navController,
                     restaurantID = backStackEntry.arguments?.getString("id") ?: ""
                 )
             }
-            composable(context.getString(R.string.randomFood)){
-                backStackEntry ->
+            composable(context.getString(R.string.randomFood)) { backStackEntry ->
                 RandomFood(
-                    navController = navController)
+                    navController = navController
+                )
             }
 
 
@@ -236,17 +254,17 @@ fun Main(
 
 
             composable(context.getString(R.string.str_group)) {
-                GroupMain(navController,gChatVM)
+                GroupMain(navController, gChatVM)
             }
             composable(context.getString(R.string.str_create_group)) {
-                GroupCreate(navController,gChatVM)
+                GroupCreate(navController, gChatVM)
             }
             composable("GroupChatRoom/{groupId}",
                 arguments = listOf(
                     navArgument("groupId") { type = NavType.IntType }
                 )
-            ){
-                GroupChatRoom(it.arguments?.getInt("groupId") ?: -1 ,gChatVM)//,gChatRoomVM)
+            ) {
+                GroupChatRoom(it.arguments?.getInt("groupId") ?: -1, gChatVM)//,gChatRoomVM)
             }
 
 
@@ -259,28 +277,19 @@ fun Main(
 
 
             composable(context.getString(R.string.str_member)) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Button(
-                        modifier = Modifier
-                            .size(120.dp, 60.dp)
-                            .padding(8.dp),
-                        onClick = { navController.navigate(context.getString(R.string.str_login)) }
-                    ) {
-                        Text(text = "登出")
-                    }
-                }
+                MemberMainScreen(navController = navController)
+
+
             }
 
             composable(context.getString(R.string.str_calendar)) {
-                TabMainScreen(navController,0)
+                TabMainScreen(navController, 0)
             }
             composable(context.getString(R.string.str_note)) {
-                TabMainScreen(navController,1)
+                TabMainScreen(navController, 1)
             }
             composable(context.getString(R.string.str_favorite)) {
-                TabMainScreen(navController,2)
+                TabMainScreen(navController, 2)
             }
 
 
@@ -288,14 +297,13 @@ fun Main(
     }
 
 
-
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun FoodHunterPreview() {
-    MaterialTheme {
-        Main()
     }
-}
+
+
+    @Preview(showBackground = true)
+    @Composable
+    fun FoodHunterPreview() {
+        MaterialTheme {
+            Main()
+        }
+    }
