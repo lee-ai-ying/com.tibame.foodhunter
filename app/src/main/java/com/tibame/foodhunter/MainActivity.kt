@@ -67,7 +67,6 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return !listOf(
         "",
-        context.getString(R.string.str_calendar),
         context.getString(R.string.str_login),
         context.getString(R.string.str_login)+ "/2",
         context.getString(R.string.str_login)+ "/3",
@@ -82,7 +81,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_group) + "/2",
-//        context.getString(R.string.str_calendar)
+        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
 
@@ -108,7 +107,6 @@ fun Main(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
-
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -239,6 +237,17 @@ fun Main(
                         }
                     }
                 }
+//                ----------------------------
+                composable(context.getString(R.string.str_calendar)) {
+                    TabMainScreen(navController,0)
+                }
+                composable(context.getString(R.string.str_note)) {
+                    TabMainScreen(navController,1)
+                }
+                composable(context.getString(R.string.str_favorite)) {
+                    TabMainScreen(navController,2)
+                }
+//                ----------------------------
             }
         }
 
