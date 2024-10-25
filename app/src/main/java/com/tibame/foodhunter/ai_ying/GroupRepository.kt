@@ -12,6 +12,7 @@ object GroupRepository {
     init {
         _groupChatList.update { setTestData() }
     }
+
     private fun setTestData(): List<GroupChat> {
         return listOf(
             GroupChat(1,"進行中",99),
