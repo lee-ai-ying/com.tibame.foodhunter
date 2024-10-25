@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,12 +28,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
 import com.tibame.foodhunter.a871208s.LoginScreen
@@ -70,8 +74,7 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_login),
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
-        context.getString(R.string.str_login) + "/4"
-
+        context.getString(R.string.str_login) + "/4",
     ).contains(destination?.route)
 }
 
@@ -81,7 +84,6 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_create_group),
-        "gotoGroupChatRoom/{groudId}",
 //        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
 }
@@ -96,14 +98,14 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
-        "gotoGroupChatRoom/{groudId}",
     ).contains(destination?.route)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Main(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    gChatVM: GroupViewModel= viewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -114,6 +116,10 @@ fun Main(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
+            if (destination?.route=="GroupChatRoom/{groupId}"){
+                GroupChatRoomTopBar(navController,TopAppBarDefaults.pinnedScrollBehavior(),gChatVM)
+                return@Scaffold
+            }
             if (checkTopBarNoShow(destination)) {
                 TopFunctionBar(
                     checkTopBarBackButtonShow(destination),
@@ -123,6 +129,10 @@ fun Main(
             }
         },
         bottomBar = {
+            if (destination?.route=="GroupChatRoom/{groupId}"){
+                GroupChatRoomBottomBar(gChatVM)
+                return@Scaffold
+            }
             if (checkBottomButtonShow(destination)) {
                 BottomFunctionBar(
                     onHomeClick = {
@@ -184,9 +194,7 @@ fun Main(
             }
 
             composable(context.getString(R.string.str_search)) {
-                SearchScreen(
-                    navController
-                )
+                SearchScreen(navController)
             }
 
 
@@ -200,16 +208,17 @@ fun Main(
 
 
             composable(context.getString(R.string.str_group)) {
-                GroupMain(navController = navController)
+                GroupMain(navController,gChatVM)
             }
             composable(context.getString(R.string.str_create_group)) {
-                GroupCreate(navController = navController)
+                GroupCreate(navController,gChatVM)
             }
-            composable("gotoGroupChatRoom/{groudId}") {
-                GroupChatRoom(
-                    navController = navController,
-                    groupRoomId = it.arguments?.getInt("groudId") ?: 0
+            composable("GroupChatRoom/{groupId}",
+                arguments = listOf(
+                    navArgument("groupId") { type = NavType.IntType }
                 )
+            ){
+                GroupChatRoom(it.arguments?.getInt("groupId") ?: -1 ,gChatVM)//,gChatRoomVM)
             }
 
 
