@@ -8,36 +8,19 @@
     <string name="str_back">返回</string>
     <string name="str_notice">通知</string>
     <string name="str_chat">私聊</string>
-
-<<<<<<< HEAD
-
+    <string name="str_searchpost">搜尋貼文</string>
     <string name="str_backToSearch">返回地圖</string>
     <string name="str_searchdetail">餐廳詳細</string>
-
-=======
-    <string name="str_backToSearch">返回地圖</string>
-    <string name="str_searchdetail">餐廳詳細</string>
->>>>>>> jessey
-
     <string name="str_login">登入</string>
-
-
-
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
     <string name="str_favorite">收藏</string>
-
     <string name="str_my_group">我的揪團</string>
     <string name="str_search_group">搜尋揪團</string>
     <string name="str_group_in_progress">進行中</string>
     <string name="str_group_complete">已結束</string>
-
-
-
-
     <string name="str_create_group">建立揪團</string>
     <string name="str_group_search">搜尋揪團</string>
-
     <string name="album_name">相簿名稱</string>
     <string name="recommend">推薦</string>
     <string name="search">搜尋</string>
@@ -54,7 +37,9 @@
     <string name="str_create_member">參加成員</string>
     <string name="str_create_describe">描述</string>
     <string name="str_search_tags">標籤</string>
-
+    <string name="restaurant_location">餐廳位置</string>
+    <string name="Select_tag">選擇標籤</string>
+    <string name="select_picture">選擇圖片</string>
     <string name="SearchToGoogleMap">導覽到地圖</string>
     <string name="randomFood">轉盤</string>
 </resources>

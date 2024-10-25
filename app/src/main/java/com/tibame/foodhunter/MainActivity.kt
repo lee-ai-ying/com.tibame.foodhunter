@@ -1,5 +1,6 @@
 package com.tibame.foodhunter
 
+import NewPost
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -53,6 +54,8 @@ import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
+import com.tibame.foodhunter.zoe.Post
+import com.tibame.foodhunter.zoe.SearchPost
 
 
 class MainActivity : ComponentActivity() {
@@ -168,7 +171,7 @@ fun Main(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color.LightGray),
+                .background(Color.White),
             navController = navController,
             startDestination = currectScene
         ) {
@@ -199,7 +202,10 @@ fun Main(
 
 
             composable(context.getString(R.string.str_post)) {
-                Text(text = destination?.route.toString())
+                NewPost(navController)
+            }
+            composable(context.getString(R.string.str_searchpost)) {
+                SearchPost(navController)
             }
 
             composable(context.getString(R.string.str_search)) {
