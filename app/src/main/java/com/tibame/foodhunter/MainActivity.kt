@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
 import com.tibame.foodhunter.a871208s.LoginScreen
+import com.tibame.foodhunter.a871208s.MemberMainScreen
 import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
@@ -149,7 +150,7 @@ fun Main(
             ) {
 
                 composable(context.getString(R.string.str_login)) {
-                    LoginScreen(navController = navController,{})
+                    LoginScreen(navController = navController)
                 }
                 composable(context.getString(R.string.str_login)+ "/2") {
                     RegisterScreen(navController = navController)
@@ -226,18 +227,9 @@ fun Main(
 
 
                 composable(context.getString(R.string.str_member)) {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Button(
-                            modifier = Modifier
-                                .size(120.dp, 60.dp)
-                                .padding(8.dp),
-                            onClick = { navController.navigate(context.getString(R.string.str_login)) }
-                        ) {
-                            Text(text = "登出")
-                        }
-                    }
+                    MemberMainScreen(navController = navController)
+
+
                 }
             }
         }
