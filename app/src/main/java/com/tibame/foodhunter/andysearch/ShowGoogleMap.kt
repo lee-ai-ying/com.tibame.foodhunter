@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -32,33 +33,61 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.round
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ShowGoogleMap(modifier : Modifier){
+fun ShowGoogleMap(
+    modifier : Modifier = Modifier.fillMaxWidth().fillMaxHeight(.8f).padding(16.dp),
+    restaurants: List<Restaurant>,
+    restaurantID: String = "",
+    onLocationUpdate: (LatLng?) -> Unit
+){
+
+    // 預設位子
+    val defaultPosition = LatLng(25.092713, 121.543442)
+
+
+    val cameraPositionState = rememberCameraPositionState {
+        // 移動地圖到指定位置
+        this.position = CameraPosition.fromLatLngZoom(defaultPosition, 15f)
+    }
+    val locationPermission = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    var newPosition by remember { mutableStateOf<LatLng?>(null) }
+
+    if(restaurantID != ""){
+        newPosition = LatLng(
+            restaurants[restaurantID.toInt()-1].latitude.toDouble(),
+            restaurants[restaurantID.toInt()-1].longitude.toDouble())
+    }
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
+
+
     Column (
         modifier = modifier
     ) {
-
-        var target = LatLng(25.092713, 121.54)
-        val cameraPositionState = rememberCameraPositionState {
-            // 移動地圖到指定位置
-            this.position = CameraPosition.fromLatLngZoom(target, 15f)
-        }
-
-        var searchText by remember { mutableStateOf("") }
-        val locationPermission = rememberPermissionState(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-
-        val currentLocation by remember { mutableStateOf<LatLng?>(null) }
-        var newPosition by remember { mutableStateOf<LatLng?>(null) }
-
         LaunchedEffect(Unit) {
             if (!locationPermission.status.isGranted) {
                 locationPermission.launchPermissionRequest()
             }
         }
+
+        LaunchedEffect(locationPermission.status.isGranted) {
+            fusedLocationClient.lastLocation.addOnSuccessListener{
+                location -> currentLocation = LatLng(location.latitude, location.longitude)
+                onLocationUpdate(currentLocation)
+            }
+        }
+
+
         var selectedPOI by remember { mutableStateOf<Pair<String, LatLng>?>(null) }
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -83,6 +112,7 @@ fun ShowGoogleMap(modifier : Modifier){
             )
         ) {
 
+
             currentLocation?.let { location ->
                 Circle(
                     center = location,
@@ -92,6 +122,33 @@ fun ShowGoogleMap(modifier : Modifier){
                     fillColor = Color(0x220000FF)
                 )
             }
+
+            if (restaurantID != ""){
+                Marker(
+                    state = MarkerState(position = newPosition ?: defaultPosition),
+                    title = restaurants[restaurantID.toInt()-1].name,
+                    snippet = restaurants[restaurantID.toInt()-1].address
+                )
+            } else {
+                restaurants.forEach {
+                    restaurant ->
+                    Marker(
+                        state = MarkerState(position = LatLng(restaurant.latitude.toDouble()
+                            , restaurant.longitude.toDouble())
+                        ),
+                        title = restaurant.name,
+                        snippet = restaurant.address
+                    )
+                }
+            }
+        }
+
+        LaunchedEffect(newPosition) {
+            newPosition?.let {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(it, 15f)
+                )
+            }
         }
     }
 }
@@ -99,10 +156,31 @@ fun ShowGoogleMap(modifier : Modifier){
 
 
 
+fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): String {
+    // 將經緯度從度數轉換為弧度
+    val earthRadiusKM = 6371.0 // 地球半徑
+    val lat1Rad = Math.toRadians(lat1)
+    val lon1Rad = Math.toRadians(lon1)
+    val lat2Rad = Math.toRadians(lat2)
+    val lon2Rad = Math.toRadians(lon2)
+
+    // 緯度和經度的差值
+    val dLat = lat2Rad - lat1Rad
+    val dLon = lon2Rad - lon1Rad
+
+    // Haversine公式
+    val a = sin(dLat / 2).pow(2) + cos(lat1Rad) * cos(lat2Rad) * sin(dLon / 2).pow(2)
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+
+    val distance = round(earthRadiusKM * c * 10.0) / 10.0
+    return distance.toString()
+
+}
 
 
 @Preview(showBackground = true)
 @Composable
 fun GoogleMapPreview() {
-    ShowGoogleMap(Modifier.fillMaxWidth().fillMaxHeight(.4f).padding(16.dp))
+//    ShowGoogleMap(Modifier.fillMaxWidth().fillMaxHeight(.4f).padding(16.dp))
 }

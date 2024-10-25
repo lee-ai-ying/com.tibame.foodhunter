@@ -3,7 +3,7 @@ package com.tibame.foodhunter.andysearch
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -25,42 +27,65 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun SearchScreen(
-    navController: NavController
+    navController: NavHostController
 ){
 
     val context = LocalContext.current
     val restaurants = parseRestaurantJson(context, "restaurants.json")
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
 
+    var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
+
     Column(modifier = Modifier.fillMaxSize()){
-
-
         ShowSearchBar(cities)
-        ShowGoogleMap(Modifier.fillMaxWidth().fillMaxHeight(.4f).padding(16.dp))
-
-        ShowRestaurantLists(restaurants, true)
+        ShowGoogleMap(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(.4f)
+                .padding(16.dp),
+            restaurants,
+            onLocationUpdate = {location -> currentLocation = location}
+        )
+        ShowRestaurantLists(restaurants, true, navController, currentLocation)
     }
 
 }
@@ -183,47 +208,191 @@ fun ShowSearchBar(cities: List<City>){
                 CityLists(cities)
             }
         }
+
+        var maxPrice by remember { mutableStateOf(100.0f) }
+        var minPrice by remember { mutableStateOf(0.0f) }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth().padding(24.dp)
+        ) {
+            Row(modifier = Modifier.clickable {
+                priceExpand = !priceExpand
+                arrowIcon2 = if (arrowIcon2 == R.drawable.arrow_right) {
+                    R.drawable.arrow_drop_down
+                } else {
+                    R.drawable.arrow_right
+                }
+            }) {
+                Icon(
+                    painter = painterResource(arrowIcon2),
+                    contentDescription = "Arrow Icon",
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(
+                    text = "${minPrice.toInt()} ~ ${maxPrice.toInt()}",
+                )
+            }
+            if (priceExpand) {
+                Row(modifier = Modifier.fillMaxWidth()){
+                    RangeSlider(
+                        value = minPrice..maxPrice,
+                        steps = 9,
+                        valueRange = 0f..2000f,
+                        onValueChange = {
+                            rangeValues ->
+                            minPrice = rangeValues.start
+                            maxPrice = rangeValues.endInclusive
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
 
 @Composable
-fun ShowRestaurantLists(restaurants: List<Restaurant>, state: Boolean){
+fun ShowRestaurantLists(
+    restaurants: List<Restaurant>,
+    state: Boolean,
+    navController: NavHostController,
+    currentLocation: LatLng?,
+){
+    val sortedRestaurants = restaurants.sortedBy {
+        restaurant ->
+        currentLocation?.let{location ->
+            haversine(
+                location.latitude, location.longitude,
+                restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+            )
+        }?:restaurant.restaurant_id
+    }
+    val context = LocalContext.current
     Log.d("Restaurant", "1")
     if (state){
+        Row(modifier = Modifier.fillMaxWidth()){
+            Text(text = "美食餐廳", style = TextStyle(
+                color = Color.Black,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            ),
+                modifier = Modifier.padding(start = 16.dp)
+            )
+
+            Icon(
+                painter = painterResource(R.drawable.bookmark),
+                contentDescription = "Go to Map",
+                modifier = Modifier
+                    .clickable {
+                        navController.navigate(route = context.getString(R.string.randomFood))
+                    }
+                    .size(30.dp, 30.dp)
+            )
+
+        }
+        // 垂直互動
         LazyColumn (
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
         ){
-            items(restaurants){
+            items(sortedRestaurants){
                 restaurant ->
-                Card (modifier = Modifier.fillMaxWidth().padding(16.dp)){
+                val distance = currentLocation?.let{location ->
+                    haversine(
+                        location.latitude, location.longitude,
+                        restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+                    )
+                } ?: "尚未開啟定位"
+                Card (modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)){
                     ListItem(
-                        headlineContent = {Text(restaurant.name)},
-                        supportingContent = {Text(text = restaurant.address)},
-                        leadingContent = { ImageScreen(restaurant) }
+                        headlineContent = {
+                            Text(text = restaurant.name ,
+                                modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis) },
+                        supportingContent = {
+                            Column(modifier = Modifier.fillMaxWidth()){
+                                Row(modifier = Modifier.fillMaxWidth()){
+                                    Text(
+                                        text = "$distance 公里",
+                                    )
+                                    Icon(
+                                        painter = painterResource(R.drawable.baseline_location_pin_24),
+                                        contentDescription = "calculator KM"
+                                    )
+                                }
+                                Text(text = restaurant.address,
+                                    modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis)
+                            }
+                        },
+                        leadingContent = { ImageScreen() },
+                        trailingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_right),
+                                contentDescription = "Go to Map",
+                                modifier = Modifier.clickable{
+                                    val id = restaurant.restaurant_id
+                                    navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${id}")
+                                }
+                            )
+                        },
+                        modifier = Modifier.height(100.dp)
                     )
                     HorizontalDivider()
                 }
             }
         }
     } else {
+        // 橫向滑動
         LazyRow (
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
         ){
             items(restaurants){
-                    restaurant ->
+                restaurant ->
+                val distance = currentLocation?.let{location ->
+                    haversine(
+                        location.latitude, location.longitude,
+                        restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+                    )
+                } ?: "尚未開啟定位"
                 Card (
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    colors = CardColors(
-                        containerColor = colorResource(R.color.orange_d2),
-                        contentColor = Color.Black,
-                        disabledContentColor = Color.Black,
-                        disabledContainerColor = Color.Gray)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ){
                     ListItem(
-                        headlineContent = {Text(restaurant.name)},
-                        supportingContent = {Text(text = restaurant.address)},
-                        leadingContent = { ImageScreen(restaurant) }
+                        headlineContent = {
+                            Text(text = restaurant.name ,
+                            modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis) },
+                        supportingContent = {
+                            Column(modifier = Modifier.fillMaxWidth()){
+                                Row(modifier = Modifier.fillMaxWidth()){
+                                    Text(
+                                        text = "$distance 公里",
+                                    )
+                                    Icon(
+                                        painter = painterResource(R.drawable.baseline_location_pin_24),
+                                        contentDescription = "calculator KM"
+                                    )
+                                }
+                                Text(text = restaurant.address,
+                                    modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis)
+                            }
+                        },
+
+                        leadingContent = { ImageScreen() },
+                        modifier = Modifier.height(100.dp)
                     )
                     HorizontalDivider()
                 }
@@ -234,10 +403,11 @@ fun ShowRestaurantLists(restaurants: List<Restaurant>, state: Boolean){
 
 
 @Composable
-fun DisplayImageFromUrl(imageUrl: String, modifier: Modifier = Modifier) {
+fun DisplayImage(modifier: Modifier = Modifier) {
     // 使用 Coil 的 rememberImagePainter 加载图片
     Image(
-        painter = rememberAsyncImagePainter(imageUrl),
+        painter = painterResource(R.drawable.steak_image),
+//        painter = rememberAsyncImagePainter(imageUrl),
         contentDescription = null,
         modifier = modifier,
         contentScale = ContentScale.Crop // 根据需要设置内容比例
@@ -245,17 +415,8 @@ fun DisplayImageFromUrl(imageUrl: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageScreen(restaurant: Restaurant) {
-    DisplayImageFromUrl(
-        imageUrl = restaurant.photo_url,
+fun ImageScreen() {
+    DisplayImage(
         modifier = Modifier.size(80.dp, 60.dp)
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SearchPreview() {
-    val context = LocalContext.current
-    val restaurants = parseRestaurantJson(context, "restaurants.json")
-    ShowRestaurantLists(restaurants, true)
 }

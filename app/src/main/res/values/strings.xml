@@ -42,5 +42,6 @@
     <string name="Share_with">分享對象</string>
 
 
-
+    <string name="SearchToGoogleMap">導覽到地圖</string>
+    <string name="randomFood">轉盤</string>
 </resources>

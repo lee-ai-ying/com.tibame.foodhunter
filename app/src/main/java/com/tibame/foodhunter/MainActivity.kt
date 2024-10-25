@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
@@ -40,12 +41,15 @@ import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.andysearch.RandomFood
+import com.tibame.foodhunter.andysearch.SearchResult
 import com.tibame.foodhunter.sharon.CalendarScreen
 import com.tibame.foodhunter.sharon.TabMainScreen
 
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
+import com.tibame.foodhunter.andysearch.ShowGoogleMap
 
 
 class MainActivity : ComponentActivity() {
@@ -81,6 +85,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_create_group),
+        context.getString(R.string.SearchToGoogleMap)+"/{id}",
+        context.getString(R.string.randomFood),
         "gotoGroupChatRoom/{groudId}",
 //        context.getString(R.string.str_calendar)
     ).contains(destination?.route)
@@ -97,6 +103,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
         "gotoGroupChatRoom/{groudId}",
+        context.getString(R.string.SearchToGoogleMap)+"/{id}",
+        context.getString(R.string.randomFood)
     ).contains(destination?.route)
 }
 
@@ -188,6 +196,19 @@ fun Main(
                     navController
                 )
             }
+            composable("${context.getString(R.string.SearchToGoogleMap)}/{id}"){
+                backStackEntry ->
+                SearchResult(
+                    navController = navController,
+                    restaurantID = backStackEntry.arguments?.getString("id") ?: ""
+                )
+            }
+            composable(context.getString(R.string.randomFood)){
+                backStackEntry ->
+                RandomFood(
+                    navController = navController)
+            }
+
 
 
 

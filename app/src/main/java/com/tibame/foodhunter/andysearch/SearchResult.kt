@@ -7,26 +7,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
-fun SearchResult(){
+fun SearchResult(
+    navController: NavHostController,
+    restaurantID: String = ""
+){
     val context = (LocalContext.current)
     val cities = parseCityJson(context, "taiwan_districts.json")
     val restaurants = parseRestaurantJson(context, "restaurants.json")
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
         ShowSearchBar(cities)
-        ShowGoogleMap(modifier = Modifier.fillMaxWidth().fillMaxHeight(.8f).padding(16.dp))
-        ShowRestaurantLists(restaurants, false)
+        ShowGoogleMap(
+            restaurants = restaurants,
+            restaurantID = restaurantID,
+            onLocationUpdate = {location -> currentLocation = location})
+        ShowRestaurantLists(restaurants, false, navController, currentLocation)
     }
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun SearchResultPreview() {
-    SearchResult()
-}
