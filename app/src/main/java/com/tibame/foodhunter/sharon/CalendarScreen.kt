@@ -5,18 +5,30 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -39,10 +51,7 @@ fun CalendarScreen(
     navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
     callback: @Composable () -> Unit // 接收一個可組合的回調函數，用於在頁面中展示額外的 UI
 ) {
-    val context = LocalContext.current // 獲取當前的 LocalContext，通常用於獲取資源或執行導航
-    var i = "ok"
     Column {
-        
         CalendarComp()
     }
 }
@@ -54,8 +63,13 @@ fun CalendarScreen(
 fun CalendarComp() {
 
     val today = LocalDate.now()
-    val datePickerState = rememberDatePickerState()
+    // 使用 atStartOfDay 將當前日期轉換為開始時間（00:00），然後轉換成 UTC 時區並轉換成毫秒（Epoch milliseconds）
+    val todayInMills = today.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
 
+    // 將 todayInMillis 作為初始選取日期傳入 rememberDatePickerState
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = todayInMills  // 設定初始值為今天日期
+            )
 ////
 //    val datePickerState = rememberDatePickerState(
 //        // SelectableDates介面用來限制可選擇的日期與年，
@@ -80,10 +94,21 @@ fun CalendarComp() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+
         DatePicker(
+//            modifier = Modifier.,
             state = datePickerState,
-            title = { Text(text = "XYZ Hotel") },
-            headline = { Text(text = "Check-in Date") }
+            title = { Text(text = "") },
+            headline = {
+                Text(text = "Check-in Date")},
+            colors = DatePickerDefaults.colors(
+                
+                todayContentColor = Color.Black,  // 今天日期字的顏色
+                todayDateBorderColor = Color.Red,  // 今天日期的邊緣線
+                selectedDayContainerColor = Color.LightGray,  // 選中日期的背景色
+                selectedDayContentColor = Color.Black,  // 選中日期的字顏色
+            )
+
         )
         // 顯示選取日期(已格式化)
         Text(
@@ -97,7 +122,10 @@ fun CalendarComp() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+
+
+
+@Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     FoodHunterTheme {
