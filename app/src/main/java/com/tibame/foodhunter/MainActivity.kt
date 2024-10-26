@@ -41,7 +41,6 @@ import androidx.navigation.navArgument
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
 import com.tibame.foodhunter.a871208s.LoginScreen
-import com.tibame.foodhunter.a871208s.MemberMainScreen
 import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
