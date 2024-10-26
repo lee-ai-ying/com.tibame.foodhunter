@@ -42,13 +42,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.NiaTab
+import com.tibame.foodhunter.sharon.NiaTabRow
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
-@Composable
+
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun SearchPost(navController: NavHostController = rememberNavController()) {
     val samplePosts: List<Post> = getSamplePosts()
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
+    var selectedTabIndex by remember { mutableStateOf(1) }
     val context = LocalContext.current
 
     // 根據選擇的篩選標籤過濾貼文
@@ -58,24 +62,32 @@ fun SearchPost(navController: NavHostController = rememberNavController()) {
         samplePosts.filter { post -> selectedFilters.contains(post.postTag) }
     }
 
-
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        PrimaryTabRow(selectedTabIndex = 0) {
-            Tab(
-                selected = true,
-                onClick = {navController.navigate(context.getString(R.string.str_home)) },
+        NiaTabRow(
+            selectedTabIndex = selectedTabIndex,
+        ) {
+            NiaTab(
+                selected = selectedTabIndex == 0,
+                onClick = {
+                    selectedTabIndex = 0
+                    navController.navigate(context.getString(R.string.str_home))
+                },
                 text = { Text(text = stringResource(id = R.string.recommend)) }
             )
-            Tab(
-                selected = false,
-                onClick = { navController.navigate(context.getString(R.string.str_searchpost))},
+            NiaTab(
+                selected = selectedTabIndex == 1,
+                onClick = {
+                    selectedTabIndex = 1
+                    navController.navigate(context.getString(R.string.str_searchpost))
+                },
                 text = { Text(text = stringResource(id = R.string.search)) }
             )
         }
+
         SearchBar(
             query = "",
             onQueryChange = {},
@@ -89,31 +101,22 @@ fun SearchPost(navController: NavHostController = rememberNavController()) {
                 IconButton(onClick = {}) {
                     Icon(
                         Icons.Default.Search,
-                        contentDescription = "" // Add a valid content description
+                        contentDescription = "Search Icon"
                     )
                 }
             },
-            trailingIcon = {
-
-            }
+            trailingIcon = {}
         ) { }
 
-
-        // 使用 FilterChips 函數
         FilterChips(
             filters = listOf("早午餐", "午餐", "晚餐"),
             selectedFilters = selectedFilters,
             onFilterChange = { updatedFilters -> selectedFilters = updatedFilters }
         )
 
-
         ImageList(posts = filteredPosts)
-
-
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable

@@ -221,20 +221,26 @@ fun ImageDisplay(
     imageSource: ImageSource,
     modifier: Modifier = Modifier
 ) {
-    when (imageSource) {
-        is ImageSource.UriSource -> {
-            ImageCarouselUri(
-                uris = imageSource.uris,
-
-            )
-        }
-        is ImageSource.CarouselSource -> {
-            ImageCarouselResource(
-                items = imageSource.items,
-                modifier = modifier
-                    .width(394.dp)
-                    .height(319.dp)
-            )
+    // 在最外層添加 Box 並設置居中對齊
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (imageSource) {
+            is ImageSource.UriSource -> {
+                ImageCarouselUri(
+                    uris = imageSource.uris,
+                    modifier = modifier
+                )
+            }
+            is ImageSource.CarouselSource -> {
+                ImageCarouselResource(
+                    items = imageSource.items,
+                    modifier = modifier
+                        .width(350.dp)  // 調整為與 PostItem 相同的寬度
+                        .height(350.dp)
+                )
+            }
         }
     }
 }
@@ -325,16 +331,16 @@ private fun ImageCarouselLayout(
 //貼文部分
 @Composable
 fun PostItem(post: Post) {
-    Log.d("PostItem", "Displaying post from: ${post.publisher.name}, Location: ${post.location}, Content: ${post.content}")
-
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth()  // 確保整個 PostItem 填滿寬度
             .background(color = Color(0xFFFFFFFF), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally  // 設置水平居中對齊
     ) {
         // User info section
         Row(
+            modifier = Modifier.fillMaxWidth(),  // 確保 Row 填滿寬度
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -345,15 +351,15 @@ fun PostItem(post: Post) {
                 Image(
                     painter = painterResource(id = post.publisher.avatarImage),
                     contentDescription = "Publisher avatar",
-                    contentScale = ContentScale.Crop, // 確保圖片被裁剪成圓形
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(30.dp) // 設置圖片的大小
-                        .clip(CircleShape) // 裁剪成圓形
+                        .size(30.dp)
+                        .clip(CircleShape)
                 )
             }
 
             Column {
-                Text(text = post.publisher.name)  // 使用發文者名稱
+                Text(text = post.publisher.name)
                 Text(text = post.location)
             }
         }
@@ -367,14 +373,14 @@ fun PostItem(post: Post) {
 
         Row(
             modifier = Modifier
-                .width(350.dp)
+                .fillMaxWidth()  // 改用 fillMaxWidth
                 .height(52.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 用於顯示 Favorite 和 Check 圖標的 Row
+            // 其他按鈕和圖標的部分保持不變
             Row(
-                modifier = Modifier.weight(1f), // 使這個 Row 占據剩餘空間
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -392,20 +398,20 @@ fun PostItem(post: Post) {
             }
 
             Icon(
-                painter = painterResource(id = R.drawable.baseline_bookmark_border_24),  // 使用你的 bookmark 資源
+                painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
                 contentDescription = "Bookmark",
-                modifier = Modifier.size(22.dp)  // 可以調整大小
+                modifier = Modifier.size(22.dp)
             )
         }
 
         Text(
             text = post.content,
+            modifier = Modifier.fillMaxWidth(),  // 確保文字填滿寬度
             maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
     }
 }
-
 
 @Composable
 fun ImageList(posts: List<Post>, modifier: Modifier = Modifier) {

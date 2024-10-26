@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.NiaTab
+import com.tibame.foodhunter.sharon.NiaTabRow
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 
@@ -31,6 +32,7 @@ fun Home(navController: NavHostController) {
     val samplePosts: List<Post> = getSamplePosts()
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
     val context = LocalContext.current
+    var selectedTabIndex by remember { mutableStateOf(0) }
 
     // 根據選擇的篩選標籤過濾貼文
     val filteredPosts = if (selectedFilters.isEmpty()) {
@@ -44,15 +46,23 @@ fun Home(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        PrimaryTabRow(selectedTabIndex = 0) {
-            Tab(
-                selected = true,
-                onClick = { navController.navigate(context.getString(R.string.str_home))},
+        NiaTabRow(
+            selectedTabIndex = selectedTabIndex,
+        ) {
+            NiaTab(
+                selected = selectedTabIndex == 0,
+                onClick = {
+                    selectedTabIndex = 0
+                    navController.navigate(context.getString(R.string.str_home))
+                },
                 text = { Text(text = stringResource(id = R.string.recommend)) }
             )
-            Tab(
-                selected = false,
-                onClick = {navController.navigate(context.getString(R.string.str_searchpost)) },
+            NiaTab(
+                selected = selectedTabIndex == 1,
+                onClick = {
+                    selectedTabIndex = 1
+                    navController.navigate(context.getString(R.string.str_searchpost))
+                },
                 text = { Text(text = stringResource(id = R.string.search)) }
             )
         }
