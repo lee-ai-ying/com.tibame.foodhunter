@@ -1,11 +1,11 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
 
 class GroupViewModel : ViewModel() {
     private val repository = GroupRepository
@@ -34,4 +34,24 @@ class GroupViewModel : ViewModel() {
             groupChat
         }
     }
+
+    private val _groupCreateData = MutableStateFlow(GroupCreateData())
+    val groupCreateData: StateFlow<GroupCreateData> = _groupCreateData.asStateFlow()
+    fun setGroupCreateData(data:GroupCreateData){
+        _groupCreateData.update {
+            data
+        }
+        Log.d("ai",data.toString())
+    }
+
+    private val _groupSearchData = MutableStateFlow(GroupSearchData())
+    val groupSearchData: StateFlow<GroupSearchData> = _groupSearchData.asStateFlow()
+    fun setGroupSearchData(data:GroupSearchData){
+        _groupSearchData.update {
+            data
+        }
+        Log.d("ai",data.toString())
+    }
+
+    //var isChatRoomFunctionButtonShow = MutableStateFlow(false).asStateFlow()
 }

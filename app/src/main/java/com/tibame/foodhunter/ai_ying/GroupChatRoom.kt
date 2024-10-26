@@ -1,14 +1,19 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,8 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,17 +36,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
 
@@ -82,7 +92,7 @@ fun GroupChatRoom(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colorResource(R.color.orange_6th))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)//colorResource(R.color.orange_6th))
                     .padding(start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -133,7 +143,7 @@ fun GroupChatRoom(
                             modifier = Modifier
                                 .background(
                                     when (it) {
-                                        "111" -> colorResource(R.color.orange_4th)
+                                        "111" -> MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
                                         else -> Color.White
                                     },
                                     shape = RoundedCornerShape(8.dp)
@@ -191,16 +201,18 @@ fun GroupChatRoomTopBar(
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorResource(R.color.orange_2nd)
+            containerColor = MaterialTheme.colorScheme.primary//colorResource(R.color.orange_2nd)
         )
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GroupChatRoomBottomBar(
     gChatVM: GroupViewModel
 ) {
     val chatInput = gChatVM.chatInput.collectAsState()
+    var isShow by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -214,7 +226,12 @@ fun GroupChatRoomBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
-                contentDescription = ""
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable {
+                    isShow=!isShow
+                    Log.d("ai",isShow.toString())
+                }
             )
             TextField(
                 value = chatInput.value,
@@ -227,17 +244,49 @@ fun GroupChatRoomBottomBar(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    focusedContainerColor = colorResource(R.color.orange_4th),
-                    unfocusedContainerColor = colorResource(R.color.orange_4th)
+                    focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,//colorResource(R.color.orange_4th),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
                 ),
                 placeholder = {
                     Text(text = "請輸入訊息")
                 }
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.Send,
-                contentDescription = ""
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.primary
             )
+        }
+        if (isShow){
+            Spacer(Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                FlowRow (
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ){
+                    listOf("aaa","bbb","ccc","ddd","eee","fff").forEach {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(0.22f)
+                                .padding(8.dp),//.background(Color.Cyan),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ){
+                            Icon(
+                                imageVector = Icons.Outlined.Menu,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
@@ -246,6 +295,7 @@ fun GroupChatRoomBottomBar(
 @Composable
 fun GroupChatRoomPreview() {
     MaterialTheme {
-//        GroupChatRoom(0)
+//        GroupChatRoom(0, viewModel())
+        GroupChatRoomBottomBar(viewModel())
     }
 }
