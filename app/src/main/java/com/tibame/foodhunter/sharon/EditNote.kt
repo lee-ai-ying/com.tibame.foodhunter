@@ -69,11 +69,9 @@ fun EditNote(
     isShow: Boolean = false,
 
     ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var titleInputText by remember { mutableStateOf("") }
     var bodyInputText by remember { mutableStateOf("") }
-
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
     var isBottomSheetVisible by remember { mutableStateOf(false) }
     var selectedRestaurantName by remember { mutableStateOf("") }
 
@@ -209,7 +207,6 @@ fun DisplayDateChip(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectRestaurantChip(
     onClick: () -> Unit,
@@ -227,16 +224,12 @@ fun SelectRestaurantChip(
                 Text("  ")
 
             }
-        }, // 預設空白
-
-
+        },
     )
-
 }
 
 @Composable
 fun DisplayRestaurantChip(
-//    isVisible: Boolean,
     label: String,
     onClear: () -> Unit,
 ) {
@@ -284,37 +277,35 @@ fun SelectRestaurantBottomSheet(
     val coroutineScope = rememberCoroutineScope()
 
 
-    // chip 點選後 出現Bottom sheet
-        ModalBottomSheet(
-            modifier = Modifier.fillMaxHeight(),
-            sheetState = modalSheetState,
-            onDismissRequest = {
-                coroutineScope.launch { modalSheetState.hide() }
-                onClose() // 關閉 BottomSheet，在外部控制
-           },
-            scrimColor = Color.Black.copy(alpha = 0.5f), // 半透明灰色背景
-            properties = ModalBottomSheetProperties(
-                isFocusable = true,  // 允許接收焦點，例如接收TextFiled輸入事件
-                shouldDismissOnBackPress = true,
-                securePolicy = SecureFlagPolicy.SecureOff, // 關閉，防止應用窗口的內容被截圖或錄屏
-            ),
-            content = {
-                BottomSheetContent(
-                    onRestaurantPicked = { restaurant ->
-                        onRestaurantPicked(restaurant) // 傳回選定餐廳
-                        coroutineScope.launch { modalSheetState.hide() }
-                        onClose() // 關閉 BottomSheet，在外部控制
+// chip 點選後 出現Bottom sheet
+    ModalBottomSheet(
+        modifier = Modifier.fillMaxHeight(),
+        sheetState = modalSheetState,
+        onDismissRequest = {
+            coroutineScope.launch { modalSheetState.hide() }
+            onClose() // 關閉 BottomSheet，在外部控制
+       },
+        scrimColor = Color.Black.copy(alpha = 0.5f), // 半透明灰色背景
+        properties = ModalBottomSheetProperties(
+            isFocusable = true,  // 允許接收焦點，例如接收TextFiled輸入事件
+            shouldDismissOnBackPress = true,
+            securePolicy = SecureFlagPolicy.SecureOff, // 關閉，防止應用窗口的內容被截圖或錄屏
+        ),
+        content = {
+            BottomSheetContent(
+                onRestaurantPicked = { restaurant ->
+                    onRestaurantPicked(restaurant) // 傳回選定餐廳
+                    coroutineScope.launch { modalSheetState.hide() }
+                    onClose() // 關閉 BottomSheet，在外部控制
 
-                    },
-                    onClose = {
-                        coroutineScope.launch { modalSheetState.hide() }
-                        onClose() // 關閉 BottomSheet，在外部控制
-                    }
-                )
-            }
-
-
-        )
+                },
+                onClose = {
+                    coroutineScope.launch { modalSheetState.hide() }
+                    onClose() // 關閉 BottomSheet，在外部控制
+                }
+            )
+        }
+    )
 
 }
 
@@ -323,6 +314,7 @@ fun SelectRestaurantBottomSheet(
 fun BottomSheetContent(
     onClose: () -> Unit, // 設定 Bottom Sheet 關閉的回調參數
     onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
+
 ) {
     // 頂部工具欄
     TopAppBar(
@@ -369,8 +361,6 @@ fun BottomSheetContent(
             .padding(10.dp)
             .background(Color.Blue)
     ) {
-        Text("選擇您喜歡的餐廳")
-
         // 餐廳選擇按鈕，選擇餐廳後執行回調並關閉 BottomSheet
         Button(onClick = {
             onRestaurantPicked("肯德基") // 選擇餐廳
@@ -379,22 +369,11 @@ fun BottomSheetContent(
             Text("我是肯德基")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+    // TODO(接入餐廳)
+//        RestaurantSelectionScreen { selectedRestaurant ->
+//            onRestaurantPicked(selectedRestaurant)
+//            onClose()
+//        }
 
-        Button(onClick = {
-            onRestaurantPicked("餐廳 A")
-            onClose()
-        }) {
-            Text("餐廳 A")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = {
-            onRestaurantPicked("餐廳 B")
-            onClose() // 關閉 BottomSheet，在外部控制
-        }) {
-            Text("餐廳 B")
-        }
     }
 }
