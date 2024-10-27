@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,11 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
@@ -69,12 +71,17 @@ fun EditNote(
     isShow: Boolean = false,
 
     ) {
+    // 初始化 scrollBehavior
+    val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    // 定義狀態
     var titleInputText by remember { mutableStateOf("") }
     var bodyInputText by remember { mutableStateOf("") }
     var isBottomSheetVisible by remember { mutableStateOf(false) }
     var selectedRestaurantName by remember { mutableStateOf("") }
 
+    // 定義樣式
     val editNoteBasicTextStyle = TextStyle(
         fontSize = 30.sp,
         fontWeight = FontWeight(500),
@@ -91,82 +98,112 @@ fun EditNote(
         fontWeight = FontWeight(400)
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 34.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-    ) {
-        Box(  // 輸入標題
-            modifier = Modifier
-                .height(40.dp)
-                .padding(bottom = 2.dp), // 設置 Box 的最小高度
-            contentAlignment = Alignment.BottomStart // 將所有內容左下對齊
-        ) {
-            BasicTextField(
-                value = titleInputText,
-                onValueChange = { titleInputText = it },
-                textStyle = editNoteTitleTextStyle,
+// Scaffold 組件，包含 TopAppBar 和內容區
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            NoteTopBar(
+                canback = true,
+                navController = navController,
+                scrollBehavior = scrollBehavior,
+                hasTitleInput = titleInputText.isNotEmpty()
             )
-            if (titleInputText.isEmpty()) {
-                Text(
-                    text = "請輸入標題",
-                    style = editNoteTitleTextStyle,
-                )
-            }
         }
-        Row(  // 顯示餐廳、顯示日期
+    ) { innerPadding ->
+        // 使用 innerPadding 為內容設定邊距
+        Column(
             modifier = Modifier
-                .height(32.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.Start),
-        ) {
-            // 顯示餐廳名稱
-            DisplayRestaurantChip(
-                label = selectedRestaurantName,
-                onClear = { selectedRestaurantName = "" }
-            )
-            VerticalLine()
-            // 顯示日期
-            DisplayDateChip()
-        }
-
-        Box(  // 輸入內文
-            modifier = Modifier
-                .heightIn(min = 24.dp)
-        ) {
-            BasicTextField(
-                value = bodyInputText,
-                onValueChange = { bodyInputText = it },
-                textStyle = editNoteBodyTextStyle,
-            )
-            if (bodyInputText.isEmpty()) {
-                Text(
-                    text = "請輸入內文",
-                    style = editNoteBodyTextStyle,
-                )
-            }
-        }
-
-        // 選擇 bottomSheet 的 chip
-        SelectRestaurantChip(
-            selectedRestaurant = true,
-            onClick = {
-                isBottomSheetVisible = true
-            }
+                .fillMaxWidth()
+                .padding(
+                    start = innerPadding.calculateStartPadding(LayoutDirection.Ltr) + 34.dp,
+                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr) + 34.dp,
+                    top = innerPadding.calculateTopPadding() + 12.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 12.dp
+                ),
+//                .padding(horizontal = 34.dp, vertical = 12.dp,top),
+//                .padding(innerPadding),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         )
-// 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
-        if (isBottomSheetVisible) {
-            SelectRestaurantBottomSheet(
-                onRestaurantPicked = { restaurant ->
-                    selectedRestaurantName = restaurant  // 更新選定的餐廳名稱
-                    isBottomSheetVisible = false // 統一關閉 BottomSheet
-                },
-                onClose = { isBottomSheetVisible = false } // 統一關閉 BottomSheet
-            )
-        }
+        {
+            Box(  // 輸入標題
+                modifier = Modifier
+                    .height(44.dp)
+                    .padding(bottom = 2.dp), // 設置 Box 的最小高度
+                contentAlignment = Alignment.TopStart // 將所有內容左下對齊
+            ) {
+                BasicTextField(
+                    value = titleInputText,
+                    onValueChange = {
+                        if (it.length <= 10) {
+                            titleInputText = it
+                        }
+                    },
+                    textStyle = editNoteTitleTextStyle,
+                )
+                if (titleInputText.isEmpty()) {
+                    Text(
+                        text = "請輸入標題",
+                        style = editNoteTitleTextStyle,
+                    )
+                }
+            }
+            Row(
+                // 顯示餐廳、顯示日期
+                modifier = Modifier
+                    .height(32.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),            ) {
+                // 顯示餐廳名稱
+                DisplayRestaurantChip(
+                    label = selectedRestaurantName,
+                    onClear = { selectedRestaurantName = "" }
+                )
+                VerticalLine()
+                // 顯示日期
+                DisplayDateChip()
+            }
 
-    }
+            Box(  // 輸入內文
+                modifier = Modifier
+                    .heightIn(min = 24.dp)
+            ) {
+                BasicTextField(
+                    value = bodyInputText,
+                    onValueChange = {
+                        if (it.length <= 500) {
+                            bodyInputText = it
+                        }
+                    },
+                    textStyle = editNoteBodyTextStyle,
+                )
+                if (bodyInputText.isEmpty()) {
+                    Text(
+                        text = "請輸入內文",
+                        style = editNoteBodyTextStyle,
+                    )
+                }
+            }
+
+            // 選擇 bottomSheet 的 chip
+            SelectRestaurantChip(
+                selectedRestaurant = true,
+                onClick = {
+                    isBottomSheetVisible = true
+                }
+            )
+// 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
+            if (isBottomSheetVisible) {
+                SelectRestaurantBottomSheet(
+                    onRestaurantPicked = { restaurant ->
+                        selectedRestaurantName = restaurant  // 更新選定的餐廳名稱
+                        isBottomSheetVisible = false // 統一關閉 BottomSheet
+                    },
+                    onClose = { isBottomSheetVisible = false } // 統一關閉 BottomSheet
+                )
+            }
+
+        }
+        }
 }
 
 @Composable
@@ -175,13 +212,15 @@ fun VerticalLine() {
         modifier = Modifier
             .width(8.dp)
             .height(20.dp)
+//            .padding(start = 0.dp, end = 4.dp)
+
     ) {
         Box(
             modifier = Modifier
                 .width(2.dp)
                 .fillMaxHeight() // 讓 Box 的高度填滿可用空間（例如 Row 或 Column 的高度）
-                .align(Alignment.Center) // 垂直和水平居中
                 .background(Color.Gray)
+                .align(Alignment.Center)
         )
     }
 }
@@ -228,23 +267,23 @@ fun SelectRestaurantChip(
     )
 }
 
+
 @Composable
 fun DisplayRestaurantChip(
     label: String,
-    onClear: () -> Unit,
+    onClear: () -> Unit
 ) {
-    FilterChip(
-        onClick = {},
-        // 有選到餐廳時，顯示餐廳名稱、顯示清除按鈕
-        selected = label.isNotEmpty(),
-        // 顯示餐廳名稱
-        label = {
-            // TODO(點擊後跳轉到餐廳資訊頁面)
-            Text(label)
-        },
-        // 清除按鈕
-        trailingIcon = {
-            if (label.isNotEmpty()) {
+    // 只有當 label 非空時才渲染 FilterChip
+    if (label.isNotEmpty()) {
+        FilterChip(
+            onClick = {},
+            selected = true,
+            label = {
+                // TODO: 點擊後跳轉到餐廳資訊頁面
+                Text(label)
+            },
+            enabled = true,
+            trailingIcon = {
                 IconButton(
                     modifier = Modifier.size(FilterChipDefaults.IconSize),
                     onClick = onClear
@@ -256,10 +295,10 @@ fun DisplayRestaurantChip(
                     )
                 }
             }
-        },
-    )
-
+        )
+    }
 }
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
