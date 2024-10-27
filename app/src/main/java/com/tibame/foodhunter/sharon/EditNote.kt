@@ -1,37 +1,40 @@
 package com.tibame.foodhunter.sharon
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheetProperties
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,20 +42,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
 import kotlinx.coroutines.launch
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -66,120 +66,195 @@ fun AddNotePreview() {
 @Composable
 fun EditNote(
     navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
-//    callback: @Composable () -> Unit, // 接收一個可組合的回調函數，用於在頁面中展示額外的 UI
-    placeholderText: String = "請輸入",
     isShow: Boolean = false,
 
-) {
-    var inputText by remember { mutableStateOf("") }
+    ) {
+    var titleInputText by remember { mutableStateOf("") }
+    var bodyInputText by remember { mutableStateOf("") }
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val focusRequester = remember { FocusRequester() }
-    var selectRestaurantShow by remember { mutableStateOf(false) }
 
+    var isBottomSheetVisible by remember { mutableStateOf(false) }
+    var selectedRestaurantName by remember { mutableStateOf("") }
 
-//    LaunchedEffect(Unit) {  // 預覽模式的Button sheet會打不開
-//        focusRequester.requestFocus()
-//    }
+    val editNoteBasicTextStyle = TextStyle(
+        fontSize = 30.sp,
+        fontWeight = FontWeight(500),
+        color = Color(0xFF9A9FAE),
+    )
+
+    val editNoteTitleTextStyle = editNoteBasicTextStyle.copy(
+        fontSize = 30.sp,
+        fontWeight = FontWeight(500),
+    )
+
+    val editNoteBodyTextStyle = editNoteBasicTextStyle.copy(
+        fontSize = 16.sp,
+        fontWeight = FontWeight(400)
+    )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp,32.dp)
+            .padding(horizontal = 34.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
     ) {
-        TextField(
-            // TODO(Basic建立無內間距的輸入)
+        Box(  // 輸入標題
             modifier = Modifier
-                .fillMaxWidth(),
-            value = inputText,
-            // 輸入的值改變時呼叫此方法
-            onValueChange = { inputText = it },
-            placeholder = { Text(
-                text = placeholderText,
-                style = TextStyle(
-                    fontSize = 20.sp, // 字體大小
-                    fontWeight = null, // 字體粗細
-                    fontFamily = null, // 字體樣式
-                    color = Color.LightGray
-                ),
-            ) },
-            textStyle = TextStyle(textAlign = TextAlign.Start),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,  // 焦點時容器背景透明
-                unfocusedContainerColor = Color.Transparent, // 未焦點時容器背景透明
-                disabledContainerColor = Color.Transparent,  // 禁用時容器背景透明
-                errorContainerColor = Color.Transparent,     // 錯誤狀態下容器背景透明
-                focusedIndicatorColor = Color.Transparent,   // 焦點框線透明
-                unfocusedIndicatorColor = Color.Transparent, // 未焦點框線透明
-                disabledIndicatorColor = Color.Transparent,  // 禁用狀態下框線透明
-                errorIndicatorColor = Color.Transparent      // 錯誤狀態下框線透明
-            ),
-        )
-        Button(
-            onClick = { selectRestaurantShow = true }
+                .height(40.dp)
+                .padding(bottom = 2.dp), // 設置 Box 的最小高度
+            contentAlignment = Alignment.BottomStart // 將所有內容左下對齊
         ) {
-            Text("show label")
+            BasicTextField(
+                value = titleInputText,
+                onValueChange = { titleInputText = it },
+                textStyle = editNoteTitleTextStyle,
+            )
+            if (titleInputText.isEmpty()) {
+                Text(
+                    text = "請輸入標題",
+                    style = editNoteTitleTextStyle,
+                )
+            }
         }
-        SelectRestaurantChip(isVisible = selectRestaurantShow)
-//        Text(
-//            text = "$phone",
-//            modifier = Modifier.padding(16.dp)
-//        )
-
-        TextField(
-            // TODO(Basic建立無內間距的輸入)
+        Row(  // 顯示餐廳、顯示日期
             modifier = Modifier
-                .fillMaxWidth(),
-            value = inputText,
-            // 輸入的值改變時呼叫此方法
-            onValueChange = { inputText = it },
-            placeholder = { Text(
-                text = "請輸入內文",
-                style = TextStyle(
-                    fontSize = 20.sp, // 字體大小
-                    fontWeight = FontWeight.Bold, // 字體粗細
-//                    fontFamily = null, // 字體樣式
-                    color = Color.LightGray
-                ),
-            ) },
-            textStyle = TextStyle(textAlign = TextAlign.Start),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,  // 焦點時容器背景透明
-                unfocusedContainerColor = Color.Transparent, // 未焦點時容器背景透明
-                disabledContainerColor = Color.Transparent,  // 禁用時容器背景透明
-                errorContainerColor = Color.Transparent,     // 錯誤狀態下容器背景透明
-                focusedIndicatorColor = Color.Transparent,   // 焦點框線透明
-                unfocusedIndicatorColor = Color.Transparent, // 未焦點框線透明
-                disabledIndicatorColor = Color.Transparent,  // 禁用狀態下框線透明
-                errorIndicatorColor = Color.Transparent      // 錯誤狀態下框線透明
-            ),
+                .height(32.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.Start),
+        ) {
+            // 顯示餐廳名稱
+            DisplayRestaurantChip(
+                label = selectedRestaurantName,
+                onClear = { selectedRestaurantName = "" }
+            )
+            VerticalLine()
+            // 顯示日期
+            DisplayDateChip()
+        }
+
+        Box(  // 輸入內文
+            modifier = Modifier
+                .heightIn(min = 24.dp)
+        ) {
+            BasicTextField(
+                value = bodyInputText,
+                onValueChange = { bodyInputText = it },
+                textStyle = editNoteBodyTextStyle,
+            )
+            if (bodyInputText.isEmpty()) {
+                Text(
+                    text = "請輸入內文",
+                    style = editNoteBodyTextStyle,
+                )
+            }
+        }
+
+        // 選擇 bottomSheet 的 chip
+        SelectRestaurantChip(
+            selectedRestaurant = true,
+            onClick = {
+                isBottomSheetVisible = true
+            }
+        )
+// 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
+        if (isBottomSheetVisible) {
+            SelectRestaurantBottomSheet(
+                onRestaurantPicked = { restaurant ->
+                    selectedRestaurantName = restaurant  // 更新選定的餐廳名稱
+                    isBottomSheetVisible = false // 統一關閉 BottomSheet
+                },
+                onClose = { isBottomSheetVisible = false } // 統一關閉 BottomSheet
+            )
+        }
+
+    }
+}
+
+@Composable
+fun VerticalLine() {
+    Box(
+        modifier = Modifier
+            .width(8.dp)
+            .height(20.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .fillMaxHeight() // 讓 Box 的高度填滿可用空間（例如 Row 或 Column 的高度）
+                .align(Alignment.Center) // 垂直和水平居中
+                .background(Color.Gray)
         )
     }
 }
 
 @Composable
-fun SelectRestaurantChip(
-    isVisible: Boolean
+fun DisplayDateChip(
+//    isVisible: Boolean,
 ) {
-    var selected by remember { mutableStateOf(false) }
-    PartialBottomSheet1(isVisible)
-    if (isVisible) {
+    var selected by remember { mutableStateOf(true) }
+
     FilterChip(
+        modifier = Modifier
+            .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp)
+            .height(32.dp),
+        // TODO(更改日期: 串接日曆、把參數帶入)
         onClick = {},
         label = {
-            if (selected) {
-                Text("已選取")
-            } else {
-                Text("麥當勞 南京復興店") // 預設空白
-            }
+            Text(
+                text = "2024-10-12", modifier = Modifier
+            )
         },
         selected = selected,
-        trailingIcon = if (selected) {
-            {
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectRestaurantChip(
+    onClick: () -> Unit,
+    selectedRestaurant: Boolean = false,
+) {
+    FilterChip(
+        // 選擇餐廳時，點擊 > bottom sheet > bottom sheet選擇完畢 > Show標籤函數
+        onClick = onClick,
+        // 有選擇到餐廳，為選取狀態
+        selected = selectedRestaurant,
+        label = {
+            if (selectedRestaurant) {
+                Text("選擇餐廳")
+            } else {
+                Text("  ")
+
+            }
+        }, // 預設空白
+
+
+    )
+
+}
+
+@Composable
+fun DisplayRestaurantChip(
+//    isVisible: Boolean,
+    label: String,
+    onClear: () -> Unit,
+) {
+    FilterChip(
+        onClick = {},
+        // 有選到餐廳時，顯示餐廳名稱、顯示清除按鈕
+        selected = label.isNotEmpty(),
+        // 顯示餐廳名稱
+        label = {
+            // TODO(點擊後跳轉到餐廳資訊頁面)
+            Text(label)
+        },
+        // 清除按鈕
+        trailingIcon = {
+            if (label.isNotEmpty()) {
                 IconButton(
-                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                onClick = { selected = !selected }
+                    modifier = Modifier.size(FilterChipDefaults.IconSize),
+                    onClick = onClear
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
@@ -188,69 +263,138 @@ fun SelectRestaurantChip(
                     )
                 }
             }
-        } else {
-            null
         },
     )
-}}
 
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PartialBottomSheet1(isVisible:Boolean = true) {
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false,
+fun SelectRestaurantBottomSheet(
+    onRestaurantPicked: (String) -> Unit,
+    onClose: () -> Unit // 關閉 BottomSheet 的回調
+) {
+    // 開滿頁面或開一半
+    val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    // 預覽顯示用，但尚未測試成功
+    val standardSheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.PartiallyExpanded
     )
-    val scope = rememberCoroutineScope()
-    var isVisible1 by remember { mutableStateOf(isVisible) }
+    val coroutineScope = rememberCoroutineScope()
 
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Button(
-            onClick = { showBottomSheet = true }
-        ) {
-            Text("Display partial bottom sheet")
-        }
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                modifier = Modifier.fillMaxHeight(),
-                sheetState = sheetState,
-                onDismissRequest = { showBottomSheet = false }
-            ) {
-                // TODO 引入餐廳
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.End // 使內容向右對齊
-                ) {
-                    Text(
-                        "Swipe up to open sheet. Swipe down to dismiss.",
-                        modifier = Modifier.padding(16.dp),
-//                        horizontalArrangement = Arrangement.End // 使內容向右對齊
+    // chip 點選後 出現Bottom sheet
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxHeight(),
+            sheetState = modalSheetState,
+            onDismissRequest = {
+                coroutineScope.launch { modalSheetState.hide() }
+                onClose() // 關閉 BottomSheet，在外部控制
+           },
+            scrimColor = Color.Black.copy(alpha = 0.5f), // 半透明灰色背景
+            properties = ModalBottomSheetProperties(
+                isFocusable = true,  // 允許接收焦點，例如接收TextFiled輸入事件
+                shouldDismissOnBackPress = true,
+                securePolicy = SecureFlagPolicy.SecureOff, // 關閉，防止應用窗口的內容被截圖或錄屏
+            ),
+            content = {
+                BottomSheetContent(
+                    onRestaurantPicked = { restaurant ->
+                        onRestaurantPicked(restaurant) // 傳回選定餐廳
+                        coroutineScope.launch { modalSheetState.hide() }
+                        onClose() // 關閉 BottomSheet，在外部控制
 
-                    )
-                    IconButton(
-                        modifier = Modifier.size(FilterChipDefaults.IconSize),
-                        onClick = {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
-                                }
-                            }
-                        })
-                     {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Clear icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
+                    },
+                    onClose = {
+                        coroutineScope.launch { modalSheetState.hide() }
+                        onClose() // 關閉 BottomSheet，在外部控制
                     }
-                }
+                )
             }
+
+
+        )
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheetContent(
+    onClose: () -> Unit, // 設定 Bottom Sheet 關閉的回調參數
+    onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
+) {
+    // 頂部工具欄
+    TopAppBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(38.dp)
+            .background(Color.Blue),
+        title = {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "選擇餐廳",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.alpha(0f) // 設置透明度
+            ) {
+                Icon(Icons.Filled.Check, contentDescription = "")
+            }
+        },
+        actions = {
+            IconButton(onClick = { onClose() }) {
+                Icon(Icons.Filled.Close, contentDescription = "")
+            }
+        }
+    )
+
+    // 水平分隔線
+    HorizontalDivider(
+        color = Color.Gray,
+        thickness = 1.dp
+    )
+
+    // 餐廳選擇按鈕
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .background(Color.Blue)
+    ) {
+        Text("選擇您喜歡的餐廳")
+
+        // 餐廳選擇按鈕，選擇餐廳後執行回調並關閉 BottomSheet
+        Button(onClick = {
+            onRestaurantPicked("肯德基") // 選擇餐廳
+            onClose() // 關閉 BottomSheet
+        }) {
+            Text("我是肯德基")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = {
+            onRestaurantPicked("餐廳 A")
+            onClose()
+        }) {
+            Text("餐廳 A")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = {
+            onRestaurantPicked("餐廳 B")
+            onClose() // 關閉 BottomSheet，在外部控制
+        }) {
+            Text("餐廳 B")
         }
     }
 }
