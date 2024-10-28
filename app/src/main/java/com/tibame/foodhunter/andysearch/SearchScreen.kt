@@ -3,7 +3,6 @@ package com.tibame.foodhunter.andysearch
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,46 +20,34 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import coil.compose.rememberAsyncImagePainter
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 
 @Composable
@@ -76,7 +62,7 @@ fun SearchScreen(
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()){
-        ShowSearchBar(cities)
+        ShowSearchBar(cities, navController = navController)
         ShowGoogleMap(
             Modifier
                 .fillMaxWidth()
@@ -134,8 +120,12 @@ fun CityLists(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowSearchBar(cities: List<City>){
-    var searchText by remember { mutableStateOf("") }
+fun ShowSearchBar(cities: List<City>,
+                  searchTextVM: SearchTextVM = viewModel(),
+                  navController: NavHostController = rememberNavController()
+){
+    val context = LocalContext.current
+    val searchText by searchTextVM.searchText.collectAsState()
     var isActive by remember { mutableStateOf(false) }
     var citySearchText by remember { mutableStateOf("選擇區域") }
     var cityExpand by remember { mutableStateOf(false) }
@@ -146,9 +136,12 @@ fun ShowSearchBar(cities: List<City>){
     var arrowIcon3 by remember { mutableStateOf(R.drawable.arrow_right) }
     SearchBar(
         query = searchText,
-        onQueryChange = {searchText = it},
+        onQueryChange = {searchTextVM.updateSearchText(it)},
         modifier = Modifier.fillMaxWidth(),
-        onSearch = {isActive = false},
+        onSearch = {isActive = false
+            val id = ""
+            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/{id}")
+                   },
         active = isActive,
         onActiveChange = {
             isActive = it
@@ -175,7 +168,7 @@ fun ShowSearchBar(cities: List<City>){
                     imageVector =Icons.Default.Clear,
                     contentDescription = "clear",
                     modifier = Modifier.clickable {
-                        searchText = ""
+                        searchTextVM.updateSearchText("")
                     }
                 )
             }

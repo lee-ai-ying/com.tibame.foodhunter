@@ -236,7 +236,7 @@ fun Main(
                     restaurantID = backStackEntry.arguments?.getString("id") ?: ""
                 )
             }
-            composable(context.getString(R.string.randomFood)) { backStackEntry ->
+            composable(context.getString(R.string.randomFood)) {
                 RandomFood(
                     navController = navController
                 )
