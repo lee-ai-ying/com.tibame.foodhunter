@@ -174,7 +174,8 @@ fun GroupSearch(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+//                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
                     }
                     showDatePickerDialog = false
                 },
