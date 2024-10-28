@@ -148,7 +148,7 @@ fun Main(
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
-                GroupChatRoomBottomBar(gChatVM)
+                GroupChatRoomBottomBar(navController,gChatVM)
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
@@ -258,7 +258,7 @@ fun Main(
                 GroupMain(navController, gChatVM)
             }
             composable(context.getString(R.string.str_create_group)) {
-                GroupCreate(gChatVM)
+                GroupCreate(navController, gChatVM)
             }
             composable("GroupChatRoom/{groupId}",
                 arguments = listOf(

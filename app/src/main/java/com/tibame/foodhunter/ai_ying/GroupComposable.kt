@@ -30,6 +30,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.RangeSliderState
@@ -37,6 +38,7 @@ import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
@@ -183,6 +185,7 @@ fun GroupDropDownMenu(
         }
     }
 }
+
 @Composable
 fun GroupTitleText(text: String) {
     Column(
@@ -196,7 +199,7 @@ fun GroupTitleText(text: String) {
         Text(
             text = text,
             color = Color.White
-            )
+        )
     }
 }
 
@@ -259,7 +262,11 @@ fun GroupSingleInputWithIcon(
 }
 
 @Composable
-fun GroupBigInput(maxLines: Int, onValueChange: (String) -> Unit) {
+fun GroupBigInput(
+    maxLines: Int,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    onValueChange: (String) -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -270,6 +277,7 @@ fun GroupBigInput(maxLines: Int, onValueChange: (String) -> Unit) {
             trailingIcon = {},
             singleLine = false,
             maxLines = maxLines,
+            colors = colors,
             onValueChange = onValueChange
         )
     }
@@ -278,11 +286,12 @@ fun GroupBigInput(maxLines: Int, onValueChange: (String) -> Unit) {
 @Composable
 fun GroupTextInputField(
     modifier: Modifier,
-    placeholder: @Composable () -> Unit,
-    trailingIcon: @Composable () -> Unit,
-    singleLine: Boolean,
-    maxLines: Int,
+    placeholder: @Composable () -> Unit = {},
+    trailingIcon: @Composable () -> Unit = {},
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
     readOnly: Boolean = false,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     onValueChange: (String) -> Unit
 ) {
     var input by remember { mutableStateOf("") }
@@ -315,7 +324,8 @@ fun GroupTextInputField(
             }
         },
         singleLine = singleLine,
-        maxLines = maxLines
+        maxLines = maxLines,
+        colors = colors
     )
 }
 
@@ -410,6 +420,7 @@ fun GroupSearchBar(onValueChange: (String) -> String, onClearClick: () -> Unit) 
         shape = RoundedCornerShape(0.dp)
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDatePickerDialog(
@@ -426,6 +437,7 @@ fun MyDatePickerDialog(
                    API 26開始支援Instant */
                 return utcTimeMillis > System.currentTimeMillis()
             }
+
             override fun isSelectableYear(year: Int): Boolean {
                 return year >= Year.now().value
             }
@@ -482,7 +494,8 @@ fun MyDatePickerDialog(
                     )
                 )
             },
-            state = datePickerState
+            state = datePickerState,
+            showModeToggle = false
         )
     }
 }

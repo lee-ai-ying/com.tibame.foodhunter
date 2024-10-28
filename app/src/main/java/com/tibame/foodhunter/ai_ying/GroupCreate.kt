@@ -35,6 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import java.time.DayOfWeek
 import java.time.Instant
@@ -48,6 +50,7 @@ import java.time.format.FormatStyle
 
 @Composable
 fun GroupCreate(
+    navController: NavHostController,
     gChatVM: GroupViewModel
 ) {
     var showDatePickerDialog by remember { mutableStateOf(false) }
@@ -120,12 +123,13 @@ fun GroupCreate(
                     Button(
                         onClick = {
                             gChatVM.setGroupCreateData(inputData)
-                            Log.d("ai",gChatVM.groupCreateData.toString())
+                            navController.popBackStack()
                         },
                     ) {
                         Text("確定")
                     }
                 }
+                Spacer(modifier = Modifier.size(8.dp))
             }
 
         }
@@ -141,7 +145,9 @@ fun GroupCreate(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+
                     }
                     showDatePickerDialog = false
                 },
@@ -163,7 +169,7 @@ fun MyLocationPicker(){
 @Composable
 fun GroupCreatePreview() {
     MaterialTheme {
-        GroupCreate(viewModel())
+        GroupCreate(rememberNavController(),viewModel())
 //        MyDatePickerDialog(
 //            onDismissRequest = {
 //            },
