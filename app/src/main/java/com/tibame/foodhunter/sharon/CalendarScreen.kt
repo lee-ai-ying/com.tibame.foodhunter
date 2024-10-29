@@ -2,11 +2,13 @@ package com.tibame.foodhunter.sharon
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -48,13 +50,33 @@ import java.time.format.FormatStyle
 /** 假裝這是會員功能準備進到-->日曆的入口點 **/
 @Composable
 fun CalendarScreen(
-    navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
+    navController: NavHostController? = null,
     callback: @Composable () -> Unit // 接收一個可組合的回調函數，用於在頁面中展示額外的 UI
 ) {
-    Column {
-        CalendarComp()
+    // 使用 LazyColumn 以支持垂直滾動
+    LazyColumn(
+        modifier = Modifier
+            .background(Color.White)
+            .fillMaxSize(),
+//            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // DatePicker 組件
+        item {
+            CalendarComp()
+        }
+        // CalendarGroupItem 卡片
+        item {
+            CalendarGroupItem()
+        }
+        // NoteCardItem 卡片
+        item {
+            NoteCardItem(title = "小巷中的咖啡廳")
+        }
     }
 }
+
 
 
 // 使用的DatePicker屬於androidx.compose.material3測試功能，需要加上"@OptIn"註記
@@ -70,39 +92,32 @@ fun CalendarComp() {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = todayInMills  // 設定初始值為今天日期
             )
-////
-//    val datePickerState = rememberDatePickerState(
-//        // SelectableDates介面用來限制可選擇的日期與年，
-//        selectableDates = object : SelectableDates {
-//            // 週六日不可選擇
-//            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-//                /* 將使用者選取的時間轉成LocalDate物件後取出星期幾的資訊
-//                   API 26開始支援Instant */
-//                val dayOfWeek = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.of("UTC"))
-//                    .toLocalDate().dayOfWeek
-//                return dayOfWeek != DayOfWeek.SUNDAY && dayOfWeek != DayOfWeek.SATURDAY
-//            }
-//            // 只可選擇2024年以後日期
-//            override fun isSelectableYear(year: Int): Boolean {
-//                return year >= 2024
-//            }
-//        }
-//    )
+
 
     Column(
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+//        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
         DatePicker(
 //            modifier = Modifier.,
             state = datePickerState,
-            title = { Text(text = "") },
+//            title = { Text(text = "") },
             headline = {
-                Text(text = "Check-in Date")},
+                DatePickerDefaults.DatePickerTitle(
+                    displayMode = datePickerState.displayMode,
+                    modifier = Modifier.padding(top = 0.dp) // 使用自定義的 titlePadding
+                )
+                       },
+            title = {
+                DatePickerDefaults.DatePickerTitle(
+                    displayMode = datePickerState.displayMode,
+                    modifier = Modifier.padding(top = 0.dp) // 使用自定義的 titlePadding
+                )
+            },
             colors = DatePickerDefaults.colors(
-                
+
                 todayContentColor = Color.Black,  // 今天日期字的顏色
                 todayDateBorderColor = Color.Red,  // 今天日期的邊緣線
                 selectedDayContainerColor = Color.LightGray,  // 選中日期的背景色
@@ -111,14 +126,14 @@ fun CalendarComp() {
 
         )
         // 顯示選取日期(已格式化)
-        Text(
-            text = "Selected date: ${
-                datePickerState.selectedDateMillis?.let {
-                    Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                        .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
-                } ?: "no selection"
-            }"
-        )
+//        Text(
+//            text = "Selected date: ${
+//                datePickerState.selectedDateMillis?.let {
+//                    Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+//                        .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+//                } ?: "no selection"
+//            }"
+//        )
     }
 }
 
@@ -130,6 +145,6 @@ fun CalendarComp() {
 fun DefaultPreview() {
     FoodHunterTheme {
 
-        CalendarScreen(){}
+        CalendarScreen {}
     }
 }
