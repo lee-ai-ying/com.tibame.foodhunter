@@ -155,7 +155,8 @@ fun NiaTabRow(
 @Composable
 fun TabBarComponent(
     selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+
 ) {
     val tabList = listOf(
         stringResource(id = R.string.str_calendar),

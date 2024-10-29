@@ -49,7 +49,7 @@ fun RecommendedPosts(
     navController: NavHostController? = null,
     postViewModel: PostViewModel = viewModel()
 ) {
-//    val filteredPosts = getFilteredPosts(repository.postList, _selectedFilters)
+    val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     FilterChips(
         filters = listOf("早午餐", "午餐", "晚餐"),
@@ -59,8 +59,8 @@ fun RecommendedPosts(
         }
     )
 
-    // Pass the filtered posts list to PostList
-//    PostList(posts = filteredPosts)
+
+    PostList(posts = filteredPosts)
 }
 
 @Composable
@@ -254,3 +254,4 @@ private fun PostHeader(post: Post) {
             }
         }
     }
+}

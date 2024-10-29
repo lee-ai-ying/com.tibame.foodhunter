@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import android.os.Build.VERSION_CODES.R
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
+
 import com.tibame.foodhunter.sharon.CalendarScreen
 import com.tibame.foodhunter.sharon.FavoriteScreen
 import com.tibame.foodhunter.sharon.NiaTab
@@ -112,8 +113,8 @@ fun PostTabBarComponent(
     onTabSelected: (Int) -> Unit
 ) {
     val tabList = listOf(
-        stringResource(id = R.string.str_Recommendedposts),
-        stringResource(id = R.string.str_searchpost)
+//        stringResource(id = R.string.r),
+//        stringResource(id = R.string.str_searchpost)
     )
 
     NiaTabRow(selectedTabIndex = selectedTab) {
@@ -134,8 +135,9 @@ fun PostTabBarComponent(
 @Preview(showBackground = true)
 @Composable
 fun HomePreview() {
+    val mockNavController = rememberNavController()
     FoodHunterTheme  {
-//       Home(rememberNavController())
+       Home(navController = mockNavController, 0)
     }
 
 

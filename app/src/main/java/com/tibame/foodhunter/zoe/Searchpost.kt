@@ -2,10 +2,14 @@ package com.tibame.foodhunter.zoe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
@@ -44,26 +48,6 @@ fun SearchPost(
         modifier = Modifier.fillMaxSize()
 
     ) {
-//        NiaTabRow(
-//            selectedTabIndex = selectedTabIndex,
-//        ) {
-//            NiaTab(
-//                selected = selectedTabIndex == 0,
-//                onClick = {
-//                    postViewModel.updateTabIndex(0)
-//                    navController.navigate(context.getString(R.string.str_home))
-//                },
-//                text = { Text(text = stringResource(id = R.string.recommend)) }
-//            )
-//            NiaTab(
-//                selected = selectedTabIndex == 1,
-//                onClick = {
-//                    postViewModel.updateTabIndex(1)
-//                    navController.navigate(context.getString(R.string.str_searchpost))
-//                },
-//                text = { Text(text = stringResource(id = R.string.search)) }
-//            )
-//        }
 
         SearchBar(
             query = "",
@@ -102,6 +86,40 @@ fun SearchPost(
         )
     }
 }
+
+@Composable
+fun FilterChips(
+    filters: List<String>,                 // 可用的標籤列表
+    selectedFilters: List<String>,         // 當前選中的標籤
+    onFilterChange: (List<String>) -> Unit // 選中狀態變更時的回調
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        filters.forEach { filter ->
+            val isSelected = selectedFilters.contains(filter)
+
+            // 使用 FilterChip 或 Chip 來表示篩選標籤
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    // 當 chip 被點擊時，更新選擇列表
+                    val updatedFilters = if (isSelected) {
+                        selectedFilters - filter
+                    } else {
+                        selectedFilters + filter
+                    }
+                    onFilterChange(updatedFilters) // 更新回調
+                },
+                label = { Text(filter) }
+            )
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
