@@ -206,7 +206,7 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController)
+                LoginScreen(navController = navController, )
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController)
@@ -218,7 +218,7 @@ fun Main(
                 ForgetPassword2Screen(navController = navController, {})
             }
             composable(context.getString(R.string.str_home)) {
-                Home(navController)
+//                Home(navController = navController)
             }
 
 
