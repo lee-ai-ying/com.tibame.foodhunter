@@ -9,6 +9,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -19,20 +20,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.CalendarScreen
+import com.tibame.foodhunter.sharon.FavoriteScreen
 import com.tibame.foodhunter.sharon.NiaTab
 import com.tibame.foodhunter.sharon.NiaTabRow
+import com.tibame.foodhunter.sharon.NoteScreen
+import com.tibame.foodhunter.sharon.TabBarComponent
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(navController: NavHostController) {
+fun Home( navController: NavHostController,
+          initTab: Int) {
     val samplePosts: List<Post> = getSamplePosts()
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
     val context = LocalContext.current
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    val destination = navController.currentBackStackEntryAsState().value?.destination
+    // 當前選到的Tab
+    var selectedTab by remember { mutableIntStateOf(initTab) }
 
     // 根據選擇的篩選標籤過濾貼文
     val filteredPosts = if (selectedFilters.isEmpty()) {
@@ -46,25 +55,16 @@ fun Home(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        NiaTabRow(
-            selectedTabIndex = selectedTabIndex,
-        ) {
-            NiaTab(
-                selected = selectedTabIndex == 0,
-                onClick = {
-                    selectedTabIndex = 0
-                    navController.navigate(context.getString(R.string.str_home))
-                },
-                text = { Text(text = stringResource(id = R.string.recommend)) }
-            )
-            NiaTab(
-                selected = selectedTabIndex == 1,
-                onClick = {
-                    selectedTabIndex = 1
-                    navController.navigate(context.getString(R.string.str_searchpost))
-                },
-                text = { Text(text = stringResource(id = R.string.search)) }
-            )
+        TabBarComponent(
+            selectedTab = selectedTab,
+            onTabSelected = { selectedTab = it }
+        )
+
+        // 根據選中的 Tab 顯示對應的頁面
+        when (selectedTab) {
+            0 -> CalendarScreen(navController) {}
+            1 -> SearchPost(navController)
+            2 -> FavoriteScreen(navController)
         }
 
         // 使用 FilterChips 函數
@@ -80,6 +80,28 @@ fun Home(navController: NavHostController) {
     }
 }
 
+
+@Composable
+fun TabBarComponent(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val tabList = listOf(
+        stringResource(id = R.string.str_calendar),
+        stringResource(id = R.string.str_note),
+        stringResource(id = R.string.str_favorite)
+    )
+
+    NiaTabRow(selectedTabIndex = selectedTab) {
+        tabList.forEachIndexed { index, title ->
+            NiaTab(
+                text = { Text(text = title) },
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) }
+            )
+        }
+    }
+}
 
 // 示例數據
 fun getSamplePosts(): List<Post> {
