@@ -107,9 +107,6 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    // 控制收藏狀態
-    var isBookmarked by remember { mutableStateOf(false) }
-
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -141,7 +138,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-                            RestaurantInfoDetail()
+                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -152,7 +149,6 @@ fun RestaurantDetail(
 
                             //社群預覽
 
-                            //RelatedPost()
                             Text(
                                 text = "社群預覽  待修",
                                 fontSize = 18.sp
@@ -174,15 +170,19 @@ fun RestaurantDetail(
                                 color = Color.Black
                             )
 
-                            Reviews ()
+                            ReviewZone()
+
 
                         }
 
                     }
                 }
             }
+
         }
     }
+
+
 }
 
 
