@@ -30,7 +30,7 @@ fun RewiewDetail(
     navController: NavHostController = rememberNavController(),
 ) {
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_searchdetail)) }
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
