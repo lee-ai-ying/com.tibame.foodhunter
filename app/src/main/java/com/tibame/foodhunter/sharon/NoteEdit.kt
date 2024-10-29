@@ -61,14 +61,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-    EditNote(mockNavController)
+    NoteEdit(navController = mockNavController, noteId = "123") // 傳入模擬的 noteId
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditNote(
+fun NoteEdit(
     navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
-    isShow: Boolean = false,
+    noteId: String? // 接收 noteId
 
     ) {
     // 初始化 scrollBehavior
@@ -152,7 +152,8 @@ fun EditNote(
                 modifier = Modifier
                     .height(32.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),            ) {
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
+            ) {
                 // 顯示餐廳名稱
                 DisplayRestaurantChip(
                     label = selectedRestaurantName,
@@ -203,7 +204,7 @@ fun EditNote(
             }
 
         }
-        }
+    }
 }
 
 @Composable
