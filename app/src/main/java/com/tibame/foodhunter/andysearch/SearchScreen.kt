@@ -3,16 +3,15 @@ package com.tibame.foodhunter.andysearch
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,61 +21,51 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import coil.compose.rememberAsyncImagePainter
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 
 @Composable
 fun SearchScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    searchTextVM: SearchScreenVM
 ){
-
     val context = LocalContext.current
-    val restaurants = parseRestaurantJson(context, "restaurants.json")
+    searchTextVM.updateRestaurantList(context)
+    val restaurants by searchTextVM.restaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
 
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()){
-        ShowSearchBar(cities)
+        ShowSearchBar(cities, searchTextVM, navController = navController)
         ShowGoogleMap(
             Modifier
                 .fillMaxWidth()
@@ -105,27 +94,25 @@ fun CityLists(
     ) {
         items(cities) { city ->
             var districtExpand by remember { mutableStateOf(false) }
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
+            Column(modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier
                     .clickable {
                         districtExpand = !districtExpand // 点击时切换展开/收起状态
-                        selectedCity = if (selectedCity == city.name) null else city.name
+                        selectedCity = if (selectedCity == city.name) null else city.name }
+                ){
+                    val textColor = if (selectedCity == city.name) Color.Blue else Color.Black
+                    Text(text = city.name, color = textColor)
+                }
+                if (districtExpand) {
+                    Column (modifier = Modifier.clickable{  }){
+                        city.districts.forEach { district ->
+                            Text(
+                                text = district.name,
+                                modifier = Modifier.padding(start = 8.dp) // 添加一些缩进使区的显示层级更明显
+                            )
+                        }
                     }
-            ) {
-                val textColor = if (selectedCity == city.name) Color.Blue else Color.Black
-                Text(text = city.name, color = textColor)
-            }
-
-            // 如果 districtExpand 为 true，则显示该城市的区列表
-            if (districtExpand) {
-                city.districts.forEach { district ->
-                    Text(
-                        text = district.name,
-                        modifier = Modifier.padding(start = 16.dp) // 添加一些缩进使区的显示层级更明显
-                    )
                 }
             }
         }
@@ -134,8 +121,12 @@ fun CityLists(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowSearchBar(cities: List<City>){
-    var searchText by remember { mutableStateOf("") }
+fun ShowSearchBar(cities: List<City>,
+                  searchTextVM: SearchScreenVM,
+                  navController: NavHostController = rememberNavController()
+){
+    val context = LocalContext.current
+    val searchText by searchTextVM.searchText.collectAsState()
     var isActive by remember { mutableStateOf(false) }
     var citySearchText by remember { mutableStateOf("選擇區域") }
     var cityExpand by remember { mutableStateOf(false) }
@@ -146,9 +137,13 @@ fun ShowSearchBar(cities: List<City>){
     var arrowIcon3 by remember { mutableStateOf(R.drawable.arrow_right) }
     SearchBar(
         query = searchText,
-        onQueryChange = {searchText = it},
+        onQueryChange = {searchTextVM.updateSearchText(it)},
         modifier = Modifier.fillMaxWidth(),
-        onSearch = {isActive = false},
+        onSearch = {isActive = false
+            val id = ""
+            searchTextVM.updateSearchText(it)
+            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
+                   },
         active = isActive,
         onActiveChange = {
             isActive = it
@@ -164,7 +159,7 @@ fun ShowSearchBar(cities: List<City>){
             }else{
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "search"
+                    contentDescription = "search",
                 )
             }
 
@@ -175,7 +170,7 @@ fun ShowSearchBar(cities: List<City>){
                     imageVector =Icons.Default.Clear,
                     contentDescription = "clear",
                     modifier = Modifier.clickable {
-                        searchText = ""
+                        searchTextVM.updateSearchText("")
                     }
                 )
             }
@@ -203,9 +198,9 @@ fun ShowSearchBar(cities: List<City>){
                 Text(
                     text = citySearchText,
                 )
-            }
-            if (cityExpand) {
-                CityLists(cities)
+                if (cityExpand) {
+                    CityLists(cities)
+                }
             }
         }
 
@@ -306,7 +301,11 @@ fun ShowRestaurantLists(
                 } ?: "尚未開啟定位"
                 Card (modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)){
+                    .padding(16.dp).clickable {
+                        Log.e("fff","start")
+                        navController.navigate(context.getString(R.string.restaurantDetail))
+                        Log.e("fff","end")
+                    }){
                     ListItem(
                         headlineContent = {
                             Text(text = restaurant.name ,
@@ -365,7 +364,9 @@ fun ShowRestaurantLists(
                 Card (
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+                        .padding(8.dp).clickable {
+                            navController.navigate(context.getString(R.string.restaurantDetail))
+                        }
                 ){
                     ListItem(
                         headlineContent = {

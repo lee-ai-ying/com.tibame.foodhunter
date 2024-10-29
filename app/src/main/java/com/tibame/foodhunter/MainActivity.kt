@@ -1,6 +1,7 @@
 package com.tibame.foodhunter
 
 import NewPost
+import android.app.appsearch.SearchResult
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,6 +25,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -59,8 +61,10 @@ import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.sharon.NoteEdit
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.sharon.NoteEdit
+import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.zoe.Post
 import com.tibame.foodhunter.zoe.SearchPost
 
@@ -109,6 +113,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/6",
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
+        context.getString(R.string.str_calendar),
+        context.getString(R.string.restaurantDetail)
     ).contains(destination?.route)
 }
 
@@ -134,7 +140,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
 fun Main(
     navController: NavHostController = rememberNavController(),
     gChatVM: GroupViewModel = viewModel(),
-
+    searchVM: SearchScreenVM = viewModel(),
     friendVM: FriendViewModel = viewModel(),
     pChatVM: PrivateViewModel = viewModel()
 ) {
@@ -246,20 +252,24 @@ fun Main(
             }
 
             composable(context.getString(R.string.str_search)) {
-                SearchScreen(navController)
+                SearchScreen(navController, searchVM)
             }
             composable("${context.getString(R.string.SearchToGoogleMap)}/{id}") { backStackEntry ->
                 SearchResult(
                     navController = navController,
-                    restaurantID = backStackEntry.arguments?.getString("id") ?: ""
+                    restaurantID = backStackEntry.arguments?.getString("id") ?: "",
+                    searchTextVM = searchVM
                 )
             }
-            composable(context.getString(R.string.randomFood)) { backStackEntry ->
+            composable(context.getString(R.string.randomFood)) {
                 RandomFood(
-                    navController = navController
+                    navController = navController, searchScreenVM = searchVM
                 )
             }
 
+            composable(context.getString(R.string.restaurantDetail)){
+                RestaurantDetail(navController = navController, restaurantVM = searchVM)
+            }
 
 
 
