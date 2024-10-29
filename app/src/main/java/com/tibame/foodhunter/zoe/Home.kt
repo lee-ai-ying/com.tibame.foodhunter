@@ -4,14 +4,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,14 +40,15 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home( navController: NavHostController,
-          initTab: Int) {
-    val samplePosts: List<Post> = getSamplePosts()
-    var selectedFilters by remember { mutableStateOf(setOf<String>()) }
+fun Home(
+    navController: NavHostController,
+    postViewModel: PostViewModel = viewModel()
+) {
+    val selectedFilters by postViewModel.selectedFilters.collectAsState()
+    val selectedTabIndex by postViewModel.selectedTabIndex.collectAsState()
+    val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val context = LocalContext.current
-    val destination = navController.currentBackStackEntryAsState().value?.destination
-    // 當前選到的Tab
-    var selectedTab by remember { mutableIntStateOf(initTab) }
+    var selectedTabIndex by remember { mutableStateOf(0) }
 
     // 根據選擇的篩選標籤過濾貼文
     val filteredPosts = if (selectedFilters.isEmpty()) {
@@ -114,65 +121,102 @@ fun getSamplePosts(): List<Post> {
         followers = emptyList(),
         following = emptyList()
     )
-
-    val bob = Publisher(
-        id = "2",
-        name = "Bob",
-        avatarImage = R.drawable.user2,
-        joinDate = "2022-12-15",
-        followers = emptyList(),
-        following = emptyList()
-    )
-
-    val cathy = Publisher(
-        id = "3",
-        name = "Cathy",
-        avatarImage = R.drawable.user3,
-        joinDate = "2021-11-20",
-        followers = emptyList(),
-        following = emptyList()
-    )
-
-    // 示例 Post 資料
-    return listOf(
-        Post(
-            id = "p1",
-            publisher = alice,
-            content = "今天吃了美味的早餐！",
-            location = "Taipei",
-            timestamp = "2 小時前",
-            postTag = "早午餐",
-            carouselItems = listOf(
-                CarouselItem(0, R.drawable.breakfast_image_1, "Breakfast image 1"),
-                CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2"),
-                CarouselItem(2, R.drawable.breakfast_image_3, "Breakfast image 3")
-            )
-        ),
-        Post(
-            id = "p2",
-            publisher = bob,
-            content = "午餐是超棒的壽司！",
-            location = "Kaohsiung",
-            timestamp = "5 小時前",
-            postTag = "午餐",
-            carouselItems = listOf(
-                CarouselItem(0, R.drawable.sushi_image_1, "Sushi image 1"),
-                CarouselItem(1, R.drawable.sushi_image_2, "Sushi image 2")
-            )
-        ),
-        Post(
-            id = "p3",
-            publisher = cathy,
-            content = "晚餐牛排超好吃！",
-            location = "Taichung",
-            timestamp = "1 天前",
-            postTag = "晚餐",
-            carouselItems = listOf(
-                CarouselItem(0, R.drawable.steak_image, "Steak image 1")
-            )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White // 设置卡片背景色为白色
         )
-    )
-}
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            PostHeader(post = post)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            ImageDisplay(imageSource = ImageSource.CarouselSource(post.carouselItems))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FavoriteIcon()
+
+                    IconButton(onClick = { showBottomSheet = true }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                            contentDescription = "Chat Bubble",
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
+                    contentDescription = "Bookmark",
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            PostContent(content = post.content)
+        }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState,
+        ) {
+            MessageSheet(post = post)
+        }
+    }
+    }
+
+
+@Composable
+private fun PostHeader(post: Post) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = post.publisher.avatarImage),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+        )
+
+        Column {
+            Text(
+                text = post.publisher.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = post.location,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ),
+
 
 
 @Preview(showBackground = true)

@@ -104,7 +104,6 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_home),
-        context.getString(R.string.str_searchpost),
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),

@@ -43,4 +43,14 @@
     <string name="select_picture">選擇圖片</string>
     <string name="SearchToGoogleMap">導覽到地圖</string>
     <string name="randomFood">轉盤</string>
+    <string name="Add_message">新增留言</string>
+    <string name="message">留言</string>
+    <string name="edit">編輯</string>
+    <string name="delete">刪除</string>
+    <string name="publisher_avatar_description">Publisher avatar</string>
+    <string name="favorite_action">Toggle favorite</string>
+    <string name="comment_action">Add comment</string>
+    <string name="bookmark_action">Toggle bookmark</string>
+    <string name="show_more">Show more</string>
+    <string name="show_less">Show less</string>
 </resources>
