@@ -66,6 +66,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import kotlinx.coroutines.launch
 
 
@@ -95,10 +96,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantDetail(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
+    restaurantVM: SearchScreenVM
 ) {
+    val restNavController = rememberNavController()
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_searchdetail)) }
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
@@ -122,7 +125,7 @@ fun RestaurantDetail(
                     .background(Color.White)
             ) {
                 NavHost(
-                    navController = navController,
+                    navController = restNavController,
                     startDestination = mainSceneName,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -183,8 +186,8 @@ fun RestaurantDetail(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun RestaurantDetailPreview() {
-    RestaurantDetail(navController = rememberNavController())
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RestaurantDetailPreview() {
+//    RestaurantDetail(navController = rememberNavController())
+//}

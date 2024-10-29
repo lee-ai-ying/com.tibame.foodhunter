@@ -9,9 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SearchTextVM: ViewModel(){
-    private val _searchText = MutableStateFlow("")
-    val searchText: StateFlow<String> = _searchText.asStateFlow()
+class RandomFoodVM: ViewModel(){
 
 
     private val _foodLabel = MutableStateFlow(emptyMap<String, List<String>>())
@@ -20,23 +18,20 @@ class SearchTextVM: ViewModel(){
     private val _randomFood = MutableStateFlow(emptyList<String>())
     val settingRandomFood: StateFlow<List<String>> = _randomFood.asStateFlow()
 
+
     init {
         // 初始化時設置預設值
         _randomFood.update { settingRandomFoodList(emptyList()) }
     }
-    // 選擇的食物種類
-    fun updateSettingRandomFood(settingList: List<String>){
-        _randomFood.update{settingRandomFoodList(settingList)}
-    }
-
-
-    fun updateSearchText(newText: String){
-        _searchText.update {newText}
+    fun updateSettingRandomFood(item: List<String>){
+        _randomFood.update{settingRandomFoodList(item)}
     }
 
     fun loadFoodLabel(context: Context){
         _foodLabel.update { loadLabelsFromJson(context) }
     }
+
+
     private fun loadLabelsFromJson(context: Context): Map<String, List<String>> {
         val jsonString = readJson(context, "restLabel.json")
         val gson = Gson()

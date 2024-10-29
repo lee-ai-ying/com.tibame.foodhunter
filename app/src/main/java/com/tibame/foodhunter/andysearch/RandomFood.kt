@@ -59,11 +59,9 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -71,8 +69,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun RandomFood(navController: NavHostController
-               , searchTextVM: SearchTextVM = viewModel()
+fun RandomFood(navController: NavHostController,
+               searchScreenVM: SearchScreenVM
+               , randomFoodVM: RandomFoodVM = viewModel()
 ) {
     var rotated by remember { mutableStateOf(false) }
     val rotateAngle by remember { mutableStateOf(0f) }
@@ -92,7 +91,7 @@ fun RandomFood(navController: NavHostController
     )
 
 
-    val options by searchTextVM.settingRandomFood.collectAsState()
+    val options by randomFoodVM.settingRandomFood.collectAsState()
     val colors = listOf(Color.Blue, Color.Red)
     val optionsSize = options.size
 
@@ -212,7 +211,7 @@ fun RandomFood(navController: NavHostController
                 Text(text = "開始", style = TextStyle(color = Color.White))
             }
             if (showSettingDialog){
-                SettingDialog (onDismiss = { showSettingDialog = false }, searchTextVM)
+                SettingDialog (onDismiss = { showSettingDialog = false }, randomFoodVM)
             }
         }
 
@@ -233,7 +232,7 @@ fun RandomFood(navController: NavHostController
                     Button(
                         onClick = {
                             val id = ""
-                            searchTextVM.updateSearchText(selectedOption)
+                            searchScreenVM.updateSearchText(selectedOption)
                             navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
                         }  // 點擊確定按鈕，關閉對話框
                     ) {
@@ -247,7 +246,7 @@ fun RandomFood(navController: NavHostController
 
 
 @Composable
-fun SettingDialog(onDismiss: () -> Unit, searchTextVM: SearchTextVM){
+fun SettingDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM){
     var restSet by remember { mutableStateOf(false) }
     var foodSet by remember { mutableStateOf(false) }
     AnimatedVisibility(
@@ -275,7 +274,7 @@ fun SettingDialog(onDismiss: () -> Unit, searchTextVM: SearchTextVM){
                     HorizontalDivider(thickness = 1.dp, color = Color.Black)
                 }
                 if (restSet){
-                    foodLabel("restaurant_tags", searchTextVM)
+                    foodLabel("restaurant_tags", randomFoodVM)
                 }
 
                 Column(modifier = Modifier.clickable{
@@ -285,7 +284,7 @@ fun SettingDialog(onDismiss: () -> Unit, searchTextVM: SearchTextVM){
                     HorizontalDivider(thickness = 1.dp, color = Color.Black)
                 }
                 if (foodSet){
-                    foodLabel("food_tags", searchTextVM)
+                    foodLabel("food_tags", randomFoodVM)
                 }
                 Button(onClick = onDismiss){
                     Text("確認")
@@ -296,12 +295,12 @@ fun SettingDialog(onDismiss: () -> Unit, searchTextVM: SearchTextVM){
 }
 
 @Composable
-fun foodLabel(selectLabel: String, searchTextVM: SearchTextVM){
+fun foodLabel(selectLabel: String, randomFoodVM: RandomFoodVM){
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        searchTextVM.loadFoodLabel(context)
+        randomFoodVM.loadFoodLabel(context)
     }
-    val foodLabel by searchTextVM.foodLabel.collectAsState()
+    val foodLabel by randomFoodVM.foodLabel.collectAsState()
     val selectedItems = remember { mutableStateListOf<String>() }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 100.dp),
@@ -320,7 +319,7 @@ fun foodLabel(selectLabel: String, searchTextVM: SearchTextVM){
                         selectedItems.remove(filter)
                     }
                     // 更新 ViewModel 中的設定隨機食物列表
-                    searchTextVM.updateSettingRandomFood(selectedItems)
+                    randomFoodVM.updateSettingRandomFood(selectedItems)
                           },
                 label = { Text(filter) },
                 leadingIcon = if (selected) {
@@ -339,8 +338,8 @@ fun foodLabel(selectLabel: String, searchTextVM: SearchTextVM){
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun RandomFoodPreview() {
-    RandomFood(navController = rememberNavController())
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RandomFoodPreview() {
+//    RandomFood(navController = rememberNavController())
+//}

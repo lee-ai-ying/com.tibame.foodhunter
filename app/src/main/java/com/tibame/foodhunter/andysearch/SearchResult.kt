@@ -9,20 +9,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun SearchResult(
     navController: NavHostController,
-    restaurantID: String = ""
+    restaurantID: String = "",
+    searchTextVM: SearchScreenVM = viewModel()
 ){
     val context = (LocalContext.current)
     val cities = parseCityJson(context, "taiwan_districts.json")
     val restaurants = parseRestaurantJson(context, "restaurants.json")
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
-        ShowSearchBar(cities)
+        ShowSearchBar(cities, searchTextVM, navController)
         ShowGoogleMap(
             restaurants = restaurants,
             restaurantID = restaurantID,
