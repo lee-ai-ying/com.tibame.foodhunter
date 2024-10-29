@@ -102,8 +102,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_create_group),
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood),
-        "gotoGroupChatRoom/{groudId}",
         "PrivateChatRoom/{roomid}",
+        "GroupChatRoom/{groupId}",
         context.getString(R.string.str_group) + "/2",
         context.getString(R.string.str_calendar),
         context.getString(R.string.str_member) + "/2",
@@ -113,7 +113,6 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/6",
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
-        context.getString(R.string.str_calendar),
         context.getString(R.string.restaurantDetail)
     ).contains(destination?.route)
 }
@@ -128,10 +127,11 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
-        "gotoGroupChatRoom/{groudId}",
+        "GroupChatRoom/{groupId}",
         "PrivateChatRoom/{roomid}",
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
-        context.getString(R.string.randomFood)
+        context.getString(R.string.randomFood),
+        context.getString(R.string.str_create_group)
     ).contains(destination?.route)
 }
 
@@ -171,7 +171,7 @@ fun Main(
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
-                GroupChatRoomBottomBar(gChatVM)
+                GroupChatRoomBottomBar(navController,gChatVM)
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
