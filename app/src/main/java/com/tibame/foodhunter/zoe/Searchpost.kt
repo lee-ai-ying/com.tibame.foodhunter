@@ -31,6 +31,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPost(
+    navController: NavHostController,
                 postViewModel: PostViewModel = viewModel()) {
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     val selectedTabIndex by postViewModel.selectedTabIndex.collectAsState()
@@ -43,26 +44,26 @@ fun SearchPost(
         modifier = Modifier.fillMaxSize()
 
     ) {
-        NiaTabRow(
-            selectedTabIndex = selectedTabIndex,
-        ) {
-            NiaTab(
-                selected = selectedTabIndex == 0,
-                onClick = {
-                    postViewModel.updateTabIndex(0)
-                    navController.navigate(context.getString(R.string.str_home))
-                },
-                text = { Text(text = stringResource(id = R.string.recommend)) }
-            )
-            NiaTab(
-                selected = selectedTabIndex == 1,
-                onClick = {
-                    postViewModel.updateTabIndex(1)
-                    navController.navigate(context.getString(R.string.str_searchpost))
-                },
-                text = { Text(text = stringResource(id = R.string.search)) }
-            )
-        }
+//        NiaTabRow(
+//            selectedTabIndex = selectedTabIndex,
+//        ) {
+//            NiaTab(
+//                selected = selectedTabIndex == 0,
+//                onClick = {
+//                    postViewModel.updateTabIndex(0)
+//                    navController.navigate(context.getString(R.string.str_home))
+//                },
+//                text = { Text(text = stringResource(id = R.string.recommend)) }
+//            )
+//            NiaTab(
+//                selected = selectedTabIndex == 1,
+//                onClick = {
+//                    postViewModel.updateTabIndex(1)
+//                    navController.navigate(context.getString(R.string.str_searchpost))
+//                },
+//                text = { Text(text = stringResource(id = R.string.search)) }
+//            )
+//        }
 
         SearchBar(
             query = "",

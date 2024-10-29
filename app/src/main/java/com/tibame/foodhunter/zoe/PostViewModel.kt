@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -68,21 +69,17 @@ class PostViewModel : ViewModel() {
     }
 
     // 獲取過濾後的帖子
-    fun getFilteredPosts(): StateFlow<List<Post>> {
-        return postChatFlow.map { posts ->
-            posts.filter { post ->
-                val matchesFilter = selectedFilters.value.isEmpty() ||
-                        selectedFilters.value.contains(post.postTag)
-                val matchesSearch = if (_searchQuery.value.isNotEmpty()) {
-                    post.content.contains(_searchQuery.value, ignoreCase = true) ||
-                            post.location.contains(_searchQuery.value, ignoreCase = true) ||
-                            post.publisher.name.contains(_searchQuery.value, ignoreCase = true)
-                } else true
-
-                matchesFilter && matchesSearch
-            }
+    fun getFilteredPosts(
+        postListFlow: StateFlow<List<Post>>,
+        selectedFiltersFlow: StateFlow<List<String>>
+    ): StateFlow<List<Post>> {
+        return combine(postListFlow, selectedFiltersFlow) { postList, filters ->
+            if (filters.isEmpty()) postList
+            else postList.filter { post -> filters.contains(post.postTag) }
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
+
+
 
     // 獲取用戶特定帖子
     fun getUserPosts(publisherId: String): StateFlow<List<Post>> {
