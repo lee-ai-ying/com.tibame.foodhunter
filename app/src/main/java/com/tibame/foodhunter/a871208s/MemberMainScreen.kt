@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
@@ -61,8 +62,7 @@ fun MemberMainScreen(
             modifier = Modifier.fillMaxWidth(0.9f)
                 .background(Color.LightGray)
         ) {
-            Row(
-            ) {
+            Row{
                 Column(
                     modifier = Modifier.size(150.dp, 180.dp),
                     verticalArrangement = Arrangement.Center,
@@ -113,7 +113,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                onClick = {}
+                onClick = {navController.navigate(context.getString(R.string.str_member)+"/2")}
             ) {
 
             }
@@ -142,7 +142,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                onClick = {}
+                onClick = {navController.navigate(context.getString(R.string.str_member)+"/6")}
             ) {
 
             }
@@ -184,6 +184,35 @@ fun MemberMainScreen(
                     modifier = Modifier.size(50.dp)
                 )
                 Text(text = "我的手札",
+                    fontSize = 24.sp)
+            }
+        }
+        Spacer(modifier = Modifier.size(16.dp))
+        Box(
+            // 設定內容物對齊方式為置中對齊
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .size(60.dp)
+                .background(Color.LightGray).padding(10.dp)
+        ){
+            TextButton(
+                modifier = Modifier
+                    .fillMaxSize(),
+                shape = RoundedCornerShape(0.dp),
+                onClick = {}
+            ) {
+
+            }
+            Row(
+                verticalAlignment= Alignment.CenterVertically
+            ){
+                Icon(
+                    imageVector = Icons.Default.AccountBox,
+                    contentDescription = "member",
+                    modifier = Modifier.size(50.dp)
+                )
+                Text(text = "我的貼文",
                     fontSize = 24.sp)
             }
         }
@@ -258,7 +287,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                onClick = {}
+                onClick = {navController.navigate(context.getString(R.string.str_member)+"/5")}
             ) {
 
             }

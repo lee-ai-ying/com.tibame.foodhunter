@@ -17,6 +17,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
@@ -25,6 +26,7 @@ import com.tibame.foodhunter.R
 
 @Composable
 fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scrollBehavior: TopAppBarScrollBehavior){
+    val context = LocalContext.current
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
@@ -49,7 +51,7 @@ fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scroll
                     contentDescription = stringResource(R.string.str_notice)
                 )
             }
-            IconButton(onClick = {}) {
+            IconButton(onClick = {navController.navigate(context.getString(R.string.str_member)+"/8")}) {
                 Icon(
                     Icons.Filled.MailOutline,
                     contentDescription = stringResource(R.string.str_chat)
