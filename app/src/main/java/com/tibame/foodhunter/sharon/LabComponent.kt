@@ -61,11 +61,16 @@ fun InsideTopBar(
     scrollBehavior: TopAppBarScrollBehavior
 ){
     TopAppBar(
+        modifier = Modifier
+//            .padding(innerPadding)
+//            .fillMaxSize()
+            .background(color = Color.White),
         scrollBehavior = scrollBehavior,
         title = {
             Text(stringResource(R.string.str_member))
         },
         navigationIcon = {
+
             if (canback) {
                 IconButton(onClick = {
                     navController?.popBackStack()
@@ -92,61 +97,10 @@ fun InsideTopBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            containerColor = Color.White,
             titleContentColor = MaterialTheme.colorScheme.primary,
         )
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddNote1(
-    navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
-//    callback: @Composable () -> Unit // 接收一個可組合的回調函數，用於在頁面中展示額外的 UI
-) {
-    var phone by remember { mutableStateOf("") }
-    val destination = navController.currentBackStackEntryAsState().value?.destination
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
-
-    Scaffold (
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-
-        topBar = {
-            InsideTopBar(true, navController, scrollBehavior)
-        },
-
-    ) { innerPadding ->
-
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(color = Color.LightGray)
-        ) {
-
-            // 輸入的文字對齊末端
-            TextField(
-                value = phone,
-                // 輸入的值改變時呼叫此方法
-                onValueChange = { phone = it },
-                // 提示文字
-                label = { Text(text = "Phone number") },
-                // 輸入的文字對齊末端
-                textStyle = TextStyle(textAlign = TextAlign.End),
-                singleLine = true,
-                // 鍵盤種類為電話
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            )
-            Text(
-                text = "$phone",
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-    }
 }
 
 
@@ -187,7 +141,6 @@ fun NiaTabRow(
 ) {
     TabRow(
         selectedTabIndex = selectedTabIndex,
-        modifier = modifier,
         indicator = { tabPositions ->
             TabRowDefaults.PrimaryIndicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
@@ -235,7 +188,6 @@ fun TabsPreview() {
     val mockNavController = rememberNavController()
 
     MaterialTheme {
-        AddNote1(mockNavController)
         val titles = listOf("Topics", "People")
         NiaTabRow(selectedTabIndex = selectedTab) {
             titles.forEachIndexed { index, title ->
