@@ -42,4 +42,5 @@
     <string name="select_picture">選擇圖片</string>
     <string name="SearchToGoogleMap">導覽到地圖</string>
     <string name="randomFood">轉盤</string>
+    <string name="str_group_search_result">搜尋結果</string>
 </resources>

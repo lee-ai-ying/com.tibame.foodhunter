@@ -4,9 +4,15 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 data class GroupChat(
-    var groupId: Int = 0,
-    var groupName: String = "defaultName",
-    var groupState: Int = 1
+    var id: Int = 0,
+    var name: String = "defaultName",
+    var state: Int = 1,
+    var location: String = "",
+    var time: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
+    var price: String = "1-2000+",
+    var joinMember: String = "",
+    var public: String = "public",
+    var describe: String = ""
 )
 
 data class GroupCreateData(
@@ -25,4 +31,8 @@ data class GroupSearchData(
     var time: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
     var price: String = "1-2000+",
     var tags: List<String> = emptyList()
+)
+
+data class GroupSearchResult(
+    var id:Int = 0
 )

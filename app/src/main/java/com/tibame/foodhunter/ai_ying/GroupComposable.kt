@@ -232,11 +232,13 @@ fun GroupSingleInput(
 @Composable
 fun GroupSingleWithIcon(
     trailingIcon: @Composable () -> Unit,
+    placeholder: @Composable () -> Unit = {},
+    modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
-        modifier = Modifier.fillMaxWidth(),
-        placeholder = {},
+        modifier = modifier,
+        placeholder = placeholder,
         trailingIcon = trailingIcon,
         singleLine = true,
         maxLines = 1,
@@ -249,10 +251,11 @@ fun GroupSingleWithIcon(
 fun GroupSingleInputWithIcon(
     placeholder: @Composable () -> Unit,
     trailingIcon: @Composable () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         placeholder = placeholder,
         trailingIcon = trailingIcon,
         singleLine = true,

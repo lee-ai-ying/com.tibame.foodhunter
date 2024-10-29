@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ fun GroupMain(
 ) {
     val context = LocalContext.current
     var selectTabIndex by remember { mutableIntStateOf(0) }
+    var isShowSearchResult by remember { mutableStateOf(false) }
     val groupChats by groupVM.groupChatFlow.collectAsState()
 
     Column(
@@ -32,6 +34,7 @@ fun GroupMain(
         GroupTopTabs(selectTabIndex,
             onTabClick1 = {
                 selectTabIndex = 0
+                isShowSearchResult = false
             },
             onTabClick2 = {
                 selectTabIndex = 1
@@ -41,10 +44,26 @@ fun GroupMain(
         ) {
             when (selectTabIndex) {
                 0 -> {
-                    GroupChatList(groupChats, navController,groupVM)
+                    GroupChatList(groupChats, navController, groupVM)
                 }
+
                 1 -> {
-                    GroupSearch(groupVM)
+                    if (!isShowSearchResult) {
+                        GroupSearch(navController, groupVM) {
+                            isShowSearchResult = true
+                        }
+                    } else {
+                        GroupSearchResult(
+                            navController,
+                            groupVM,
+                            onBackClick = {
+                                isShowSearchResult = false
+                            },
+                            onJoinClick = {
+                                selectTabIndex = 0
+                            }
+                        )
+                    }
                 }
             }
         }

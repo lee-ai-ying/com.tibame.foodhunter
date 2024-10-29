@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +18,7 @@ class GroupViewModel : ViewModel() {
         }
     }
 
+
     private val _chatInput = MutableStateFlow("")
     val chatInput = _chatInput.asStateFlow()
     fun chatRoomInput(text: String) {
@@ -34,6 +34,13 @@ class GroupViewModel : ViewModel() {
             groupChat
         }
     }
+    fun getGroupChatDetailFromId(id:Int){
+        _chatRoom.update {
+            groupChatFlow.value.find {
+                it.id == id && it.state!=99
+            }?:GroupChat()
+        }
+    }
 
     private val _groupCreateData = MutableStateFlow(GroupCreateData())
     val groupCreateData: StateFlow<GroupCreateData> = _groupCreateData.asStateFlow()
@@ -41,7 +48,6 @@ class GroupViewModel : ViewModel() {
         _groupCreateData.update {
             data
         }
-        Log.d("ai",data.toString())
     }
 
     private val _groupSearchData = MutableStateFlow(GroupSearchData())
@@ -50,8 +56,20 @@ class GroupViewModel : ViewModel() {
         _groupSearchData.update {
             data
         }
-        Log.d("ai",data.toString())
     }
 
-    //var isChatRoomFunctionButtonShow = MutableStateFlow(false).asStateFlow()
+    private val _groupSearchResult = MutableStateFlow(emptyList<GroupSearchResult>())
+    var groupSearchResult = _groupSearchResult.asStateFlow()
+    fun getGroupSearchResult(){
+        groupSearchResult=repository.groupSearchResult
+    }
+
+    var showEditGroup =MutableStateFlow(false)
+    var showEditMember =MutableStateFlow(false)
+    fun setShowEditGroup(show:Boolean){
+        showEditGroup.update { show }
+    }
+    fun setShowEditMember(show:Boolean){
+        showEditMember.update { show }
+    }
 }

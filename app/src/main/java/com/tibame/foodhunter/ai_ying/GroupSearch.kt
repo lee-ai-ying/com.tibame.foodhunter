@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,19 +38,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ofLocalizedDate
-import java.time.format.FormatStyle
 
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GroupSearch(
-    gChatVM: GroupViewModel
+    navController: NavHostController,
+    gChatVM: GroupViewModel,
+    onSearchClick: () -> Unit = {}
 ) {
     val tags = listOf(
         "aaa",
@@ -64,7 +65,11 @@ fun GroupSearch(
         "h"
     )
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var selectDate by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))) }
+    var selectDate by remember {
+        mutableStateOf(
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+        )
+    }
     val inputData by remember { mutableStateOf(GroupSearchData()) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -73,22 +78,22 @@ fun GroupSearch(
         items(1) {
             //*
             GroupTitleText(text = stringResource(R.string.str_search_group))
-            Column (
+            Column(
                 modifier = Modifier.padding(horizontal = 16.dp)
-            ){
+            ) {
                 GroupText(text = stringResource(R.string.str_create_name))
                 GroupSingleInput {
                     inputData.name = it
                 }
                 GroupText(text = stringResource(R.string.str_create_location))
-                GroupSingleWithIcon (
-                    trailingIcon={
+                GroupSingleWithIcon(
+                    trailingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Place,
                             contentDescription = ""
                         )
                     }
-                ){
+                ) {
                     inputData.location = it
                 }
                 GroupText(text = stringResource(R.string.str_create_time))
@@ -109,7 +114,7 @@ fun GroupSearch(
                     inputData.time = it
                 }
                 GroupText(text = stringResource(R.string.str_create_price))
-                GroupPriceSlider{
+                GroupPriceSlider {
                     inputData.price = it
                 }
                 Spacer(modifier = Modifier.size(8.dp))
@@ -124,9 +129,8 @@ fun GroupSearch(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     tags.forEach {//.shuffled().forEach {
-                        FoodLabel(it){
+                        FoodLabel(it) {
                             inputData.tags.toMutableList().add(it)
-                            Log.d("ai",it)
                         }
                     }
                 }
@@ -141,7 +145,7 @@ fun GroupSearch(
                         Button(
                             onClick = {
                                 gChatVM.setGroupSearchData(inputData)
-                                Log.d("ai",gChatVM.groupSearchData.toString())
+                                onSearchClick()
                             },
                         ) {
                             Text("搜尋")
@@ -189,7 +193,7 @@ fun GroupSearch(
 }
 
 @Composable
-fun FoodLabel(text: String,onClick:()->Unit) {
+fun FoodLabel(text: String, onClick: () -> Unit) {
     var selected by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.clickable {
@@ -247,6 +251,6 @@ fun FoodLabel(text: String,onClick:()->Unit) {
 @Composable
 fun GroupSearchPreview() {
     MaterialTheme {
-        GroupSearch(viewModel())
+        GroupSearch(rememberNavController(), viewModel())
     }
 }
