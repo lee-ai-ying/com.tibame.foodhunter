@@ -66,6 +66,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import kotlinx.coroutines.launch
 
 
@@ -95,18 +96,17 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantDetail(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
+    restaurantVM: SearchScreenVM
 ) {
+    val restNavController = rememberNavController()
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_searchdetail)) }
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    // 控制收藏狀態
-    var isBookmarked by remember { mutableStateOf(false) }
-
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -122,7 +122,7 @@ fun RestaurantDetail(
                     .background(Color.White)
             ) {
                 NavHost(
-                    navController = navController,
+                    navController = restNavController,
                     startDestination = mainSceneName,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -138,7 +138,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-                            RestaurantInfoDetail()
+                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -149,7 +149,6 @@ fun RestaurantDetail(
 
                             //社群預覽
 
-                            //RelatedPost()
                             Text(
                                 text = "社群預覽  待修",
                                 fontSize = 18.sp
@@ -171,20 +170,24 @@ fun RestaurantDetail(
                                 color = Color.Black
                             )
 
-                            Reviews ()
+                            ReviewZone()
+
 
                         }
 
                     }
                 }
             }
+
         }
     }
+
+
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun RestaurantDetailPreview() {
-    RestaurantDetail(navController = rememberNavController())
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RestaurantDetailPreview() {
+//    RestaurantDetail(navController = rememberNavController())
+//}

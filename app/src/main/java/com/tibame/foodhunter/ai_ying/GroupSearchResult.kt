@@ -1,11 +1,11 @@
 package com.tibame.foodhunter.ai_ying
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,51 +40,34 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 
 @Composable
-fun GroupChatList(
-    groupChats: List<GroupChat>,
+fun GroupSearchResult(
     navController: NavHostController,
-    gChatVM: GroupViewModel
+    groupVM: GroupViewModel,
+    onBackClick: () -> Unit = {},
+    onJoinClick: () -> Unit = {}
 ) {
-    var searchInput by remember { mutableStateOf("") }
-
-    GroupSearchBar(
-        onValueChange= {
-            searchInput = it
-            searchInput
-        },
-        onClearClick = {
-            searchInput = ""
-        }
-    )
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(groupChats.filter { it.name.contains(searchInput) }) { groupChat ->
-            if (groupChat.state == 99 && searchInput.isEmpty()) {
-                Column(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primary)//colorResource(R.color.orange_3rd))
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
-                        text = groupChat.name,
-                        color = Color.White
-                    )
-                }
-            }
-            else {
-                Column(
-                    modifier = Modifier.background(Color.White).clickable {
-                        gChatVM.setDetailGroupChat(groupChat)
-                        navController.navigate("GroupChatRoom/${groupChat.id}")
-                    }
-                ) {
+    groupVM.getGroupSearchResult()
+    val result = groupVM.groupSearchResult.collectAsState()
+    var showGroupChatDetail by remember { mutableStateOf(false) }
+    val selectGroupChat = groupVM.chatRoom.collectAsState().value
+    if (!showGroupChatDetail) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(result.value) {
                     Row(
                         modifier = Modifier
                             .height(56.dp)
                             .padding(start = 10.dp, end = 10.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .clickable {
+                                showGroupChatDetail = true
+                                groupVM.getGroupChatDetailFromId(it.id)
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(
@@ -92,7 +76,7 @@ fun GroupChatList(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ){
+                            ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.user1),
                                     contentDescription = "avatar",
@@ -102,7 +86,7 @@ fun GroupChatList(
                                     contentScale = ContentScale.Crop
                                 )
                                 Text(
-                                    text = groupChat.name
+                                    text = it.id.toString()
                                 )
                             }
                         }
@@ -112,19 +96,48 @@ fun GroupChatList(
                         )
                     }
                 }
-            }
-            //Spacer(modifier = Modifier.fillMaxWidth().size(1.dp).background(colorResource(R.color.orange_1st)))
-        }
 
+            }
+            Button(
+                onClick = onBackClick
+            ) {
+                Text("返回")
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(selectGroupChat.name)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onJoinClick,
+                ) {
+                    Text("加入")
+                }
+                Button(
+                    onClick = {
+                        showGroupChatDetail = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text("返回", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
+            }
+        }
     }
 }
 
-
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun GroupChatListPreview(groupVM:GroupViewModel= viewModel()) {
+fun GroupSearchResultPreview() {
     MaterialTheme {
-        val groupChats by groupVM.groupChatFlow.collectAsState()
-        GroupChatList(groupChats, rememberNavController(), viewModel())
+        GroupSearchResult(rememberNavController(), viewModel())
     }
 }

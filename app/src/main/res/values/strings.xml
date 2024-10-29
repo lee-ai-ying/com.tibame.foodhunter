@@ -10,7 +10,6 @@
     <string name="str_chat">私聊</string>
     <string name="str_searchpost">搜尋貼文</string>
     <string name="str_backToSearch">返回地圖</string>
-    <string name="str_searchdetail">餐廳詳細</string>
     <string name="str_login">登入</string>
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
@@ -43,6 +42,8 @@
     <string name="select_picture">選擇圖片</string>
     <string name="SearchToGoogleMap">導覽到地圖</string>
     <string name="randomFood">轉盤</string>
+    <string name="str_group_search_result">搜尋結果</string>
+    <string name="restaurantDetail">餐廳詳細</string>
     <string name="Add_message">新增留言</string>
     <string name="message">留言</string>
     <string name="edit">編輯</string>

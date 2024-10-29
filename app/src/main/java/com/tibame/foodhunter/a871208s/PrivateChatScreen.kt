@@ -1,11 +1,14 @@
-package com.tibame.foodhunter.ai_ying
+package com.tibame.foodhunter.a871208s
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,53 +35,54 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ai_ying.GroupChat
+import com.tibame.foodhunter.ai_ying.GroupSearchBar
+import com.tibame.foodhunter.ai_ying.GroupViewModel
 
 @Composable
-fun GroupChatList(
-    groupChats: List<GroupChat>,
+fun PrivateChatScreen(
     navController: NavHostController,
-    gChatVM: GroupViewModel
+    pChatVM: PrivateViewModel= viewModel()
 ) {
     var searchInput by remember { mutableStateOf("") }
-
-    GroupSearchBar(
-        onValueChange= {
-            searchInput = it
-            searchInput
-        },
-        onClearClick = {
-            searchInput = ""
-        }
-    )
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
+    val privateChats by pChatVM.PrivateChatFlow.collectAsState()
+    Column(
     ) {
-        items(groupChats.filter { it.name.contains(searchInput) }) { groupChat ->
-            if (groupChat.state == 99 && searchInput.isEmpty()) {
-                Column(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primary)//colorResource(R.color.orange_3rd))
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
-                        text = groupChat.name,
-                        color = Color.White
-                    )
-                }
-            }
-            else {
+        Column(
+            modifier = Modifier.background(colorResource(R.color.orange_3rd))
+        ) {
+
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 16.dp),
+                text = "聊天"
+            )
+        }
+
+
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+
+            items(privateChats.filter { it.name.contains(searchInput) }) { privateChat ->
+
                 Column(
                     modifier = Modifier.background(Color.White).clickable {
-                        gChatVM.setDetailGroupChat(groupChat)
-                        navController.navigate("GroupChatRoom/${groupChat.id}")
+                        pChatVM.setDetailGroupChat(privateChat)
+                        navController.navigate("GroupChatRoom/${privateChat.id}")
                     }
                 ) {
                     Row(
@@ -92,17 +98,17 @@ fun GroupChatList(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ){
+                            ) {
                                 Image(
-                                    painter = painterResource(id = R.drawable.user1),
-                                    contentDescription = "avatar",
-                                    modifier = Modifier
-                                        .size(32.dp)
+                                    painter = painterResource(id = privateChat.image),
+                                    contentDescription = "friend",
+                                    modifier = Modifier.size(30.dp)
+                                        .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                                 Text(
-                                    text = groupChat.name
+                                    text = privateChat.name
                                 )
                             }
                         }
@@ -122,9 +128,9 @@ fun GroupChatList(
 
 @Preview(showBackground = true)
 @Composable
-fun GroupChatListPreview(groupVM:GroupViewModel= viewModel()) {
+fun GroupChatListPreview(privateVM: PrivateViewModel = viewModel()) {
     MaterialTheme {
-        val groupChats by groupVM.groupChatFlow.collectAsState()
-        GroupChatList(groupChats, rememberNavController(), viewModel())
+        val privateChats by privateVM.PrivateChatFlow.collectAsState()
+        PrivateChatScreen(rememberNavController(), viewModel())
     }
 }
