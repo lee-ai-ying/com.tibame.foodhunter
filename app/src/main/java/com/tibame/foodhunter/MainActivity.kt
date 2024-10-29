@@ -54,6 +54,7 @@ import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
+import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.zoe.Post
 import com.tibame.foodhunter.zoe.SearchPost
 
@@ -283,6 +284,10 @@ fun Main(
                 TabMainScreen(navController,2)
             }
 
+            composable("${context.getString(R.string.str_note_edit)}/{noteId}") { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                NoteEdit(navController = navController, noteId = noteId)
+            }
 
         }
     }
