@@ -1,19 +1,14 @@
 package com.tibame.foodhunter.wei
 
-import android.content.res.Resources.Theme
-import android.view.View.OnCreateContextMenuListener
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,13 +20,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,32 +38,38 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.zIndex
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.zoe.Post
 import com.tibame.foodhunter.zoe.PostItem
 import kotlinx.coroutines.launch
 
+@Preview
+@Composable
+fun PreviewInfoDetail() {
+    ReviewZone()
+
+}
+
 /**餐廳資訊*/
 @Composable
 fun RestaurantInfoDetail(
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
+    var isBookmarked by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf("建立揪團", "建立筆記", "建立貼文")
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
     // 控制收藏狀態(icon圖示及snackbar文字)
-    var isBookmarked by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
+
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -82,39 +85,44 @@ fun RestaurantInfoDetail(
             contentScale = ContentScale.Crop
         )
 
-        Spacer(modifier = Modifier.weight(0.2f))
+        Spacer(modifier = Modifier.size(10.dp))
 
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top
         ) {
+            //星星
+
             Text(
                 text = "餐廳名稱",
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = "餐廳描述1",
-                fontSize = 18.sp,
+                text = "描述1(地址)",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
             Text(
-                text = "餐廳描述2",
-                fontSize = 18.sp,
+                text = "描述2(電話、營業狀態)",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.size(10.dp))
 
         Column(
             horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier.weight(0.5f)
         ) {
-            Button(
+
+            //加入收藏
+            IconButton(
                 onClick = {
                     isBookmarked = !isBookmarked
                     val message = if (isBookmarked) {
@@ -124,83 +132,51 @@ fun RestaurantInfoDetail(
                     }
 
                     scope.launch {
+                        Log.e("TAG", "showSnackBar")
                         snackbarHostState.showSnackbar(
                             message,
                             withDismissAction = true
                         )
                     }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                )
-            ) {
+                }) {
                 Icon(
-                    painter = painterResource(
-                        id = if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border
-                    ),
+                    modifier = Modifier.size(30.dp),
+                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
                     contentDescription = if (isBookmarked) "已收藏" else "未收藏",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            Button(
-                onClick = {
-                    showDialog = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                )
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_more_horiz_24),
-                    contentDescription = "更多功能",
-                    modifier = Modifier.size(30.dp)
                 )
             }
         }
-    }
 
-    if (showDialog) {
-        Column(
-            modifier = Modifier
-                .width(150.dp)
-                .height(250.dp)
-                .background(Color(0xFFFED2C7))
-                .padding(16.dp),
 
-            ) {
+        //更多功能
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_more_horiz_24),
+                contentDescription = "更多功能",
+                modifier = Modifier.size(30.dp)
+            )
+        }
 
-            Button(onClick = {
-                // 建立揪團的功能
-                showDialog = false
-            }) {
-                Text("建立揪團")
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            // 下拉選單內容由DropdownMenuItem選項元件組成
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    // 點選項目後呼叫
+                    onClick = {
+                        // 跳到各功能
+                        expanded = false
+                    }
+                )
             }
 
-            Button(onClick = {
-                // 建立筆記的功能
-                showDialog = false
-            }) {
-                Text("建立筆記")
-            }
-
-            Button(onClick = {
-                // 建立貼文的功能
-                showDialog = false
-            }) {
-                Text("建立貼文")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(onClick = { showDialog = false }) {
-                Text("關閉")
-            }
         }
     }
 }
+
 
 /**相關貼文*/
 @Composable
@@ -218,11 +194,16 @@ fun RelatedPost(posts: List<Post>) {
     }
 }
 
-
 /**評論顯示區*/
 @Composable
-fun Reviews() {
+fun ReviewZone() {
     //val reviewList = (0..20).toList() 建立假的評論們
+    var rememberRating by remember { mutableStateOf(0) }
+    //記錄讚數&倒讚數狀態
+    var likeCount by remember { mutableStateOf(0) }
+    var dislikeCount by remember { mutableStateOf(0) }
+    var isLiked by remember { mutableStateOf(false) }
+    var isDisliked by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -260,16 +241,6 @@ fun Reviews() {
                 )
         }
 
-
-    }
-
-    Column(
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-
         //評論內容
         Row {
             Image(
@@ -282,12 +253,13 @@ fun Reviews() {
                 contentScale = ContentScale.Crop
             )
 
-
-
             Column(
                 horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
+                Spacer(modifier = Modifier.size(8.dp))
                 Text(
                     text = "使用者名稱",
                     fontSize = 20.sp,
@@ -297,55 +269,107 @@ fun Reviews() {
 
                 Spacer(modifier = Modifier.size(5.dp))
 
-                Text(
-                    text = "☆星星數☆",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                RatingBar(
+                    rating = rememberRating,
+                    onRatingChanged = { newRememberRating ->
+                        rememberRating = newRememberRating
+                    }
                 )
-
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             //讚、倒讚
             Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier.weight(1f),
             ) {
                 Button(
                     onClick = {
-                        //一定是大拇指的啦，點擊+1
+                        isLiked = !isLiked
+                        likeCount += if (isLiked) 1 else -1
+                        // 如果按下讚的時候已經有倒讚，則取消倒讚
+                        if (isDisliked) {
+                            isDisliked = false
+                            dislikeCount-- // 取消倒讚
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         contentColor = Color.Black
                     )
-                ) {
+                ) { //一定是大拇指的啦，點擊+1
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_thumb_up),
+                        painter = painterResource(
+                            id = if (isLiked) R.drawable.baseline_thumb_up_filled else R.drawable.baseline_thumb_up
+                        ),
                         contentDescription = "讚哦",
                         modifier = Modifier.size(30.dp)
                     )
+
+                    Text(text = " $likeCount", modifier = Modifier.padding(start = 8.dp))
                 }
 
                 Button(
                     onClick = {
-                        //這麼臭的評論有必要存在嗎，點擊+1
+                        isDisliked = !isDisliked
+                        dislikeCount += if (isDisliked) 1 else -1
+                        // 如果按下倒讚的時候已經有讚，則取消讚
+                        if (isLiked) {
+                            isLiked = false
+                            likeCount-- // 取消讚
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         contentColor = Color.Black
                     )
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_thumb_down),
+                    Icon( //這麼臭的評論有必要存在嗎，點擊+1
+                        painter = painterResource(
+                            id = if (isDisliked) R.drawable.baseline_thumb_down_filled else R.drawable.baseline_thumb_down
+                        ),
                         contentDescription = "倒讚",
                         modifier = Modifier.size(30.dp)
                     )
+
+                    Text(text = " $dislikeCount", modifier = Modifier.padding(start = 8.dp))
                 }
 
             }
+
+
+        }
+
+
+    }
+
+}
+
+
+/**星星*/
+@Composable
+fun RatingBar(
+    modifier: Modifier = Modifier,
+    rating: Int,
+    onRatingChanged: (Int) -> Unit
+) {
+
+
+    Row(modifier = modifier) {
+        for (i in 1..5) {
+            Icon(
+                painter = painterResource(
+                    id = if (i <= rating) R.drawable.baseline_star else R.drawable.baseline_star_outline
+                ),
+                contentDescription = "$i 顆星",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { onRatingChanged(i) }
+            )
         }
     }
 }
+
+
+
+
