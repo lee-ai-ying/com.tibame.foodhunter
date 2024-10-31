@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -209,6 +210,20 @@ fun GroupText(text: String) {
         modifier = Modifier
             .height(40.dp)
             .fillMaxWidth(),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = text)
+    }
+}
+@Composable
+fun GroupTextWithBackground(text: String) {
+    Column(
+        modifier = Modifier
+            .heightIn(min=40.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(8.dp)
+        ,
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = text)
