@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,15 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
-import com.tibame.foodhunter.sharon.NiaTab
-import com.tibame.foodhunter.sharon.NiaTabRow
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 
@@ -38,8 +36,6 @@ fun SearchPost(
     navController: NavHostController,
                 postViewModel: PostViewModel = viewModel()) {
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
-    val selectedTabIndex by postViewModel.selectedTabIndex.collectAsState()
-    val context = LocalContext.current
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
 
     Column(
@@ -93,13 +89,13 @@ fun FilterChips(
     selectedFilters: List<String>,         // 當前選中的標籤
     onFilterChange: (List<String>) -> Unit // 選中狀態變更時的回調
 ) {
-    Row(
+    LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        filters.forEach { filter ->
+        items(filters) { filter ->
             val isSelected = selectedFilters.contains(filter)
 
             // 使用 FilterChip 或 Chip 來表示篩選標籤
@@ -119,6 +115,7 @@ fun FilterChips(
         }
     }
 }
+
 
 
 @Preview(showBackground = true)

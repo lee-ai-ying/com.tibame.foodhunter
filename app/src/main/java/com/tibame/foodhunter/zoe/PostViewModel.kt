@@ -2,6 +2,7 @@ package com.tibame.foodhunter.zoe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tibame.foodhunter.zoe.PostRepository.postList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -10,47 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-//
-//    // 獲取用戶特定帖子
-//    fun getUserPosts(publisherId: String): StateFlow<List<Post>> {
-//        return postChatFlow.map { posts ->
-//            posts.filter { it.publisher.id == publisherId }
-//        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-//    }
-//
-//    fun updateFilters(filters: Set<String>) {
-//        _selectedFilters.value = filters
-//    }
-//
-//    fun updateTabIndex(index: Int) {
-//        _selectedTabIndex.value = index
-//    }
-//
-//    fun updateSearchQuery(query: String) {
-//        _searchQuery.value = query
-//        performSearch()
-//    }
-//
-//    fun performSearch() {
-//        // 搜索邏輯已整合到 getFilteredPosts() 中
-//        viewModelScope.launch {
-//            // 可以在這裡添加額外的搜索相關操作
-//            // 例如：記錄搜索歷史、更新搜索建議等
-//        }
-//    }
-//
-//    // 清除錯誤訊息
-//    fun clearError() {
-//        _error.value = null
-//    }
-//
-//    // 清除當前用戶數據
-//    fun clearUserData() {
-//        _userPosts.value = emptyList()
-//        _publisher.value = null
-//    }
-//}
+
 class PostViewModel : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
@@ -60,21 +21,42 @@ class PostViewModel : ViewModel() {
 
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex = _selectedTabIndex.asStateFlow()
-
-    // 直接使用 PostRepository 的 postList
-    val postList = PostRepository.postList
+    private val repository = PostRepository
+    private val postFlow = repository.postList
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
-
     fun updateFilters(filters: List<String>) {
         _selectedFilters.value = filters
     }
+    fun getPersonalPosts(userId: String): StateFlow<List<Post>> {
+        return postList.map { posts ->
+            posts.filter { post -> post.publisher.id == userId }
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }
+
+
+
+    private val _postCreateData = MutableStateFlow(PostCreateData())
+    val postCreateData: StateFlow<PostCreateData> = _postCreateData.asStateFlow()
+    fun setPostCreateData(data: PostCreateData){
+        _postCreateData.update {
+            data
+        }
+    }
+    fun getPostById(postId: Int): StateFlow<Post?> {
+        return postFlow.map { posts ->
+            posts.find { it.postId == postId }
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    }
+
+
+
 
     fun getFilteredPosts(): StateFlow<List<Post>> {
         return combine(
-            postList,
+            postFlow,
             selectedFilters,
             searchQuery
         ) { posts, filters, query ->
@@ -102,4 +84,11 @@ class PostViewModel : ViewModel() {
             }
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
+
+
+
+
+
+
+
 }

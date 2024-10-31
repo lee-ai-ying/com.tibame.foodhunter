@@ -35,7 +35,7 @@ object PostRepository {
         // 初始化示例数据
         _postList.value = listOf(
             Post(
-                postId = "1",
+                postId = 1,
                 publisher = samplePublishers[0],  // 使用 Publisher 对象
                 content = "這是一個美味的早午餐！推薦大家來試試。",
                 location = "台北市信義區",
@@ -59,7 +59,7 @@ object PostRepository {
                 )
             ),
             Post(
-                postId = "2",
+                postId = 2,
                 publisher = samplePublishers[1],
                 content = "今天的午餐很特別，是米其林餐廳的特製料理。",
                 location = "台北市大安區",
@@ -83,7 +83,7 @@ object PostRepository {
                 )
             ),
             Post(
-                postId = "3",
+                postId = 3,
                 publisher = samplePublishers[2],
                 content = "晚餐約會的好去處，氣氛很好！",
                 location = "台北市中山區",
@@ -109,29 +109,6 @@ object PostRepository {
         )
     }
 
-    // Repository 方法
-    fun addPost(post: Post) {
-        val currentList = _postList.value.toMutableList()
-        currentList.add(0, post)
-        _postList.value = currentList
-    }
 
-    fun updatePost(post: Post) {
-        val currentList = _postList.value.toMutableList()
-        val index = currentList.indexOfFirst { it.postId == post.postId }
-        if (index != -1) {
-            currentList[index] = post
-            _postList.value = currentList
-        }
-    }
 
-    fun deletePost(postId: String) {
-        val currentList = _postList.value.toMutableList()
-        currentList.removeAll { it.postId == postId }
-        _postList.value = currentList
-    }
-
-    fun getPublisherById(publisherId: String): Publisher? {
-        return samplePublishers.find { it.id == publisherId }
-    }
 }

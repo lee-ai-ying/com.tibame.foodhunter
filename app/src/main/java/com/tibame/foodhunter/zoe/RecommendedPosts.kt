@@ -52,7 +52,7 @@ fun RecommendedPosts(
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     FilterChips(
-        filters = listOf("早午餐", "午餐", "晚餐"),
+        filters = listOf("早午餐", "午餐", "晚餐","下午茶","宵夜"),
         selectedFilters = selectedFilters,
         onFilterChange = { updatedFilters ->
             postViewModel.updateFilters(updatedFilters)
@@ -81,7 +81,7 @@ fun PostList(posts: List<Post>) {
 @Composable
 fun PostItem(
     post: Post,
-    postViewModel: PostViewModel = viewModel()
+
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -129,7 +129,7 @@ fun PostItem(
                         Icon(
                             painter = painterResource(id = R.drawable.chat_bubble_outline_24),
                             contentDescription = "Chat Bubble",
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -137,7 +137,7 @@ fun PostItem(
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
                     contentDescription = "Bookmark",
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -172,6 +172,7 @@ private fun PostHeader(post: Post) {
             modifier = Modifier
                 .size(30.dp)
                 .clip(CircleShape)
+
         )
 
         Column {
@@ -228,30 +229,29 @@ private fun PostHeader(post: Post) {
             }
         }
     }
-
-    @Composable
-    fun PostContent(content: String) {
-        var expanded by remember { mutableStateOf(false) }
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = content,
-                maxLines = if (expanded) Int.MAX_VALUE else 3,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.animateContentSize()
-            )
-
-            if (content.length > 100) {
-                TextButton(
-                    onClick = { expanded = !expanded },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(
-                        text = if (expanded) "顯示較少" else "顯示更多"
-                    )
-                }
-            }
-        }
-    }
 }
+//    @Composable
+//    fun PostContent(content: String) {
+//        var expanded by remember { mutableStateOf(false) }
+//
+//        Column(modifier = Modifier.fillMaxWidth()) {
+//            Text(
+//                text = content,
+//                maxLines = if (expanded) Int.MAX_VALUE else 3,
+//                overflow = TextOverflow.Ellipsis,
+//                style = MaterialTheme.typography.bodyMedium,
+//                modifier = Modifier.animateContentSize()
+//            )
+//
+//            if (content.length > 100) {
+//                TextButton(
+//                    onClick = { expanded = !expanded },
+//                    modifier = Modifier.align(Alignment.End)
+//                ) {
+//                    Text(
+//                        text = if (expanded) "顯示較少" else "顯示更多"
+//                    )
+//                }
+//            }
+//        }
+//    }

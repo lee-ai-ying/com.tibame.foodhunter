@@ -1,7 +1,6 @@
 package com.tibame.foodhunter
 
 import NewPost
-import android.app.appsearch.SearchResult
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,8 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModel
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -62,11 +59,11 @@ import com.tibame.foodhunter.zoe.Home
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.andysearch.SearchScreenVM
-import com.tibame.foodhunter.andysearch.ShowGoogleMap
-import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.wei.RestaurantDetail
-import com.tibame.foodhunter.zoe.Post
+import com.tibame.foodhunter.zoe.PostDetailScreen
+import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -122,7 +119,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
 fun checkBottomButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
-        context.getString(R.string.str_home),
+        context.getString(R.string.str_Recommended_posts),
+        context.getString(R.string.str_searchpost),
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
@@ -142,7 +140,8 @@ fun Main(
     gChatVM: GroupViewModel = viewModel(),
     searchVM: SearchScreenVM = viewModel(),
     friendVM: FriendViewModel = viewModel(),
-    pChatVM: PrivateViewModel = viewModel()
+    pChatVM: PrivateViewModel = viewModel(),
+    postViewModel: PostViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -177,7 +176,7 @@ fun Main(
             if (checkBottomButtonShow(destination)) {
                 BottomFunctionBar(
                     onHomeClick = {
-                        currectScene = context.getString(R.string.str_home)
+                        currectScene = context.getString(R.string.str_Recommended_posts)
                     },
                     onSearchClick = {
                         currectScene = context.getString(R.string.str_search)
@@ -217,9 +216,27 @@ fun Main(
             composable(context.getString(R.string.str_login) + "/4") {
                 ForgetPassword2Screen(navController = navController, {})
             }
-            composable(context.getString(R.string.str_home)) {
-//                Home(navController = navController)
+            composable(context.getString(R.string.str_Recommended_posts)) {
+                Home(navController, 0)
             }
+            composable(context.getString(R.string.str_searchpost)) {
+                Home(navController, 1)
+            }
+            composable(
+                "postDetail/{postId}",
+                arguments = listOf(navArgument("postId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val postId = backStackEntry.arguments?.getInt("postId")
+                PostDetailScreen(
+                    postId = postId,
+                    navController = navController,
+                    postViewModel = postViewModel
+                )
+            }
+
+
+
+
 
 
 
