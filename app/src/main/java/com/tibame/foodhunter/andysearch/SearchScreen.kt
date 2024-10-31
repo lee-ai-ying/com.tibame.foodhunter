@@ -34,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -58,8 +61,8 @@ fun SearchScreen(
     searchTextVM: SearchScreenVM
 ){
     val context = LocalContext.current
-    searchTextVM.updateRestaurantList(context)
     val restaurants by searchTextVM.restaurantList.collectAsState()
+//    val restaurants by searchTextVM.restaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
 
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
@@ -74,7 +77,7 @@ fun SearchScreen(
             restaurants,
             onLocationUpdate = {location -> currentLocation = location}
         )
-        ShowRestaurantLists(restaurants, true, navController, currentLocation)
+        ShowRestaurantLists(restaurants, true, navController, currentLocation, searchTextVM)
     }
 
 }
@@ -125,6 +128,7 @@ fun ShowSearchBar(cities: List<City>,
                   searchTextVM: SearchScreenVM,
                   navController: NavHostController = rememberNavController()
 ){
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val searchText by searchTextVM.searchText.collectAsState()
     var isActive by remember { mutableStateOf(false) }
@@ -139,9 +143,13 @@ fun ShowSearchBar(cities: List<City>,
         query = searchText,
         onQueryChange = {searchTextVM.updateSearchText(it)},
         modifier = Modifier.fillMaxWidth(),
-        onSearch = {isActive = false
-            val id = ""
+        onSearch = {
+            isActive = false
+            if (it.isNotBlank()){
+                coroutineScope.launch { searchTextVM.updateSearchRest(it) }
+            }
             searchTextVM.updateSearchText(it)
+            val id = ""
             navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
                    },
         active = isActive,
@@ -252,7 +260,9 @@ fun ShowRestaurantLists(
     state: Boolean,
     navController: NavHostController,
     currentLocation: LatLng?,
+    searchTextVM: SearchScreenVM
 ){
+    val selectRest by searchTextVM.restListFromDataBase.collectAsState()
     val sortedRestaurants = restaurants.sortedBy {
         restaurant ->
         currentLocation?.let{location ->
@@ -302,9 +312,7 @@ fun ShowRestaurantLists(
                 Card (modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp).clickable {
-                        Log.e("fff","start")
                         navController.navigate(context.getString(R.string.restaurantDetail))
-                        Log.e("fff","end")
                     }){
                     ListItem(
                         headlineContent = {
@@ -353,7 +361,7 @@ fun ShowRestaurantLists(
                 .fillMaxWidth()
                 .padding(4.dp),
         ){
-            items(restaurants){
+            items(selectRest){
                 restaurant ->
                 val distance = currentLocation?.let{location ->
                     haversine(

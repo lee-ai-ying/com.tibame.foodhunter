@@ -254,3 +254,4 @@ private fun PostHeader(post: Post) {
             }
         }
     }
+}

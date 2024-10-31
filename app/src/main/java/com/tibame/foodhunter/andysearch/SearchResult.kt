@@ -29,7 +29,7 @@ fun SearchResult(
             restaurants = restaurants,
             restaurantID = restaurantID,
             onLocationUpdate = {location -> currentLocation = location})
-        ShowRestaurantLists(restaurants, false, navController, currentLocation)
+        ShowRestaurantLists(restaurants, false, navController, currentLocation, searchTextVM)
     }
 }
 
