@@ -19,6 +19,14 @@
     <color name="yellow_1">#FFC529</color>
     <color name="yellow_2">#FFEFC3</color>
     <color name="gary">#9A9FAE</color>
+    <color name="gary_20">#FFEBEBEB</color>
+    <color name="dark_20">#FF6E7489</color>
+    <color name="dark_80">#FF2A2F3D</color>
+    <color name="dark">#FF1A1D26</color>
+    <color name="yellow_20">#FFEFC3</color>
+
+
+
 
 
 </resources>
