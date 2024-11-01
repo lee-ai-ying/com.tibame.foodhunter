@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.LocationOn
@@ -27,7 +28,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -59,17 +62,27 @@ import com.tibame.foodhunter.zoe.PostViewModel
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
+
+
+enum class NewPostSheetContent {
+    NONE,
+    TAGS,
+    LOCATION
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
-
 fun NewPost(navController: NavHostController,
             postViewModel: PostViewModel = viewModel()
 ) {
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
+    var selectedLocation by remember { mutableStateOf("") }
     var text by remember { mutableStateOf(TextFieldValue("")) }
     val scope = rememberCoroutineScope()
-    val sheetState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    var currentSheet by remember { mutableStateOf(NewPostSheetContent.NONE) }
+
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
@@ -91,20 +104,36 @@ fun NewPost(navController: NavHostController,
         )
     }
 
+
     BottomSheetScaffold(
-        scaffoldState = sheetState,
+        scaffoldState = scaffoldState,
         sheetContent = {
-            TagSelectionSheet(
-                availableTags = availableTags,
-                selectedTags = selectedTags,
-                onFilterChange = { newTags ->
-                    selectedTags = newTags
-                    scope.launch { sheetState.bottomSheetState.partialExpand() }
-                }
-            )
+            when (currentSheet) {
+                NewPostSheetContent.TAGS -> TagSelectionSheet(
+                    availableTags = availableTags,
+                    selectedTags = selectedTags,
+                    onFilterChange = { newTags ->
+                        selectedTags = newTags
+                        inputData = inputData.copy(postTag = newTags.joinToString(","))
+                        scope.launch { scaffoldState.bottomSheetState.partialExpand() }
+                    }
+                )
+                NewPostSheetContent.LOCATION -> LocationSelectionSheet(
+                    onLocationSelected = { location ->
+                        selectedLocation = location
+                        inputData = inputData.copy(location = location)
+                        scope.launch { scaffoldState.bottomSheetState.partialExpand() }
+                    }
+                )
+                NewPostSheetContent.NONE -> {}
+            }
+
         },
-        sheetPeekHeight = 0.dp,  // 完全隱藏時的高度
+        sheetPeekHeight = 0.dp,
+        sheetContainerColor =(colorResource(R.color.orange_5th)),
+
     ) { paddingValues ->
+
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -113,6 +142,7 @@ fun NewPost(navController: NavHostController,
                 .padding(10.dp)
                 .padding(paddingValues)
         ) {
+
             item {
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -132,6 +162,8 @@ fun NewPost(navController: NavHostController,
                 }
             }
 
+
+
             item {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -142,8 +174,8 @@ fun NewPost(navController: NavHostController,
                     TextField(
                         value = text,
                         onValueChange = { newText ->
-                            text = newText                    // 更新text狀態
-                            inputData.content = newText.toString()       // 同時更新inputData
+                            text = newText
+                            inputData.content = newText.toString()
                         },
                         label = { Text("貼文內容") },
                         modifier = Modifier
@@ -191,13 +223,15 @@ fun NewPost(navController: NavHostController,
                             Text(text = stringResource(id = R.string.select_picture))
                         }
                     }
-
                     Button(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
                             contentColor = Color.Black
                         ),
-                        onClick = { /* 跳到餐廳 */ },
+                        onClick = {
+                            currentSheet = NewPostSheetContent.LOCATION
+                            scope.launch { scaffoldState.bottomSheetState.expand() }
+                        },
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -209,19 +243,23 @@ fun NewPost(navController: NavHostController,
                                 contentDescription = "location"
                             )
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text(text = stringResource(id = R.string.restaurant_location))
+                            if (selectedLocation.isEmpty()) {
+                                Text(text = stringResource(id = R.string.restaurant_location))
+                            } else {
+                                Text(text = selectedLocation)
+                            }
                         }
                     }
 
+                    // 標籤選擇按鈕
                     Button(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
                             contentColor = Color.Black
                         ),
                         onClick = {
-                            scope.launch {
-                                sheetState.bottomSheetState.expand()
-                            }
+                            currentSheet = NewPostSheetContent.TAGS
+                            scope.launch { scaffoldState.bottomSheetState.expand() }
                         }
                     ) {
                         Row(
@@ -239,8 +277,6 @@ fun NewPost(navController: NavHostController,
                                 Text(text = stringResource(id = R.string.Select_tag))
                             } else {
                                 Text(text = selectedTags.joinToString(", "))
-
-                                inputData = inputData.copy(postTag = selectedTags.joinToString(","))
                             }
                         }
                     }
@@ -248,11 +284,14 @@ fun NewPost(navController: NavHostController,
                     Button(
                         onClick = {
                             postViewModel.setPostCreateData(inputData)
-                            navController.popBackStack()},
-                        modifier = Modifier.fillMaxWidth(),
-
+                            navController.popBackStack()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            colorResource(id = R.color.orange_2nd)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f), // 設置為螢幕寬度的 80%
                     ) {
-
                         Text(text = stringResource(id = R.string.str_post))
                     }
                 }
@@ -263,7 +302,33 @@ fun NewPost(navController: NavHostController,
     }
 }
 
+@Composable
+fun LocationSelectionSheet(
+    onLocationSelected: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "選擇餐廳位置",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
+        LazyColumn {
+            items(listOf("台北市", "新北市", "桃園市", "台中市", "高雄市")) { city ->
+                TextButton(
+                    onClick = { onLocationSelected(city) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(city)
+                }
+            }
+        }
+    }
+}
 @OptIn( ExperimentalLayoutApi::class)
 @Composable
 
@@ -322,74 +387,6 @@ fun TagSelectionSheet(
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//
-//fun ShareOptionsSheet(
-//    scope: CoroutineScope,
-//    sheetState: BottomSheetScaffoldState, // 直接使用 BottomSheetScaffoldState
-//    onSelectOption: (String) -> Unit
-//) {
-//    val context = LocalContext.current
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .fillMaxHeight(0.5f),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Text(text = stringResource(id = R.string.Share_with))
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // 按鈕區塊
-//        Column(
-//            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(vertical = 16.dp),
-//                horizontalArrangement = Arrangement.Center, // 按鈕置中
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//
-//                Button(
-//                    onClick = {
-//                        val message = context.getString(R.string.only_friend)
-//                        onSelectOption(message)
-//                        scope.launch { sheetState.bottomSheetState.hide() } // 收起 BottomSheet
-//                    },
-//                    modifier = Modifier
-//                        .fillMaxWidth() // 按鈕占滿整個 Row
-//                        .height(40.dp) // 指定按鈕高度
-//                ) {
-//                    Text(text = stringResource(id = R.string.only_friend))
-//                }
-//            }
-//
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(vertical = 16.dp),
-//                horizontalArrangement = Arrangement.Center, // 按鈕置中
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Button(
-//                    onClick = {
-//                        val message = context.getString(R.string.for_public)
-//                        onSelectOption(message)
-//                        scope.launch { sheetState.bottomSheetState.hide() } // 收起 BottomSheet
-//                    },
-//                    modifier = Modifier
-//                        .fillMaxWidth() // 按鈕占滿整個 Row
-//                        .height(40.dp) // 指定按鈕高度
-//                ) {
-//                    Text(text = stringResource(id = R.string.for_public))
-//                }
-//            }
-//        }
-//    }
-//}
 
 
 @Preview(showBackground = true)
