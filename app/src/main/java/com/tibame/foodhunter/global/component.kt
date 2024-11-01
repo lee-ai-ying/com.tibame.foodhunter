@@ -20,9 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FoodHunterFont
 
 @Composable
 fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scrollBehavior: TopAppBarScrollBehavior){
@@ -30,7 +32,7 @@ fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scroll
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
-            Text(stringResource(R.string.app_name))
+            Text(stringResource(R.string.app_name), fontFamily = FoodHunterFont)
         },
         navigationIcon = {
             if (canback) {
