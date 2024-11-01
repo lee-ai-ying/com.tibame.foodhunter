@@ -40,17 +40,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ai_ying.GroupCreateData
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
+import com.tibame.foodhunter.zoe.PostCreateData
+import com.tibame.foodhunter.zoe.PostViewModel
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -58,7 +63,9 @@ import kotlinx.coroutines.launch
 @Composable
 
 
-fun NewPost(navController: NavHostController) {
+fun NewPost(navController: NavHostController,
+            postViewModel: PostViewModel = viewModel()
+) {
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
     var text by remember { mutableStateOf(TextFieldValue("")) }
     val scope = rememberCoroutineScope()
@@ -70,6 +77,7 @@ fun NewPost(navController: NavHostController) {
             selectedImageUris = uris
         }
     )
+    var inputData by remember { mutableStateOf(PostCreateData()) }
 
     val availableTags = remember {
         listOf(
@@ -133,7 +141,10 @@ fun NewPost(navController: NavHostController) {
                 ) {
                     TextField(
                         value = text,
-                        onValueChange = { text = it },
+                        onValueChange = { newText ->
+                            text = newText                    // 更新text狀態
+                            inputData.content = newText.toString()       // 同時更新inputData
+                        },
                         label = { Text("貼文內容") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -146,7 +157,11 @@ fun NewPost(navController: NavHostController) {
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent
+                            errorIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedLabelColor = Color.LightGray
                         )
                     )
                     Button(
@@ -224,19 +239,27 @@ fun NewPost(navController: NavHostController) {
                                 Text(text = stringResource(id = R.string.Select_tag))
                             } else {
                                 Text(text = selectedTags.joinToString(", "))
+
+                                inputData = inputData.copy(postTag = selectedTags.joinToString(","))
                             }
                         }
                     }
 
                     Button(
-                        onClick = { /* 發文邏輯 */ },
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = {
+                            postViewModel.setPostCreateData(inputData)
+                            navController.popBackStack()},
+                        modifier = Modifier.fillMaxWidth(),
+
                     ) {
-                        Text("發文")
+
+                        Text(text = stringResource(id = R.string.str_post))
                     }
                 }
             }
         }
+
+
     }
 }
 

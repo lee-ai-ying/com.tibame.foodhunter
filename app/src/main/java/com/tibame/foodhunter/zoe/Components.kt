@@ -58,17 +58,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.tibame.foodhunter.R
 
 
 
 
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
-)
 
 
 
@@ -77,46 +74,7 @@ data class CarouselItem(
 
 
 
-//標籤篩選貼文
-@Composable
-fun FilterChips(
-    filters: List<String>,
-    selectedFilters: Set<String>,
-    onFilterChange: (Set<String>) -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        filters.forEach { filter ->
-            val isSelected = selectedFilters.contains(filter)
-            FilterChip(
-                selected = isSelected,
-                onClick = {
-                    // 更新選中的篩選標籤
-                    val updatedFilters = if (isSelected) {
-                        selectedFilters - filter
-                    } else {
-                        selectedFilters + filter
-                    }
-                    onFilterChange(updatedFilters)
-                },
-                label = { Text(filter) },
-                leadingIcon = if (isSelected) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                }
-            )
-        }
-    }
-}
+
 
 
 
@@ -178,7 +136,7 @@ private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier 
         modifier = modifier
     ) { page ->
         Image(
-            painter = painterResource(id = items[page].imageResId),
+            painter = painterResource(id = items[page].id),
             contentDescription = items[page].contentDescription,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -223,7 +181,7 @@ private fun ImageCarouselLayout(
                     modifier = Modifier
                         .padding(2.dp)
                         .clip(CircleShape)
-                        .background(color)
+                        .background(colorResource(R.color.orange_5th))
                         .size(8.dp)
                         .zIndex(1f)
                 )
@@ -231,12 +189,12 @@ private fun ImageCarouselLayout(
         }
     }
 }
-
 @Composable
 fun ImageList(
     posts: List<Post>,
-    onPostClick: (String) -> Unit,  // 添加點擊回調，接收 postId
-    modifier: Modifier = Modifier
+    onPostClick: (Int) -> Unit, // 回調函式，用於處理點擊事件
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
@@ -248,10 +206,10 @@ fun ImageList(
             if (post.carouselItems.isNotEmpty()) {
                 Box(
                     modifier = Modifier
-                        .clickable { onPostClick(post.postId) }  // 添加點擊事件
+                        .clickable { onPostClick(post.postId) } // 點擊時觸發回調，傳遞 postId
                 ) {
                     ImageItem(
-                        imageResId = post.carouselItems[0].imageResId,
+                        imageResId = post.carouselItems[0].id,
                         contentDescription = post.carouselItems[0].contentDescription
                     )
                 }
