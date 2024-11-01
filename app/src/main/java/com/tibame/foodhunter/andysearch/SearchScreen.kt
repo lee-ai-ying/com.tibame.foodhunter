@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +28,6 @@ import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,12 +44,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -61,12 +57,9 @@ fun SearchScreen(
     searchTextVM: SearchScreenVM
 ){
     val context = LocalContext.current
-    val restaurants by searchTextVM.restaurantList.collectAsState()
-//    val restaurants by searchTextVM.restaurantList.collectAsState()
+    val restaurants by searchTextVM.preRestaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
-
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
-
     Column(modifier = Modifier.fillMaxSize()){
         ShowSearchBar(cities, searchTextVM, navController = navController)
         ShowGoogleMap(
@@ -258,11 +251,13 @@ fun ShowSearchBar(cities: List<City>,
 fun ShowRestaurantLists(
     restaurants: List<Restaurant>,
     state: Boolean,
-    navController: NavHostController,
+    navController: NavHostController = rememberNavController(),
     currentLocation: LatLng?,
-    searchTextVM: SearchScreenVM
+    searchTextVM: SearchScreenVM,
+    cardClick: ((Restaurant?) -> Unit)? = null
 ){
-    val selectRest by searchTextVM.restListFromDataBase.collectAsState()
+    val context = LocalContext.current
+    val selectRest by searchTextVM.selectRestList.collectAsState()
     val sortedRestaurants = restaurants.sortedBy {
         restaurant ->
         currentLocation?.let{location ->
@@ -272,7 +267,6 @@ fun ShowRestaurantLists(
             )
         }?:restaurant.restaurant_id
     }
-    val context = LocalContext.current
     Log.d("Restaurant", "1")
     if (state){
         Row(modifier = Modifier.fillMaxWidth()){
@@ -312,6 +306,7 @@ fun ShowRestaurantLists(
                 Card (modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp).clickable {
+                        searchTextVM.updateChoiceOneRest(restaurant)
                         navController.navigate(context.getString(R.string.restaurantDetail))
                     }){
                     ListItem(
@@ -361,7 +356,7 @@ fun ShowRestaurantLists(
                 .fillMaxWidth()
                 .padding(4.dp),
         ){
-            items(selectRest){
+            items(restaurants){
                 restaurant ->
                 val distance = currentLocation?.let{location ->
                     haversine(
@@ -373,7 +368,12 @@ fun ShowRestaurantLists(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp).clickable {
-                            navController.navigate(context.getString(R.string.restaurantDetail))
+                            searchTextVM.updateChoiceOneRest(restaurant)
+                            if (cardClick != null){
+                                cardClick(restaurant)
+                            } else {
+                                navController.navigate(context.getString(R.string.restaurantDetail))
+                            }
                         }
                 ){
                     ListItem(
@@ -409,6 +409,7 @@ fun ShowRestaurantLists(
         }
     }
 }
+
 
 
 @Composable

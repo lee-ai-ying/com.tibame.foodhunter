@@ -3,6 +3,7 @@ package com.tibame.foodhunter.andysearch
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +22,7 @@ fun SearchResult(
 ){
     val context = (LocalContext.current)
     val cities = parseCityJson(context, "taiwan_districts.json")
-    val restaurants = parseRestaurantJson(context, "restaurants.json")
+    val restaurants by searchTextVM.preRestaurantList.collectAsState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
         ShowSearchBar(cities, searchTextVM, navController)

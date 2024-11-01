@@ -18,12 +18,16 @@ class SearchScreenVM: ViewModel(){
     val searchText: StateFlow<String> = _searchText.asStateFlow()
 
     // 預先載入的餐廳
-    private val _restaurantList = MutableStateFlow(emptyList<Restaurant>())
-    val restaurantList: StateFlow<List<Restaurant>> = _restaurantList.asStateFlow()
+    private val _preRestaurantList = MutableStateFlow(emptyList<Restaurant>())
+    val preRestaurantList: StateFlow<List<Restaurant>> = _preRestaurantList.asStateFlow()
 
     // 找尋餐廳的response
-    private val _restListFromDataBase = MutableStateFlow(emptyList<Restaurant>())
-    val restListFromDataBase: StateFlow<List<Restaurant>> = _restListFromDataBase.asStateFlow()
+    private val _selectRestList = MutableStateFlow(emptyList<Restaurant>())
+    val selectRestList: StateFlow<List<Restaurant>> = _selectRestList.asStateFlow()
+
+    // 選擇單一餐廳
+    private val _choiceOneRest = MutableStateFlow<Restaurant?>(null)
+    val choiceOneRest: StateFlow<Restaurant?> = _choiceOneRest.asStateFlow()
 
     init {
         // 初始化時設置預設值
@@ -36,11 +40,15 @@ class SearchScreenVM: ViewModel(){
         _searchText.update {newText}
     }
 
+    fun updateChoiceOneRest(choiceRest: Restaurant){
+        _choiceOneRest.update { choiceRest }
+    }
+
     // 預先載入10家餐廳
     private fun preloadRestaurants(){
         CoroutineScope(Dispatchers.IO).launch {
             val initialRestaurants = fetchInitRestaurant()
-            _restaurantList.update { initialRestaurants }
+            _preRestaurantList.update { initialRestaurants }
         }
     }
 
@@ -54,7 +62,7 @@ class SearchScreenVM: ViewModel(){
     }
 
     suspend fun updateSearchRest(searchText: String){
-        _restListFromDataBase.update { fetchRestaurant(searchText) }
+        _selectRestList.update { fetchRestaurant(searchText) }
     }
 
     // 搜尋餐廳從database

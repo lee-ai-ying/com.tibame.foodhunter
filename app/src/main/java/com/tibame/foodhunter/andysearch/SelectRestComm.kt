@@ -7,7 +7,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-const val serverUrl = "http://192.168.0.198:8080/foodhunter-restaurant"
+const val serverUrl = "http://10.2.17.120:8080/com.tibame.foodhunter_server"
 suspend fun selectRestPost(
     url:String,
     dataOut: String
