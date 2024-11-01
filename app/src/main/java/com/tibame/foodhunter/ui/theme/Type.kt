@@ -37,5 +37,10 @@ val Typography = Typography(
 )
 
 val FoodHunterFont = FontFamily(
-    Font(R.font.holtwood, FontWeight.Black, FontStyle.Normal)
+    Font(R.font.holtwood, FontWeight.Black, FontStyle.Normal),
+    Font(R.font.roboto_regular, FontWeight.Normal),
+    Font(R.font.roboto_medium, FontWeight.Medium),
+    Font(R.font.roboto_bold, FontWeight.Bold),
+    Font(R.font.roboto_light, FontWeight.Light),
+    Font(R.font.roboto_thin, FontWeight.Thin)
 )
