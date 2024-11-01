@@ -34,6 +34,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +84,7 @@ fun RewiewDetail(
                             HorizontalDivider(
                                 modifier = Modifier,
                                 thickness = 1.5.dp,
-                                color = Color(0xFFFE724C)
+                                color = FColor.Orange_1st
                             )
                             Spacer(modifier = Modifier.size(20.dp))
                         }

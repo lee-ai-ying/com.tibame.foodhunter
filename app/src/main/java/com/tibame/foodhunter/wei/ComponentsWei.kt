@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.wei
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -21,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -28,8 +28,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,25 +43,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.zoe.Post
-import com.tibame.foodhunter.zoe.PostItem
-import kotlinx.coroutines.launch
+import androidx.compose.ui.text.style.TextOverflow
 
 @Preview
 @Composable
 fun PreviewInfoDetail() {
-    ReviewZone()
+    //RelatedPost()
 
 }
 
@@ -189,39 +181,74 @@ fun RestaurantInfoDetail(
 /**相關貼文*/
 @Composable
 fun RelatedPost(posts: List<Post>) {
-//    LazyColumn(
-//        modifier = Modifier
-//            .size(150.dp),
-//
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
-//    ) {
-//        items(posts) { post ->
-//            PostItem(post = post)
-//        }
-//    }
-
     LazyRow(
         modifier = Modifier
-            .size(150.dp)
-            .padding(4.dp),
+            .padding(4.dp)
     ) {
         items(posts) { post ->
-            PostItem(post = post)
+            com.tibame.foodhunter.wei.PostItems(Post = post)
             Spacer(modifier = Modifier.size(8.dp)) // 每筆貼文間的間距
         }
+    }
+}
 
+@Composable
+fun PostItems(Post: Post) {
+    Card(
+        modifier = Modifier
+            .size(150.dp)
+            .padding(8.dp),
+        //elevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Row {
+                Image(
+                painter = painterResource(id = R.drawable.account_circle),
+                contentDescription = "發文者",
+                modifier = Modifier
+                    .size(30.dp)
+                    .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
+                    .clip(RoundedCornerShape(12)),
+                contentScale = ContentScale.Crop
+            )
+                Text(
+                    text = "發文者",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Image(
+                painter = painterResource(id = R.drawable.steak_image),
+                contentDescription = "貼文圖片",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "發文內容", maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { /* TODO: 跳轉至貼文頁面 */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_right),
+                    contentDescription = "前往貼文頁面",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     }
 }
 
 /**評論顯示區*/
 @Composable
 fun ReviewZone() {
-    //navController: NavController
-//    val navController = rememberNavController()
-//    NavHost(navController, startDestination = "home") {
-//        composable("home") { RestaurantDetail(navController) }
-//        composable("reviewDetail") { RewiewDetail() }
-//    }
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -295,7 +322,7 @@ fun ReviewItem(review: Review) {
             contentDescription = "評論者",
             modifier = Modifier
                 .size(70.dp)
-                .border(BorderStroke(2.dp, Color(0xFFB43310)), CircleShape)
+                .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
                 .clip(RoundedCornerShape(12)),
             contentScale = ContentScale.Crop
         )
@@ -408,7 +435,7 @@ fun RatingBar(
 }
 
 @Composable
-fun FilterChips(
+fun ReviewFilterChips(
     filters: List<String>,                 // 可用的標籤列表
     selectedFilters: List<String>,         // 當前選中的標籤
     onFilterChange: (List<String>) -> Unit // 選中狀態變更時的回調

@@ -67,6 +67,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
 import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 
 
@@ -139,7 +140,7 @@ fun RestaurantDetail(
                             HorizontalDivider(
                                 modifier = Modifier,
                                 thickness = 1.5.dp,
-                                color = Color(0xFFFE724C)
+                                color = FColor.Orange_1st
                             )
                             Spacer(modifier = Modifier.size(20.dp))
 
@@ -149,13 +150,13 @@ fun RestaurantDetail(
                                 text = "社群預覽  待修",
                                 fontSize = 18.sp
                             )
-                            //RelatedPost()
 
+                            //RelatedPost()
 
                             HorizontalDivider(
                                 modifier = Modifier,
                                 thickness = 1.5.dp,
-                                color = Color(0xFFFE724C)
+                                color = FColor.Orange_1st
                             )
                             Spacer(modifier = Modifier.size(20.dp))
 
@@ -166,9 +167,7 @@ fun RestaurantDetail(
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
-
                             ReviewZone()
-
                         }
                     }
                 }
