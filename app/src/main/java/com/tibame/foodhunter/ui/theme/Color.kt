@@ -26,6 +26,14 @@ class FColor(val value: ULong) {
 
         val Yellow_1 = Color(0xFFFFC529)
         val Yellow_2 = Color(0xFFFFEFC3)
+        val Yellow_20 = Color(0xFFEFEFC3UL)
+
+        val Gary = Color(0xFF9A9FAEUL)
+        val Gary_20 = Color(0xFFEBEBEBUL)
+
+        val Dark = Color(0xFF1A1D26UL)
+        val Dark_20 = Color(0xFF6E7489UL)
+        val Dark_80 = Color(0xFF2A2F3DUL)
 
         val Transparent = Color(0x00000000)
     }
