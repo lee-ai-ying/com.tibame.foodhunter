@@ -23,6 +23,7 @@ fun SearchResult(
     val context = (LocalContext.current)
     val cities = parseCityJson(context, "taiwan_districts.json")
     val restaurants by searchTextVM.preRestaurantList.collectAsState()
+    val choiceOneRest by searchTextVM.choiceOneRest.collectAsState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
         ShowSearchBar(cities, searchTextVM, navController)

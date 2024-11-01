@@ -63,11 +63,6 @@ fun ShowGoogleMap(
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var newPosition by remember { mutableStateOf<LatLng?>(null) }
 
-    if(restaurantID != ""){
-        newPosition = LatLng(
-            restaurants[restaurantID.toInt()-1].latitude.toDouble(),
-            restaurants[restaurantID.toInt()-1].longitude.toDouble())
-    }
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
 
 
@@ -112,7 +107,7 @@ fun ShowGoogleMap(
             )
         ) {
 
-
+            // 定位的圖案
             currentLocation?.let { location ->
                 Circle(
                     center = location,
@@ -123,7 +118,13 @@ fun ShowGoogleMap(
                 )
             }
 
+            // 如果有選餐廳的話就單一標點
             if (restaurantID != ""){
+
+                newPosition = LatLng(
+                    restaurants[restaurantID.toInt()-1].latitude.toDouble(),
+                    restaurants[restaurantID.toInt()-1].longitude.toDouble())
+
                 Marker(
                     state = MarkerState(position = newPosition ?: defaultPosition),
                     title = restaurants[restaurantID.toInt()-1].name,
