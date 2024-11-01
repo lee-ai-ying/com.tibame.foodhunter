@@ -136,7 +136,7 @@ private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier 
         modifier = modifier
     ) { page ->
         Image(
-            painter = painterResource(id = items[page].id),
+            painter = painterResource(id = items[page].imageResId),
             contentDescription = items[page].contentDescription,
             contentScale = ContentScale.Crop,
             modifier = Modifier
