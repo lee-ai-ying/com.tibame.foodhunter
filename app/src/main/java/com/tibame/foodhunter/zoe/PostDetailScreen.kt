@@ -20,19 +20,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,8 +56,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import kotlinx.coroutines.launch
 
 enum class SheetContent {
@@ -60,9 +67,43 @@ enum class SheetContent {
     MESSAGE,
     EDIT
 }
+@Composable
+fun PostDetailScreen(
+    postId: Int?,
+    navController: NavHostController,
+    postViewModel: PostViewModel = viewModel()
+) {
+    // 根據 postId 從 ViewModel 中取得特定的貼文
+    val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
+
+    post?.let { nonNullPost ->
+        // 顯示貼文詳細內容
+        PostDetail(post = nonNullPost)
+    } ?: Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 當找不到貼文時顯示的訊息
+        Text(
+            text = "找不到相關貼文",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { navController.popBackStack() }) {
+            Text("返回")
+        }
+    }
+}
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostDetail(post: Post) {
+ fun PostDetail(post: Post) {
     val scaffoldState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
@@ -79,11 +120,13 @@ fun PostDetail(post: Post) {
                 }
             }
         }
-    ) {
+    ) { paddingValues ->
         Column(
             verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
             PostDetailItem(
                 post = post,
@@ -99,13 +142,12 @@ fun PostDetail(post: Post) {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetailItem(post: Post,
                    onEditClick: () -> Unit,
                    onMessageClick: () -> Unit) {
-    var showBottomSheet by remember { mutableStateOf(false) }
+
     val sheetState = rememberModalBottomSheetState()
     var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
 
@@ -283,6 +325,7 @@ fun MessageSheet(post: Post) {
 fun EditSheet(
 
 ) {
+    var showDialog by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -312,7 +355,7 @@ fun EditSheet(
 
         OutlinedButton(
             onClick = {
-                // 刪除按鈕點擊事件
+                showDialog = true
             },
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = Color.Transparent // 背景透明
@@ -328,44 +371,35 @@ fun EditSheet(
             )
         }
     }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "確定要刪除？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // 執行刪除邏輯
+                        showDialog = false
+                    }
+                ) {
+                    Text(text = "刪除", color = colorResource(id = R.color.orange_1st))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(text = "取消")
+                }
+            }
+        )
+    }
 
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun PostDetailPreview() {
-    // 創建一個示例 Post
-    val samplePost = Post(
-        postId = "1",
-        publisher = Publisher(
-            id = "publisher1",
-            name = "Sample Publisher",
-            avatarImage = R.drawable.user4,  // 請確保這是有效的 drawable 資源
-            joinDate = "2023-01-01"
-        ),
-        content = "This is a sample post content.",
-        location = "Sample Location",
-        timestamp = "2023-01-01 10:00",
-        postTag = "SampleTag",
-        carouselItems = listOf(
-            CarouselItem(id = 1, imageResId = R.drawable.sushi_image_1, contentDescription = "Sample Image")
-        ),
-        comments = listOf(
-            Comment(
-                id = "comment1",
-                commenter = Commenter(
-                    id = "commenter1",
-                    name = "Sample Commenter",
-                    avatarImage = R.drawable.user1
-                ),
-                content = "This is a sample comment.",
-                timestamp = "2023-01-01 10:05"
-            )
-        )
-    )
+fun GroupChatRoomPreview() {
+    MaterialTheme {
 
-    FoodHunterTheme {
-        PostDetail(post = samplePost)
+        PostDetailScreen(1, rememberNavController())
     }
 }

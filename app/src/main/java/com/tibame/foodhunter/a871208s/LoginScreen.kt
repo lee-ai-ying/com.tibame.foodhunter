@@ -124,7 +124,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_home)) }
+                onClick = { navController.navigate(context.getString(R.string.str_Recommended_posts)) }
             ) {
                 Text(text = "登入")
             }

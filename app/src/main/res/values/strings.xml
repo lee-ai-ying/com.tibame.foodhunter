@@ -54,5 +54,6 @@
     <string name="bookmark_action">Toggle bookmark</string>
     <string name="show_more">Show more</string>
     <string name="show_less">Show less</string>
-    <string name="str_Recommendedposts">推薦貼文</string>
+    <string name="str_Recommended_posts">推薦貼文</string>
+    <string name="postDetail">貼文詳情</string>
 </resources>
