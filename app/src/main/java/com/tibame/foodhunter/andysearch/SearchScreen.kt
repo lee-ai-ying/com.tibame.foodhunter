@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,11 +28,11 @@ import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,11 +44,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -58,12 +57,9 @@ fun SearchScreen(
     searchTextVM: SearchScreenVM
 ){
     val context = LocalContext.current
-    searchTextVM.updateRestaurantList(context)
-    val restaurants by searchTextVM.restaurantList.collectAsState()
+    val restaurants by searchTextVM.preRestaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
-
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
-
     Column(modifier = Modifier.fillMaxSize()){
         ShowSearchBar(cities, searchTextVM, navController = navController)
         ShowGoogleMap(
@@ -74,7 +70,7 @@ fun SearchScreen(
             restaurants,
             onLocationUpdate = {location -> currentLocation = location}
         )
-        ShowRestaurantLists(restaurants, true, navController, currentLocation)
+        ShowRestaurantLists(restaurants, true, navController, currentLocation, searchTextVM)
     }
 
 }
@@ -125,6 +121,7 @@ fun ShowSearchBar(cities: List<City>,
                   searchTextVM: SearchScreenVM,
                   navController: NavHostController = rememberNavController()
 ){
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val searchText by searchTextVM.searchText.collectAsState()
     var isActive by remember { mutableStateOf(false) }
@@ -139,9 +136,13 @@ fun ShowSearchBar(cities: List<City>,
         query = searchText,
         onQueryChange = {searchTextVM.updateSearchText(it)},
         modifier = Modifier.fillMaxWidth(),
-        onSearch = {isActive = false
-            val id = ""
+        onSearch = {
+            isActive = false
+            if (it.isNotBlank()){
+                coroutineScope.launch { searchTextVM.updateSearchRest(it) }
+            }
             searchTextVM.updateSearchText(it)
+            val id = ""
             navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
                    },
         active = isActive,
@@ -250,9 +251,13 @@ fun ShowSearchBar(cities: List<City>,
 fun ShowRestaurantLists(
     restaurants: List<Restaurant>,
     state: Boolean,
-    navController: NavHostController,
+    navController: NavHostController = rememberNavController(),
     currentLocation: LatLng?,
+    searchTextVM: SearchScreenVM,
+    cardClick: ((Restaurant?) -> Unit)? = null
 ){
+    val context = LocalContext.current
+    val selectRest by searchTextVM.selectRestList.collectAsState()
     val sortedRestaurants = restaurants.sortedBy {
         restaurant ->
         currentLocation?.let{location ->
@@ -262,7 +267,6 @@ fun ShowRestaurantLists(
             )
         }?:restaurant.restaurant_id
     }
-    val context = LocalContext.current
     Log.d("Restaurant", "1")
     if (state){
         Row(modifier = Modifier.fillMaxWidth()){
@@ -302,9 +306,8 @@ fun ShowRestaurantLists(
                 Card (modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp).clickable {
-                        Log.e("fff","start")
+                        searchTextVM.updateChoiceOneRest(restaurant)
                         navController.navigate(context.getString(R.string.restaurantDetail))
-                        Log.e("fff","end")
                     }){
                     ListItem(
                         headlineContent = {
@@ -365,7 +368,12 @@ fun ShowRestaurantLists(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp).clickable {
-                            navController.navigate(context.getString(R.string.restaurantDetail))
+                            searchTextVM.updateChoiceOneRest(restaurant)
+                            if (cardClick != null){
+                                cardClick(restaurant)
+                            } else {
+                                navController.navigate(context.getString(R.string.restaurantDetail))
+                            }
                         }
                 ){
                     ListItem(
@@ -401,6 +409,7 @@ fun ShowRestaurantLists(
         }
     }
 }
+
 
 
 @Composable

@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,8 +55,13 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.model.LatLng
+import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.andysearch.ShowGoogleMap
+import com.tibame.foodhunter.andysearch.ShowRestaurantLists
 import com.tibame.foodhunter.sharon.data.noteList
 import kotlinx.coroutines.launch
 
@@ -374,6 +381,11 @@ fun BottomSheetContent(
     onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
 
 ) {
+
+    val testVM: SearchScreenVM = viewModel()
+    val test_restaurant by testVM.preRestaurantList.collectAsState()
+    Log.d("test_restaurant", "${test_restaurant}")
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     // 頂部工具欄
     TopAppBar(
         modifier = Modifier
@@ -411,7 +423,6 @@ fun BottomSheetContent(
         color = Color.Gray,
         thickness = 1.dp
     )
-
     // 餐廳選擇按鈕
     Column(
         modifier = Modifier
@@ -434,4 +445,21 @@ fun BottomSheetContent(
 //        }
 
     }
+
+    ShowGoogleMap(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f).padding(8.dp),
+        restaurants = test_restaurant,
+        onLocationUpdate = {location -> currentLocation = location}
+    )
+    ShowRestaurantLists(
+        restaurants = test_restaurant,
+        state = false,
+        currentLocation = currentLocation,
+        searchTextVM = testVM,
+        cardClick = { choiceRest ->
+            onRestaurantPicked(choiceRest?.name.toString())
+            onClose()
+        }
+    )
+
 }
