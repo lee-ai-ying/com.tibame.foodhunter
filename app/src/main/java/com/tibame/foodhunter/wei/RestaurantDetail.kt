@@ -150,6 +150,7 @@ fun RestaurantDetail(
                                 text = "社群預覽  待修",
                                 fontSize = 18.sp
                             )
+                            //RelatedPost()
 
 
                             HorizontalDivider(
@@ -169,18 +170,15 @@ fun RestaurantDetail(
 
                             ReviewZone()
 
-
                         }
-
                     }
                 }
             }
-
         }
     }
 
-
 }
+
 
 
 @Preview(showBackground = true)

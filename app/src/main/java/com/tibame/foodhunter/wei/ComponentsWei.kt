@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,12 +43,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.zoe.Post
 import com.tibame.foodhunter.zoe.PostItem
@@ -115,38 +124,38 @@ fun RestaurantInfoDetail(
 
         Spacer(modifier = Modifier.size(10.dp))
 
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier.weight(0.5f)
-        ) {
-
-            //加入收藏
-            IconButton(
-                onClick = {
-                    isBookmarked = !isBookmarked
-                    val message = if (isBookmarked) {
-                        "收藏成功"
-                    } else {
-                        "取消收藏"
-                    }
-
-                    scope.launch {
-                        Log.e("TAG", "showSnackBar")
-                        snackbarHostState.showSnackbar(
-                            message,
-                            withDismissAction = true
-                        )
-                    }
-                }) {
-                Icon(
-                    modifier = Modifier.size(30.dp),
-                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
-                    contentDescription = if (isBookmarked) "已收藏" else "未收藏",
-                )
-            }
-        }
-
+        /**加入收藏(暫時擱置)*/
+//        Column(
+//            horizontalAlignment = Alignment.End,
+//            verticalArrangement = Arrangement.Top,
+//            modifier = Modifier.weight(0.5f)
+//        ) {
+//
+//            //加入收藏
+//            IconButton(
+//                onClick = {
+//                    isBookmarked = !isBookmarked
+//                    val message = if (isBookmarked) {
+//                        "收藏成功"
+//                    } else {
+//                        "取消收藏"
+//                    }
+//
+//                    scope.launch {
+//                        Log.e("TAG", "showSnackBar")
+//                        snackbarHostState.showSnackbar(
+//                            message,
+//                            withDismissAction = true
+//                        )
+//                    }
+//                }) {
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
+//                    contentDescription = if (isBookmarked) "已收藏" else "未收藏",
+//                )
+//            }
+//        }
 
         //更多功能
         IconButton(onClick = { expanded = !expanded }) {
@@ -172,7 +181,6 @@ fun RestaurantInfoDetail(
                     }
                 )
             }
-
         }
     }
 }
@@ -181,29 +189,39 @@ fun RestaurantInfoDetail(
 /**相關貼文*/
 @Composable
 fun RelatedPost(posts: List<Post>) {
-    LazyColumn(
+//    LazyColumn(
+//        modifier = Modifier
+//            .size(150.dp),
+//
+//        verticalArrangement = Arrangement.spacedBy(16.dp)
+//    ) {
+//        items(posts) { post ->
+//            PostItem(post = post)
+//        }
+//    }
+
+    LazyRow(
         modifier = Modifier
-            .size(150.dp),
-
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-
+            .size(150.dp)
+            .padding(4.dp),
     ) {
         items(posts) { post ->
             PostItem(post = post)
+            Spacer(modifier = Modifier.size(8.dp)) // 每筆貼文間的間距
         }
+
     }
 }
 
 /**評論顯示區*/
 @Composable
 fun ReviewZone() {
-    //val reviewList = (0..20).toList() 建立假的評論們
-    var rememberRating by remember { mutableStateOf(0) }
-    //記錄讚數&倒讚數狀態
-    var likeCount by remember { mutableStateOf(0) }
-    var dislikeCount by remember { mutableStateOf(0) }
-    var isLiked by remember { mutableStateOf(false) }
-    var isDisliked by remember { mutableStateOf(false) }
+    //navController: NavController
+//    val navController = rememberNavController()
+//    NavHost(navController, startDestination = "home") {
+//        composable("home") { RestaurantDetail(navController) }
+//        composable("reviewDetail") { RewiewDetail() }
+//    }
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -218,9 +236,9 @@ fun ReviewZone() {
         )
         Spacer(modifier = Modifier.size(8.dp))
 
-        Button(
+        Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
-                // 還沒寫 切到評論頁面
+                // navController.navigate("ReviewDetail")
             },
             modifier = Modifier
                 .width(140.dp)
@@ -240,110 +258,129 @@ fun ReviewZone() {
 
                 )
         }
+        GetReviews()
+    }
+}
 
-        //評論內容
-        Row {
-            Image(
-                painter = painterResource(id = R.drawable.account_circle),
-                contentDescription = "評論者",
-                modifier = Modifier
-                    .size(70.dp)
-                    .border(BorderStroke(2.dp, Color(0xFFB43310)), CircleShape)
-                    .clip(RoundedCornerShape(12)),
-                contentScale = ContentScale.Crop
+
+@Composable
+fun GetReviews() {
+    val reviews = listOf(
+        Review("使用者名稱1", 4),
+        Review("使用者名稱2", 5),
+        Review("使用者名稱3", 3),
+        Review("使用者名稱4", 2),
+        Review("使用者名稱5", 1)
+    )
+
+    LazyColumn {
+        items(reviews) { review ->
+            ReviewItem(review)
+            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+        }
+    }
+}
+
+@Composable
+fun ReviewItem(review: Review) {
+    var rememberRating by remember { mutableStateOf(review.rating) }
+    var likeCount by remember { mutableStateOf(0) }
+    var dislikeCount by remember { mutableStateOf(0) }
+    var isLiked by remember { mutableStateOf(false) }
+    var isDisliked by remember { mutableStateOf(false) }
+
+    Row {
+        Image(
+            painter = painterResource(id = R.drawable.account_circle),
+            contentDescription = "評論者",
+            modifier = Modifier
+                .size(70.dp)
+                .border(BorderStroke(2.dp, Color(0xFFB43310)), CircleShape)
+                .clip(RoundedCornerShape(12)),
+            contentScale = ContentScale.Crop
+        )
+
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .weight(1f)
+        ) {
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = review.username,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             )
 
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(
-                    text = "使用者名稱",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+            Spacer(modifier = Modifier.size(5.dp))
 
-                Spacer(modifier = Modifier.size(5.dp))
-
-                RatingBar(
-                    rating = rememberRating,
-                    onRatingChanged = { newRememberRating ->
-                        rememberRating = newRememberRating
-                    }
-                )
-            }
-
-            //讚、倒讚
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Bottom,
-                modifier = Modifier.weight(1f),
-            ) {
-                Button(
-                    onClick = {
-                        isLiked = !isLiked
-                        likeCount += if (isLiked) 1 else -1
-                        // 如果按下讚的時候已經有倒讚，則取消倒讚
-                        if (isDisliked) {
-                            isDisliked = false
-                            dislikeCount-- // 取消倒讚
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.Black
-                    )
-                ) { //一定是大拇指的啦，點擊+1
-                    Icon(
-                        painter = painterResource(
-                            id = if (isLiked) R.drawable.baseline_thumb_up_filled else R.drawable.baseline_thumb_up
-                        ),
-                        contentDescription = "讚哦",
-                        modifier = Modifier.size(30.dp)
-                    )
-
-                    Text(text = " $likeCount", modifier = Modifier.padding(start = 8.dp))
+            RatingBar(
+                rating = rememberRating,
+                onRatingChanged = { newRememberRating ->
+                    rememberRating = newRememberRating
                 }
-
-                Button(
-                    onClick = {
-                        isDisliked = !isDisliked
-                        dislikeCount += if (isDisliked) 1 else -1
-                        // 如果按下倒讚的時候已經有讚，則取消讚
-                        if (isLiked) {
-                            isLiked = false
-                            likeCount-- // 取消讚
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Icon( //這麼臭的評論有必要存在嗎，點擊+1
-                        painter = painterResource(
-                            id = if (isDisliked) R.drawable.baseline_thumb_down_filled else R.drawable.baseline_thumb_down
-                        ),
-                        contentDescription = "倒讚",
-                        modifier = Modifier.size(30.dp)
-                    )
-
-                    Text(text = " $dislikeCount", modifier = Modifier.padding(start = 8.dp))
-                }
-
-            }
-
-
+            )
         }
 
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.Bottom,
+            modifier = Modifier,
+        ) {
+            Button(
+                onClick = {
+                    isLiked = !isLiked
+                    likeCount += if (isLiked) 1 else -1
+                    if (isDisliked) {
+                        isDisliked = false
+                        dislikeCount--
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isLiked) R.drawable.baseline_thumb_up_filled else R.drawable.baseline_thumb_up
+                    ),
+                    contentDescription = "讚哦",
+                    modifier = Modifier.size(30.dp)
+                )
+                Text(text = " $likeCount", modifier = Modifier.padding(start = 8.dp))
+            }
 
+            Button(
+                onClick = {
+                    isDisliked = !isDisliked
+                    dislikeCount += if (isDisliked) 1 else -1
+                    if (isLiked) {
+                        isLiked = false
+                        likeCount--
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled else R.drawable.baseline_thumb_down
+                    ),
+                    contentDescription = "倒讚",
+                    modifier = Modifier.size(30.dp)
+                )
+                Text(text = " $dislikeCount", modifier = Modifier.padding(start = 8.dp))
+            }
+        }
     }
-
 }
+
+data class Review(val username: String, val rating: Int)
 
 
 /**星星*/
@@ -363,13 +400,47 @@ fun RatingBar(
                 ),
                 contentDescription = "$i 顆星",
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(35.dp)
                     .clickable { onRatingChanged(i) }
             )
         }
     }
 }
 
+@Composable
+fun FilterChips(
+    filters: List<String>,                 // 可用的標籤列表
+    selectedFilters: List<String>,         // 當前選中的標籤
+    onFilterChange: (List<String>) -> Unit // 選中狀態變更時的回調
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        items(filters) { filter ->
+            val isSelected = selectedFilters.contains(filter)
 
+            // 使用 FilterChip 或 Chip 來表示篩選標籤
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    val updatedFilters = if (isSelected) {
+                        selectedFilters - filter
+                    } else {
+                        selectedFilters + filter
+                    }
+                    onFilterChange(updatedFilters)
+                },
+                label = { Text(filter) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.White,
+                    selectedContainerColor = (colorResource(R.color.orange_5th)),
+                )
+            )
+        }
+    }
+}
 
 
