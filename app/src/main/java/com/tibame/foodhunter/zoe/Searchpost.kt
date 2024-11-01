@@ -1,39 +1,39 @@
 package com.tibame.foodhunter.zoe
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.ai_ying.GroupSearchBar
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPost(
     navController: NavHostController,
@@ -42,33 +42,29 @@ fun SearchPost(
 ) {
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
-
+    var searchQuery by remember { mutableStateOf("") }
+    var isActive by remember { mutableStateOf(false) }
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
 
     ) {
-
-        SearchBar(
-            query = "",
-            onQueryChange = {},
+        Spacer(modifier = Modifier.height(20.dp))
+        com.tibame.foodhunter.sharon.components.SearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
             placeholder = {
-                Text("")
+                Text(
+                    "搜尋",
+                    color = FColor.Gary,
+                    fontSize = 16.sp
+                )
             },
-            onSearch = {},
-            active = false,
-            onActiveChange = {},
-            leadingIcon = {
-                IconButton(onClick = {}) {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Search Icon"
-                    )
-                }
-            },
-            trailingIcon = {}
-        ) { }
+            active = isActive,
+            onActiveChange = { isActive = it },
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
         FilterChips(
             filters = listOf("早午餐", "午餐", "晚餐"),
@@ -81,9 +77,7 @@ fun SearchPost(
         ImageList(
             posts = filteredPosts,  // 你的貼文數據
             onPostClick = { postId ->
-                // 这里会获取到被点击的帖子 ID
                 postViewModel.setPostId(postId)
-                // 使用获取到的 ID 进行导航
                 navController.navigate("postDetail/$postId")
             }
         )
@@ -119,12 +113,18 @@ fun FilterChips(
                 label = { Text(filter) },
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = Color.White,
-                    selectedContainerColor = (colorResource(R.color.orange_5th)),
-                                    )
+                    selectedContainerColor = colorResource(R.color.orange_3rd) // 設定選中顏色
+                ),
+                border = if (isSelected) {
+                    BorderStroke(2.dp, colorResource(R.color.orange_5th)) // 設定選中時的邊界顏色
+                } else {
+                    BorderStroke(2.dp, color= Color.LightGray)
+                }
             )
         }
     }
 }
+
 
 
 @Preview(showBackground = true)

@@ -149,7 +149,7 @@ fun PostItem(
             onDismissRequest = { showBottomSheet = false },
             sheetState = sheetState,
         ) {
-            MessageSheet(post = post)
+            MessageSheet(post = post, onConfirm = { showBottomSheet = false })
         }
     }
 }

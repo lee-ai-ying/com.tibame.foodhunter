@@ -3,6 +3,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -19,9 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,20 +28,20 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,13 +52,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.ai_ying.GroupCreateData
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
 import com.tibame.foodhunter.zoe.PostCreateData
 import com.tibame.foodhunter.zoe.PostViewModel
-import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 
@@ -70,19 +67,18 @@ enum class NewPostSheetContent {
     LOCATION
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewPost(navController: NavHostController,
-            postViewModel: PostViewModel = viewModel()
+fun NewPost(
+    navController: NavHostController,
+    postViewModel: PostViewModel = viewModel()
 ) {
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
     var selectedLocation by remember { mutableStateOf("") }
     var text by remember { mutableStateOf(TextFieldValue("")) }
-    val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
     var currentSheet by remember { mutableStateOf(NewPostSheetContent.NONE) }
-
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
@@ -104,10 +100,14 @@ fun NewPost(navController: NavHostController,
         )
     }
 
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetContent = {
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+                currentSheet = NewPostSheetContent.NONE
+            },
+            containerColor = Color.White,
+        ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(
                     availableTags = availableTags,
@@ -115,190 +115,180 @@ fun NewPost(navController: NavHostController,
                     onFilterChange = { newTags ->
                         selectedTags = newTags
                         inputData = inputData.copy(postTag = newTags.joinToString(","))
-                        scope.launch { scaffoldState.bottomSheetState.partialExpand() }
+                    },
+                    onConfirm = {
+                        showBottomSheet = false // 按下確定後收起 BottomSheet
                     }
                 )
+
                 NewPostSheetContent.LOCATION -> LocationSelectionSheet(
                     onLocationSelected = { location ->
                         selectedLocation = location
                         inputData = inputData.copy(location = location)
-                        scope.launch { scaffoldState.bottomSheetState.partialExpand() }
+                        showBottomSheet = false
                     }
                 )
                 NewPostSheetContent.NONE -> {}
             }
+        }
+    }
 
-        },
-        sheetPeekHeight = 0.dp,
-        sheetContainerColor =(colorResource(R.color.orange_5th)),
-
-    ) { paddingValues ->
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp)
-                .padding(paddingValues)
-        ) {
-
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .width(300.dp)
-                        .height(300.dp)
-                        .padding(16.dp)
-                ) {
-                    if (selectedImageUris.isNotEmpty()) {
-                        ImageDisplay(
-                            imageSource = ImageSource.UriSource(selectedImageUris),
-                            modifier = Modifier
-                                .fillMaxSize()
-                        )
-                    }
-                }
-            }
-
-
-
-            item {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    TextField(
-                        value = text,
-                        onValueChange = { newText ->
-                            text = newText
-                            inputData.content = newText.toString()
-                        },
-                        label = { Text("貼文內容") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            errorContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Gray,
-                            focusedLabelColor = Color.Gray,
-                            unfocusedLabelColor = Color.LightGray
-                        )
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+    ) {
+        item {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(300.dp)
+                    .padding(16.dp)
+            ) {
+                if (selectedImageUris.isNotEmpty()) {
+                    ImageDisplay(
+                        imageSource = ImageSource.UriSource(selectedImageUris),
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = Color.Black
-                        ),
-                        onClick = {
-                            pickImageLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
-                            )
-                        },
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.photo),
-                                contentDescription = "photo",
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Text(text = stringResource(id = R.string.select_picture))
-                        }
-                    }
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = Color.Black
-                        ),
-                        onClick = {
-                            currentSheet = NewPostSheetContent.LOCATION
-                            scope.launch { scaffoldState.bottomSheetState.expand() }
-                        },
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.LocationOn,
-                                contentDescription = "location"
-                            )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            if (selectedLocation.isEmpty()) {
-                                Text(text = stringResource(id = R.string.restaurant_location))
-                            } else {
-                                Text(text = selectedLocation)
-                            }
-                        }
-                    }
-
-                    // 標籤選擇按鈕
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = Color.Black
-                        ),
-                        onClick = {
-                            currentSheet = NewPostSheetContent.TAGS
-                            scope.launch { scaffoldState.bottomSheetState.expand() }
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.tag),
-                                contentDescription = "Select Tag",
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            if (selectedTags.isEmpty()) {
-                                Text(text = stringResource(id = R.string.Select_tag))
-                            } else {
-                                Text(text = selectedTags.joinToString(", "))
-                            }
-                        }
-                    }
-
-                    Button(
-                        onClick = {
-                            postViewModel.setPostCreateData(inputData)
-                            navController.popBackStack()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            colorResource(id = R.color.orange_2nd)
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f), // 設置為螢幕寬度的 80%
-                    ) {
-                        Text(text = stringResource(id = R.string.str_post))
-                    }
                 }
             }
         }
 
+        item {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                TextField(
+                    value = text,
+                    onValueChange = { newText ->
+                        text = newText
+                        inputData.content = newText.toString()
+                    },
+                    label = { Text("貼文內容") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        errorContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Gray,
+                        focusedLabelColor = Color.Gray,
+                        unfocusedLabelColor = Color.LightGray
+                    )
+                )
 
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    ),
+                    onClick = {
+                        pickImageLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    },
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.photo),
+                            contentDescription = "photo",
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text(text = stringResource(id = R.string.select_picture))
+                    }
+                }
+
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    ),
+                    onClick = {
+                        currentSheet = NewPostSheetContent.LOCATION
+                        showBottomSheet = true
+                    },
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.LocationOn,
+                            contentDescription = "location"
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        if (selectedLocation.isEmpty()) {
+                            Text(text = stringResource(id = R.string.restaurant_location))
+                        } else {
+                            Text(text = selectedLocation)
+                        }
+                    }
+                }
+
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    ),
+                    onClick = {
+                        currentSheet = NewPostSheetContent.TAGS
+                        showBottomSheet = true
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.tag),
+                            contentDescription = "Select Tag",
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        if (selectedTags.isEmpty()) {
+                            Text(text = stringResource(id = R.string.Select_tag))
+                        } else {
+                            Text(text = selectedTags.joinToString(", "))
+                        }
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        postViewModel.setPostCreateData(inputData)
+                        navController.navigate(context.getString(R.string.str_Recommended_posts))
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        colorResource(id = R.color.orange_2nd)
+                    ),
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                ) {
+                    Text(text = stringResource(id = R.string.str_post))
+                }
+            }
+        }
     }
 }
 
@@ -332,10 +322,12 @@ fun LocationSelectionSheet(
 @OptIn( ExperimentalLayoutApi::class)
 @Composable
 
+
 fun TagSelectionSheet(
     availableTags: List<String>,  // 傳入可選的標籤列表
     selectedTags: Set<String>,    // 傳入已選中的標籤
-    onFilterChange: (Set<String>) -> Unit  // 當篩選標籤發生變化時的回調
+    onFilterChange: (Set<String>) -> Unit,  // 當篩選標籤發生變化時的回調
+    onConfirm: () -> Unit         // 確定按鈕的回調
 ) {
     Column(
         modifier = Modifier
@@ -369,20 +361,36 @@ fun TagSelectionSheet(
                         onFilterChange(updatedTags)  // 通知標籤選擇變更
                     },
                     label = { Text(tag) },
-                    leadingIcon = if (isSelected) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Done,
-                                contentDescription = "Done icon",
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color.White,
+                        selectedContainerColor = colorResource(R.color.orange_3rd) // 設定選中顏色
+                    ),
+                    border = if (isSelected) {
+                        BorderStroke(2.dp, colorResource(R.color.orange_5th)) // 設定選中時的邊界顏色
                     } else {
-                        null
-                    }
+                        BorderStroke(2.dp, Color.LightGray) // 未選中時的邊界顏色
+                    },
 
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 確定按鈕
+        Button(
+            onClick = {
+                onConfirm() // 按下確定時的回調
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                colorResource(id = R.color.orange_1st)
+            ),
+
+        ) {
+            Text(text = "確定", color = Color.White) // 按鈕文字
         }
     }
 }
