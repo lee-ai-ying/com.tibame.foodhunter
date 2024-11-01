@@ -10,10 +10,10 @@
     <string name="str_chat">私聊</string>
     <string name="str_searchpost">搜尋貼文</string>
     <string name="str_backToSearch">返回地圖</string>
-    <string name="str_searchdetail">餐廳詳細</string>
     <string name="str_login">登入</string>
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
+    <string name="str_note_edit">編輯頁面</string>
     <string name="str_favorite">收藏</string>
     <string name="str_my_group">我的揪團</string>
     <string name="str_search_group">搜尋揪團</string>
@@ -42,4 +42,18 @@
     <string name="select_picture">選擇圖片</string>
     <string name="SearchToGoogleMap">導覽到地圖</string>
     <string name="randomFood">轉盤</string>
+    <string name="str_group_search_result">搜尋結果</string>
+    <string name="restaurantDetail">餐廳詳細</string>
+    <string name="Add_message">新增留言</string>
+    <string name="message">留言</string>
+    <string name="edit">編輯</string>
+    <string name="delete">刪除</string>
+    <string name="publisher_avatar_description">Publisher avatar</string>
+    <string name="favorite_action">Toggle favorite</string>
+    <string name="comment_action">Add comment</string>
+    <string name="bookmark_action">Toggle bookmark</string>
+    <string name="show_more">Show more</string>
+    <string name="show_less">Show less</string>
+    <string name="str_Recommended_posts">推薦貼文</string>
+    <string name="postDetail">貼文詳情</string>
 </resources>

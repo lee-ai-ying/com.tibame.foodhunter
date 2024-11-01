@@ -1,18 +1,37 @@
 package com.tibame.foodhunter.ai_ying
 
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 object GroupRepository {
     private val _groupChatList = MutableStateFlow(emptyList<GroupChat>())
-    val groupChatList: StateFlow<List<GroupChat>> = _groupChatList.asStateFlow()
-
+    val groupChatList = _groupChatList.asStateFlow()
+    private val _groupSearchResult = MutableStateFlow(emptyList<GroupSearchResult>())
+    val groupSearchResult = _groupSearchResult.asStateFlow()
     init {
         _groupChatList.update { setTestData() }
+        _groupSearchResult.update { searchFakeData() }
     }
-
+    private fun searchFakeData():List<GroupSearchResult>{
+        return listOf(
+            GroupSearchResult(1),
+            GroupSearchResult(2),
+            GroupSearchResult(3),
+            GroupSearchResult(4),
+            GroupSearchResult(5),
+            GroupSearchResult(6),
+            GroupSearchResult(7),
+            GroupSearchResult(8),
+            GroupSearchResult(9),
+            GroupSearchResult(10),
+            GroupSearchResult(11),
+            GroupSearchResult(12),
+            GroupSearchResult(13),
+            GroupSearchResult(14),
+            GroupSearchResult(15),
+        )
+    }
     private fun setTestData(): List<GroupChat> {
         return listOf(
             GroupChat(1,"進行中",99),
@@ -35,4 +54,5 @@ object GroupRepository {
             GroupChat(16,"GroupChat16",0),
         )
     }
+
 }

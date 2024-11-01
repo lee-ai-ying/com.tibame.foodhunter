@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,18 +40,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ai_ying.GroupCreateData
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
-import kotlinx.coroutines.CoroutineScope
+import com.tibame.foodhunter.zoe.PostCreateData
+import com.tibame.foodhunter.zoe.PostViewModel
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -59,9 +63,10 @@ import kotlinx.coroutines.launch
 @Composable
 
 
-fun NewPost(navController: NavHostController) {
+fun NewPost(navController: NavHostController,
+            postViewModel: PostViewModel = viewModel()
+) {
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    var message by remember { mutableStateOf("") }
     var text by remember { mutableStateOf(TextFieldValue("")) }
     val scope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetScaffoldState()
@@ -72,6 +77,7 @@ fun NewPost(navController: NavHostController) {
             selectedImageUris = uris
         }
     )
+    var inputData by remember { mutableStateOf(PostCreateData()) }
 
     val availableTags = remember {
         listOf(
@@ -89,8 +95,6 @@ fun NewPost(navController: NavHostController) {
         scaffoldState = sheetState,
         sheetContent = {
             TagSelectionSheet(
-                scope = scope,
-                sheetState = sheetState,
                 availableTags = availableTags,
                 selectedTags = selectedTags,
                 onFilterChange = { newTags ->
@@ -101,7 +105,7 @@ fun NewPost(navController: NavHostController) {
         },
         sheetPeekHeight = 0.dp,  // 完全隱藏時的高度
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -109,158 +113,161 @@ fun NewPost(navController: NavHostController) {
                 .padding(10.dp)
                 .padding(paddingValues)
         ) {
-
-
-            Row(
-                horizontalArrangement = Arrangement.Center, // 水平置中
-                verticalAlignment = Alignment.CenterVertically, // 垂直置中
-                modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp)
-                    .padding(16.dp)
-                    .padding(paddingValues)
-            ) {
-                if (selectedImageUris.isNotEmpty()) {  // 只在有選擇圖片時顯示
-                    ImageDisplay(
-                        imageSource = ImageSource.UriSource(selectedImageUris),
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                }
-            }
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp), // 項目之間的垂直間距
-                horizontalAlignment = Alignment.CenterHorizontally, // 水平置中
-                modifier = Modifier
-                    .fillMaxSize() // 根據需要填滿可用空間
-            ) {
-                TextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("貼文內容") },
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        errorContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        errorIndicatorColor = Color.Transparent
-                    )
-                )
-                Button(
-
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.Black
-                    ),
-                    onClick = {
-                        pickImageLauncher.launch(
-                            PickVisualMediaRequest(
-                                // 設定只能挑選圖片
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
-                    },
+                        .width(300.dp)
+                        .height(300.dp)
+                        .padding(16.dp)
                 ) {
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.photo),
-                            contentDescription = "photo",
-                            modifier = Modifier.size(22.dp)
+                    if (selectedImageUris.isNotEmpty()) {
+                        ImageDisplay(
+                            imageSource = ImageSource.UriSource(selectedImageUris),
+                            modifier = Modifier
+                                .fillMaxSize()
                         )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = stringResource(id = R.string.select_picture))
                     }
                 }
-
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.Black
-                    ),
-                    onClick = { /* 跳到餐廳 */ },
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Outlined.LocationOn,
-                            contentDescription = "location" // 添加有效的內容描述
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = stringResource(id = R.string.restaurant_location))
-                    }
-                }
-
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.Black
-                    ),
-                    onClick = {
-                        scope.launch {
-                            sheetState.bottomSheetState.expand()
-                        }
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.tag),
-                            contentDescription = "Select Tag",
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        if (selectedTags.isEmpty()) {
-                            Text(text = stringResource(id = R.string.Select_tag))
-                        } else {
-                            Text(text = selectedTags.joinToString(", "))
-                        }
-                    }
-                }
-
-                Button(
-
-                    onClick = { /* 發文邏輯 */ },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("發文")
-
-
-
             }
 
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    TextField(
+                        value = text,
+                        onValueChange = { newText ->
+                            text = newText                    // 更新text狀態
+                            inputData.content = newText.toString()       // 同時更新inputData
+                        },
+                        label = { Text("貼文內容") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedLabelColor = Color.LightGray
+                        )
+                    )
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color.Black
+                        ),
+                        onClick = {
+                            pickImageLauncher.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
+                            )
+                        },
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.photo),
+                                contentDescription = "photo",
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text(text = stringResource(id = R.string.select_picture))
+                        }
+                    }
 
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color.Black
+                        ),
+                        onClick = { /* 跳到餐廳 */ },
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.LocationOn,
+                                contentDescription = "location"
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text(text = stringResource(id = R.string.restaurant_location))
+                        }
+                    }
 
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color.Black
+                        ),
+                        onClick = {
+                            scope.launch {
+                                sheetState.bottomSheetState.expand()
+                            }
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.tag),
+                                contentDescription = "Select Tag",
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+                            if (selectedTags.isEmpty()) {
+                                Text(text = stringResource(id = R.string.Select_tag))
+                            } else {
+                                Text(text = selectedTags.joinToString(", "))
 
+                                inputData = inputData.copy(postTag = selectedTags.joinToString(","))
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            postViewModel.setPostCreateData(inputData)
+                            navController.popBackStack()},
+                        modifier = Modifier.fillMaxWidth(),
+
+                    ) {
+
+                        Text(text = stringResource(id = R.string.str_post))
+                    }
+                }
             }
         }
+
+
     }
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn( ExperimentalLayoutApi::class)
 @Composable
 
 fun TagSelectionSheet(
-    scope: CoroutineScope,
-    sheetState: BottomSheetScaffoldState,
     availableTags: List<String>,  // 傳入可選的標籤列表
     selectedTags: Set<String>,    // 傳入已選中的標籤
     onFilterChange: (Set<String>) -> Unit  // 當篩選標籤發生變化時的回調

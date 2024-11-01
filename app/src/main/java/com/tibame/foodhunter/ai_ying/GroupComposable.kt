@@ -1,20 +1,16 @@
 package com.tibame.foodhunter.ai_ying
 
-import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,23 +19,29 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Label
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.RangeSliderState
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -52,21 +54,15 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tibame.foodhunter.R
-import java.nio.file.WatchEvent
-import java.sql.Time
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.Year
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupPriceSlider() {
+fun GroupPriceSlider(onValueChangeFinished: (String) -> Unit) {
     var lowNumber by remember { mutableIntStateOf(1) }
     var highNumber by remember { mutableIntStateOf(2000) }
     val rangeSliderState = remember {
@@ -75,8 +71,7 @@ fun GroupPriceSlider() {
             2000f,
             valueRange = 1f..2000f,
             onValueChangeFinished = {
-                // launch some business logic update with the state you hold
-                // viewModel.updateSelectedSliderValue(sliderPosition)
+                onValueChangeFinished("$lowNumber-$highNumber")
             },
             steps = 9,
         )
@@ -104,12 +99,14 @@ fun GroupPriceSlider() {
 }
 
 @Composable
-fun GroupSelectMember() {
+fun GroupSelectMember(
+    onValueChange: (Int) -> Unit
+) {
     val input by remember { mutableIntStateOf(1) }
     OutlinedTextField(
         value = "參加人數:${input}",
         onValueChange = {
-
+            onValueChange(input)
         },
         trailingIcon = {
             Icon(
@@ -127,7 +124,10 @@ fun GroupSelectMember() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupDropDownMenu(options: List<String>) {
+fun GroupDropDownMenu(
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
 //    val options = listOf("Large", "Medium", "Small")
     var expanded by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf(options[0]) }
@@ -179,10 +179,28 @@ fun GroupDropDownMenu(options: List<String>) {
                         inputText = option
                         // 將狀態設定為收回下拉選單
                         expanded = false
+                        onSelect(inputText)
                     }
                 )
             }
         }
+    }
+}
+
+@Composable
+fun GroupTitleText(text: String) {
+    Column(
+        modifier = Modifier
+            .height(56.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primary)
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White
+        )
     }
 }
 
@@ -197,54 +215,88 @@ fun GroupText(text: String) {
         Text(text = text)
     }
 }
+@Composable
+fun GroupTextWithBackground(text: String) {
+    Column(
+        modifier = Modifier
+            .heightIn(min=40.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(8.dp)
+        ,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = text)
+    }
+}
 
 @Composable
-fun GroupSingleInput() {
+fun GroupSingleInput(
+    onValueChange: (String) -> Unit
+) {
     GroupTextInputField(
         modifier = Modifier.fillMaxWidth(),
         placeholder = {},
         trailingIcon = {},
         singleLine = true,
-        maxLines = 1
+        maxLines = 1,
+        onValueChange = onValueChange
     )
 }
 
 @Composable
-fun GroupSingleWithIcon(trailingIcon: @Composable () -> Unit) {
+fun GroupSingleWithIcon(
+    trailingIcon: @Composable () -> Unit,
+    placeholder: @Composable () -> Unit = {},
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    onValueChange: (String) -> Unit
+) {
     GroupTextInputField(
-        modifier = Modifier.fillMaxWidth(),
-        placeholder = {},
-        trailingIcon = trailingIcon,
-        singleLine = true,
-        maxLines = 1,
-        readOnly = true
-    )
-}@Composable
-fun GroupSingleInputWithIcon(
-    placeholder:@Composable () -> Unit,
-    trailingIcon: @Composable () -> Unit) {
-    GroupTextInputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         placeholder = placeholder,
         trailingIcon = trailingIcon,
         singleLine = true,
-        maxLines = 1
+        maxLines = 1,
+        readOnly = true,
+        onValueChange = onValueChange
     )
 }
 
 @Composable
-fun GroupBigInput(maxLines: Int) {
+fun GroupSingleInputWithIcon(
+    placeholder: @Composable () -> Unit,
+    trailingIcon: @Composable () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    onValueChange: (String) -> Unit
+) {
+    GroupTextInputField(
+        modifier = modifier,
+        placeholder = placeholder,
+        trailingIcon = trailingIcon,
+        singleLine = true,
+        maxLines = 1,
+        onValueChange = onValueChange
+    )
+}
+
+@Composable
+fun GroupBigInput(
+    maxLines: Int,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    onValueChange: (String) -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         GroupTextInputField(
             modifier = Modifier
-//                .weight(1f)
                 .fillMaxWidth(),
             placeholder = {},
             trailingIcon = {},
             singleLine = false,
-            maxLines = maxLines
+            maxLines = maxLines,
+            colors = colors,
+            onValueChange = onValueChange
         )
     }
 }
@@ -252,11 +304,13 @@ fun GroupBigInput(maxLines: Int) {
 @Composable
 fun GroupTextInputField(
     modifier: Modifier,
-    placeholder: @Composable () -> Unit,
-    trailingIcon: @Composable () -> Unit,
-    singleLine: Boolean,
-    maxLines: Int,
-    readOnly: Boolean = false
+    placeholder: @Composable () -> Unit = {},
+    trailingIcon: @Composable () -> Unit = {},
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
+    readOnly: Boolean = false,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    onValueChange: (String) -> Unit
 ) {
     var input by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -266,6 +320,7 @@ fun GroupTextInputField(
         value = input,
         onValueChange = {
             input = it
+            onValueChange(it)
         },
         placeholder = {
             placeholder()
@@ -273,7 +328,6 @@ fun GroupTextInputField(
         trailingIcon = {
             if (input.isBlank()) {
                 trailingIcon()
-
             } else {
                 Icon(
                     imageVector = Icons.Default.Clear,
@@ -281,18 +335,20 @@ fun GroupTextInputField(
                     // 可設定該元件點擊時要執行指定程式
                     modifier = Modifier.clickable {
                         input = ""
+                        onValueChange("")
                         focusManager.clearFocus()
                     }
                 )
             }
         },
         singleLine = singleLine,
-        maxLines = maxLines
+        maxLines = maxLines,
+        colors = colors
     )
 }
 
 @Composable
-fun GroupCreate(onClick: () -> Unit) {
+fun GroupCreateButton(onClick: () -> Unit) {
     ExtendedFloatingActionButton(
         onClick = onClick,
         icon = {
@@ -383,6 +439,85 @@ fun GroupSearchBar(onValueChange: (String) -> String, onClearClick: () -> Unit) 
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyDatePickerDialog(
+    showData: String,
+    onDismissRequest: () -> Unit,
+    onConfirm: (Long?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        // SelectableDates介面用來限制可選擇的日期與年，
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                /* 將使用者選取的時間轉成LocalDate物件後取出星期幾的資訊
+                   API 26開始支援Instant */
+                return utcTimeMillis > System.currentTimeMillis()
+            }
+
+            override fun isSelectableYear(year: Int): Boolean {
+                return year >= Year.now().value
+            }
+        }
+    )
+
+    DatePickerDialog(
+        // 點擊對話視窗外部或back按鈕時呼叫，並非點擊dismissButton時呼叫
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(
+                // 點擊確定按鈕時呼叫onConfirm(Long?)並將選取日期傳入以回饋給原畫面
+                onClick = {
+                    onConfirm(datePickerState.selectedDateMillis)
+                }
+            ) {
+                Text("確認")
+            }
+        },
+        // 設定取消按鈕
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
+    ) {
+        DatePicker(
+            title = {
+                Text(
+                    text = "請選擇日期",
+                    modifier = Modifier.padding(
+                        PaddingValues(
+                            start = 24.dp,
+                            end = 12.dp,
+                            top = 16.dp
+                        )
+                    )
+                )
+            },
+            headline = {
+                Text(
+                    text = showData,
+                    modifier = Modifier.padding(
+                        PaddingValues(
+                            start = 24.dp,
+                            end = 12.dp,
+                            bottom = 12.dp
+                        )
+                    )
+                )
+            },
+            state = datePickerState,
+            showModeToggle = false
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GroupSearchBarPreview() {
@@ -402,7 +537,7 @@ fun GroupSearchBarPreview() {
 //            GroupDropDownMenu(listOf("Large", "Medium", "Small"))
 //            GroupSelectMember()
 //            GroupPriceSlider()
-            GroupBigInput(5)
+            GroupBigInput(5) {}
         }
     }
 }

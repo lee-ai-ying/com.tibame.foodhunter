@@ -42,7 +42,7 @@ fun RewiewDetail(
     navController: NavHostController = rememberNavController(),
 ) {
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.str_searchdetail)) }
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
@@ -68,11 +68,7 @@ fun RewiewDetail(
                     modifier = Modifier.weight(1f)
                 ) {
                     composable(route = mainSceneName) {
-                        HorizontalDivider(
-                            modifier = Modifier,
-                            thickness = 3.dp,
-                            color = Color(0xFFFE724C)
-                        )
+
                         Column(
                             modifier = Modifier.padding(20.dp),
                             verticalArrangement = Arrangement.spacedBy(15.dp)

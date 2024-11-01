@@ -6,15 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -26,9 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -38,25 +32,38 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.tibame.foodhunter.a871208s.AddFriendScreen
+import com.tibame.foodhunter.a871208s.DeleteMemberScreen
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
+import com.tibame.foodhunter.a871208s.FriendManagementScreen
+import com.tibame.foodhunter.a871208s.FriendViewModel
 import com.tibame.foodhunter.a871208s.LoginScreen
+import com.tibame.foodhunter.a871208s.MemberInformationScreen
 import com.tibame.foodhunter.a871208s.MemberMainScreen
+import com.tibame.foodhunter.a871208s.ModifyInformationScreen
+import com.tibame.foodhunter.a871208s.OtherSettingScreen
+import com.tibame.foodhunter.a871208s.PrivateChatRoom
+import com.tibame.foodhunter.a871208s.PrivateChatScreen
+import com.tibame.foodhunter.a871208s.PrivateViewModel
 import com.tibame.foodhunter.a871208s.RegisterScreen
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
 import com.tibame.foodhunter.andysearch.RandomFood
 import com.tibame.foodhunter.andysearch.SearchResult
-import com.tibame.foodhunter.sharon.CalendarScreen
 import com.tibame.foodhunter.sharon.TabMainScreen
 
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
-import com.tibame.foodhunter.andysearch.ShowGoogleMap
-import com.tibame.foodhunter.zoe.Post
+import com.tibame.foodhunter.sharon.NoteEdit
+import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.zoe.PostDetailScreen
+import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -92,9 +99,19 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_create_group),
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood),
-        "gotoGroupChatRoom/{groudId}",
+        "PrivateChatRoom/{roomid}",
+        "GroupChatRoom/{groupId}",
         context.getString(R.string.str_group) + "/2",
-        context.getString(R.string.str_calendar)
+        context.getString(R.string.str_calendar),
+        context.getString(R.string.str_member) + "/2",
+        context.getString(R.string.str_member) + "/3",
+        context.getString(R.string.str_member) + "/4",
+        context.getString(R.string.str_member) + "/5",
+        context.getString(R.string.str_member) + "/6",
+        context.getString(R.string.str_member) + "/7",
+        context.getString(R.string.str_member) + "/8",
+        context.getString(R.string.restaurantDetail),
+        "postDetail/{postId}"
     ).contains(destination?.route)
 }
 
@@ -103,14 +120,18 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
 fun checkBottomButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
-        context.getString(R.string.str_home),
+        context.getString(R.string.str_Recommended_posts),
+        context.getString(R.string.str_searchpost),
         context.getString(R.string.str_search),
         context.getString(R.string.str_post),
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
-        "gotoGroupChatRoom/{groudId}",
+        "GroupChatRoom/{groupId}",
+        "PrivateChatRoom/{roomid}",
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
-        context.getString(R.string.randomFood)
+        context.getString(R.string.randomFood),
+        context.getString(R.string.str_create_group),
+        "postDetail/{postId}"
     ).contains(destination?.route)
 }
 
@@ -118,7 +139,11 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
 @Composable
 fun Main(
     navController: NavHostController = rememberNavController(),
-    gChatVM: GroupViewModel = viewModel()
+    gChatVM: GroupViewModel = viewModel(),
+    searchVM: SearchScreenVM = viewModel(),
+    friendVM: FriendViewModel = viewModel(),
+    pChatVM: PrivateViewModel = viewModel(),
+    postViewModel: PostViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -147,13 +172,13 @@ fun Main(
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
-                GroupChatRoomBottomBar(gChatVM)
+                GroupChatRoomBottomBar(navController,gChatVM)
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
                 BottomFunctionBar(
                     onHomeClick = {
-                        currectScene = context.getString(R.string.str_home)
+                        currectScene = context.getString(R.string.str_Recommended_posts)
                     },
                     onSearchClick = {
                         currectScene = context.getString(R.string.str_search)
@@ -182,7 +207,7 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController)
+                LoginScreen(navController = navController, )
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController)
@@ -193,9 +218,27 @@ fun Main(
             composable(context.getString(R.string.str_login) + "/4") {
                 ForgetPassword2Screen(navController = navController, {})
             }
-            composable(context.getString(R.string.str_home)) {
-                Home(navController)
+            composable(context.getString(R.string.str_Recommended_posts)) {
+                Home(navController, 0)
             }
+            composable(context.getString(R.string.str_searchpost)) {
+                Home(navController, 1)
+            }
+            composable(
+                "postDetail/{postId}",
+                arguments = listOf(navArgument("postId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val postId = backStackEntry.arguments?.getInt("postId")
+                PostDetailScreen(
+                    postId = postId,
+                    navController = navController,
+                    postViewModel = postViewModel
+                )
+            }
+
+
+
+
 
 
 
@@ -221,27 +264,31 @@ fun Main(
 
 
             composable(context.getString(R.string.str_post)) {
-                NewPost(navController)
+                NewPost(navController = navController,  postViewModel)
             }
             composable(context.getString(R.string.str_searchpost)) {
                 SearchPost(navController)
             }
 
             composable(context.getString(R.string.str_search)) {
-                SearchScreen(navController)
+                SearchScreen(navController, searchVM)
             }
             composable("${context.getString(R.string.SearchToGoogleMap)}/{id}") { backStackEntry ->
                 SearchResult(
                     navController = navController,
-                    restaurantID = backStackEntry.arguments?.getString("id") ?: ""
+                    restaurantID = backStackEntry.arguments?.getString("id") ?: "",
+                    searchTextVM = searchVM
                 )
             }
-            composable(context.getString(R.string.randomFood)) { backStackEntry ->
+            composable(context.getString(R.string.randomFood)) {
                 RandomFood(
-                    navController = navController
+                    navController = navController, searchScreenVM = searchVM
                 )
             }
 
+            composable(context.getString(R.string.restaurantDetail)){
+                RestaurantDetail(navController = navController, restaurantVM = searchVM)
+            }
 
 
 
@@ -268,7 +315,13 @@ fun Main(
             }
 
 
-
+            composable("PrivateChatRoom/{roomid}",
+                arguments = listOf(
+                    navArgument("roomid") { type = NavType.IntType }
+                )
+            ) {
+                PrivateChatRoom(it.arguments?.getString("roomid") ?: "-1", pChatVM)//,gChatRoomVM)
+            }
 
 
 
@@ -278,9 +331,30 @@ fun Main(
 
             composable(context.getString(R.string.str_member)) {
                 MemberMainScreen(navController = navController)
-
-
             }
+
+            composable(context.getString(R.string.str_member) + "/2") {
+                MemberInformationScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_member) + "/3") {
+                ModifyInformationScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_member) + "/4") {
+                DeleteMemberScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_member) + "/5") {
+                OtherSettingScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_member) + "/6") {
+                FriendManagementScreen(navController = navController, friendVM)
+            }
+            composable(context.getString(R.string.str_member) + "/7") {
+                AddFriendScreen(navController = navController)
+            }
+            composable(context.getString(R.string.str_member) + "/8") {
+                PrivateChatScreen(navController = navController)
+            }
+
 
             composable(context.getString(R.string.str_calendar)) {
                 TabMainScreen(navController, 0)
@@ -292,18 +366,22 @@ fun Main(
                 TabMainScreen(navController, 2)
             }
 
+            composable("${context.getString(R.string.str_note_edit)}/{noteId}") { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                NoteEdit(navController = navController, noteId = noteId)
+            }
 
         }
     }
 
 
-    }
+}
 
 
-    @Preview(showBackground = true)
-    @Composable
-    fun FoodHunterPreview() {
-        MaterialTheme {
-            Main()
-        }
+@Preview(showBackground = true)
+@Composable
+fun FoodHunterPreview() {
+    MaterialTheme {
+        Main()
     }
+}

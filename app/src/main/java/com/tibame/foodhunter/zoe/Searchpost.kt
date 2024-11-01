@@ -1,16 +1,14 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -18,64 +16,44 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Tab
+import androidx.compose.material3.SelectableChipElevation
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.Main
+import androidx.wear.compose.material.SelectableChip
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
-@Composable
+
 @OptIn(ExperimentalMaterial3Api::class)
-fun SearchPost(navController: NavHostController = rememberNavController()) {
-    val samplePosts: List<Post> = getSamplePosts()
-    var selectedFilters by remember { mutableStateOf(setOf<String>()) }
-    val context = LocalContext.current
+@Composable
+fun SearchPost(
+    navController: NavHostController,
+  postViewModel: PostViewModel = viewModel()
 
-    // 根據選擇的篩選標籤過濾貼文
-    val filteredPosts = if (selectedFilters.isEmpty()) {
-        samplePosts
-    } else {
-        samplePosts.filter { post -> selectedFilters.contains(post.postTag) }
-    }
-
+) {
+    val selectedFilters by postViewModel.selectedFilters.collectAsState()
+    val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
+
     ) {
-        PrimaryTabRow(selectedTabIndex = 0) {
-            Tab(
-                selected = true,
-                onClick = {navController.navigate(context.getString(R.string.str_home)) },
-                text = { Text(text = stringResource(id = R.string.recommend)) }
-            )
-            Tab(
-                selected = false,
-                onClick = { navController.navigate(context.getString(R.string.str_searchpost))},
-                text = { Text(text = stringResource(id = R.string.search)) }
-            )
-        }
+
         SearchBar(
             query = "",
             onQueryChange = {},
@@ -89,36 +67,74 @@ fun SearchPost(navController: NavHostController = rememberNavController()) {
                 IconButton(onClick = {}) {
                     Icon(
                         Icons.Default.Search,
-                        contentDescription = "" // Add a valid content description
+                        contentDescription = "Search Icon"
                     )
                 }
             },
-            trailingIcon = {
-
-            }
+            trailingIcon = {}
         ) { }
 
-
-        // 使用 FilterChips 函數
         FilterChips(
             filters = listOf("早午餐", "午餐", "晚餐"),
             selectedFilters = selectedFilters,
-            onFilterChange = { updatedFilters -> selectedFilters = updatedFilters }
+            onFilterChange = { updatedFilters ->
+                postViewModel.updateFilters(updatedFilters)
+            }
         )
 
-
-        ImageList(posts = filteredPosts)
-
-
+        ImageList(
+            posts = filteredPosts,  // 你的貼文數據
+            onPostClick = { postId ->
+                // 这里会获取到被点击的帖子 ID
+                postViewModel.setPostId(postId)
+                // 使用获取到的 ID 进行导航
+                navController.navigate("postDetail/$postId")
+            }
+        )
     }
 }
 
+@Composable
+fun FilterChips(
+    filters: List<String>,                 // 可用的標籤列表
+    selectedFilters: List<String>,         // 當前選中的標籤
+    onFilterChange: (List<String>) -> Unit // 選中狀態變更時的回調
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        items(filters) { filter ->
+            val isSelected = selectedFilters.contains(filter)
+
+            // 使用 FilterChip 或 Chip 來表示篩選標籤
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    val updatedFilters = if (isSelected) {
+                        selectedFilters - filter
+                    } else {
+                        selectedFilters + filter
+                    }
+                    onFilterChange(updatedFilters)
+                },
+                label = { Text(filter) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.White,
+                    selectedContainerColor = (colorResource(R.color.orange_5th)),
+                                    )
+            )
+        }
+    }
+}
 
 
 @Preview(showBackground = true)
 @Composable
 fun SerchpostPreview() {
     FoodHunterTheme  {
-        SearchPost()
+        SearchPost(rememberNavController())
     }
 }
