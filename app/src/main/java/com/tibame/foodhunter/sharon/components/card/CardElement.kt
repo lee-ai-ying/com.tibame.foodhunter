@@ -1,8 +1,9 @@
-package com.tibame.foodhunter.sharon.components
+package com.tibame.foodhunter.sharon.components.card
 
 import Roboto
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +14,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,30 +32,10 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.sharon.CalendarGroupItem
-import com.tibame.foodhunter.sharon.NoteCardItem
-
-@Preview(showBackground = true)
-@Composable
-fun NoteItemPreview() {
-    NoteCardItem(
-        navController = rememberNavController(), // 對 NavController 進行預覽時的初始化
-        imageResId = R.drawable.sushi_image_1,
-        title = "小巷中的咖啡廳"
-    )// 預覽時顯示的圖片資源 ID
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CalendarGroupCardPreview() {
-    CalendarGroupItem(
-    )
-}
 
 
 // 邊條顏色
@@ -195,20 +179,33 @@ fun GroupTextContent(
 // 揪團是否為公開狀態
 @Composable
 fun GroupVisibilityToggle(isPublic: Boolean) {
-    SuggestionChip(
+    Box(
         modifier = Modifier
-            .height(40.dp)
-            .padding(top = 8.dp,end = 2.dp),
-        onClick = {},
-        label = {
-            Text(
-                text = if (isPublic) "公開" else "私人",
+            .wrapContentHeight()
+            .height(44.dp)
+            .padding(top = 16.dp, end = 16.dp)
+            .clip(RoundedCornerShape(8.dp)) // 使用圓角形狀來模擬 FilterChip 的圓角
+            .border(
+                width = 1.dp,
+                color = colorResource(id = R.color.orange_1st),
+                shape = RoundedCornerShape(8.dp)
             )
-        },
-        colors = SuggestionChipDefaults.suggestionChipColors(
-            containerColor = if (isPublic) colorResource(id = R.color.orange_1st) else colorResource(id = R.color.white), // 背景顏色
-            labelColor =  if (isPublic) colorResource(id = R.color.white) else colorResource(id = R.color.orange_d1), // 文字顏色，您可以根據需要替換
-        ),
-        enabled = true
-    )
+            .background(
+                color = if (isPublic) colorResource(id = R.color.white) else colorResource(id = R.color.orange_6th)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isPublic) "公開" else "私人",
+            color = colorResource(id = R.color.orange_1st),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontFamily = Roboto,
+                fontWeight = FontWeight(700),
+                textAlign = TextAlign.Center,
+
+            )
+        )
+    }
 }

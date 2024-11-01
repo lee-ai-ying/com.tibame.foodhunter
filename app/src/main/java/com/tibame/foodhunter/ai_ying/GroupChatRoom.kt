@@ -27,10 +27,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DateRange
@@ -76,8 +80,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -90,10 +99,10 @@ fun GroupChatRoom(
 //        EditGroupInformation(gChatVM)
 //        return
 //    }
-//    if (gChatVM.showEditMember.collectAsState().value) {
-//        EditGroupMember(gChatVM)
-//        return
-//    }
+    if (gChatVM.showEditMember.asStateFlow().collectAsState().value) {
+        EditGroupMember(gChatVM)
+        return
+    }
     val item = listOf(
         "111",
         "222\n222",
@@ -255,6 +264,7 @@ fun GroupChatRoomBottomBar(
     val chatInput = gChatVM.chatInput.collectAsState()
     var showFunc by remember { mutableStateOf(false) }
     var showAlert by remember { mutableStateOf(false) }
+    var showEndAlert by remember { mutableStateOf(false) }
     var showNotManagerAlert by remember { mutableStateOf(false) }
     var showManagerFunction by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -317,11 +327,11 @@ fun GroupChatRoomBottomBar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Spacer(Modifier.height(8.dp))
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    maxItemsInEachRow = 4
+//                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     if (!showManagerFunction) {
                         GroupFunction("傳送圖片", Icons.Filled.AccountBox) {
@@ -335,26 +345,34 @@ fun GroupChatRoomBottomBar(
                         GroupFunction("離開揪團", Icons.AutoMirrored.Filled.ExitToApp) {
                             showAlert = true
                         }
-//                        groupFunction("管理揪團", Icons.Filled.Settings) {
-//                            if (true) {
-//                                showManagerFunction = true
-//                            } else {
-//                                showNotManagerAlert = true
-//                            }
-//                        }
-                    } else {
-                        GroupFunction("返回上層", Icons.AutoMirrored.Filled.ArrowBack) {
-                            showManagerFunction = false
-                            gChatVM.setShowEditGroup(false)
-                            gChatVM.setShowEditMember(false)
-                        }
-                        GroupFunction("修改揪團", Icons.Filled.Create) {
-                            gChatVM.setShowEditGroup(!showEditGroup)
-                        }
                         GroupFunction("管理成員", Icons.Outlined.Person) {
-                            gChatVM.setShowEditMember(!showEditMember)
+                            if (true) {
+                                gChatVM.setShowEditMember(true)
+                            } else {
+                                showNotManagerAlert = true
+                            }
+                        }
+                        GroupFunction("終止揪團", Icons.Filled.Settings) {
+                            if (true) {
+                                showEndAlert = true
+                            } else {
+                                showNotManagerAlert = true
+                            }
                         }
                     }
+//                    else {
+//                        GroupFunction("返回上層", Icons.AutoMirrored.Filled.ArrowBack) {
+//                            showManagerFunction = false
+//                            gChatVM.setShowEditGroup(false)
+//                            gChatVM.setShowEditMember(false)
+//                        }
+//                        GroupFunction("修改揪團", Icons.Filled.Create) {
+//                            gChatVM.setShowEditGroup(true)
+//                        }
+//                        GroupFunction("管理成員", Icons.Outlined.Person) {
+//                            gChatVM.setShowEditMember(true)
+//                        }
+//                    }
                 }
             }
         }
@@ -362,6 +380,24 @@ fun GroupChatRoomBottomBar(
             NotManagerDialog(
                 onDismissRequest = {
                     showNotManagerAlert = false
+                },
+                gChatVM = gChatVM
+            )
+        }
+        if (showEndAlert) {
+            EndGroupChatDialog(
+                // 點擊對話視窗外部或 back 按鈕時呼叫
+                onDismissRequest = {
+                    showEndAlert = false
+                },
+                // 設定確定時欲執行內容
+                onConfirm = {
+                    navController.popBackStack()
+                    showEndAlert = false
+                },
+                // 設定取消時欲執行內容
+                onDismiss = {
+                    showEndAlert = false
                 },
                 gChatVM = gChatVM
             )
@@ -554,16 +590,132 @@ fun GroupChatRoomBottomBar(
 //        }
 //    }
 //}
-//@Composable
-//fun EditGroupMember(
-//    gChatVM: GroupViewModel
-//){
-//    Column(
-//        modifier = Modifier.background(FColor.Orange_3rd)
-//    ){
-//
-//    }
-//}
+@Composable
+fun EditGroupMember(
+    gChatVM: GroupViewModel
+){
+    val users = listOf(1,2,3,4,5)
+    val users2 = listOf(1,2,3,4,5,6,7,8,9,10)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().background(Color.White),
+    ) {
+        items(1){
+            GroupTitleText(text = "待確認")
+        }
+        items(users){
+            Row(
+                modifier = Modifier
+                    .height(56.dp)
+                    .padding(start = 10.dp, end = 10.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.user1),
+                            contentDescription = "avatar",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(
+                            text = "$it"
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = ""
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Icon(
+                    imageVector = Icons.Filled.Clear,
+                    contentDescription = ""
+                )
+            }
+        }
+        items(1){
+            GroupTitleText(text = "已加入")
+        }
+        items(users2){
+            Row(
+                modifier = Modifier
+                    .height(56.dp)
+                    .padding(start = 10.dp, end = 10.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.user1),
+                            contentDescription = "avatar",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(
+                            text = "$it"
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = Icons.Filled.Clear,
+                    contentDescription = ""
+                )
+            }
+        }
+    }
+}
+@Composable
+fun EndGroupChatDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    gChatVM: GroupViewModel
+) {
+    val chatRoom = gChatVM.chatRoom.collectAsState()
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("確定要終止此揪團嗎?") },
+        text = { Text("警告：此動作無法復原") },
+        // 設定確定按鈕
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+            ) {
+                Text("確定")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
+    )
+}
 @Composable
 fun LeaveGroupChatDialog(
     onDismissRequest: () -> Unit,
@@ -644,8 +796,8 @@ fun GroupFunction(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth(0.22f)
-            .padding(8.dp)
+            //.fillMaxWidth()//fillMaxWidth(0.22f)
+//            .padding(8.dp)
             .clickable {
                 onClick()
             },
@@ -670,6 +822,7 @@ fun GroupFunction(
 fun GroupChatRoomPreview() {
     MaterialTheme {
 //        GroupChatRoom(0, viewModel())
-        GroupChatRoomBottomBar(rememberNavController(), viewModel())
+//        GroupChatRoomBottomBar(rememberNavController(), viewModel())
+        EditGroupMember(viewModel())
     }
 }
