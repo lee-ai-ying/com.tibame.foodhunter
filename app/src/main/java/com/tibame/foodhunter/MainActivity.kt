@@ -30,6 +30,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tibame.foodhunter.a871208s.AddFriendScreen
@@ -52,18 +53,23 @@ import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
 import com.tibame.foodhunter.andysearch.RandomFood
 import com.tibame.foodhunter.andysearch.SearchResult
-import com.tibame.foodhunter.sharon.TabMainScreen
+import com.tibame.foodhunter.sharon.PersonalToolsScreen
 
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.sharon.NoteEditTopBar
+import com.tibame.foodhunter.sharon.TabConstants
+import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
+import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
+import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
+import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -102,7 +108,6 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         "PrivateChatRoom/{roomid}",
         "GroupChatRoom/{groupId}",
         context.getString(R.string.str_group) + "/2",
-        context.getString(R.string.str_calendar),
         context.getString(R.string.str_member) + "/2",
         context.getString(R.string.str_member) + "/3",
         context.getString(R.string.str_member) + "/4",
@@ -168,6 +173,24 @@ fun Main(
                     navController,
                     scrollBehavior
                 )
+            }
+            if (destination?.parent?.route == "personal_tools") {
+                when (destination.route) {
+                    "note_edit" -> NoteEditTopBar(
+
+                    )
+                    context.getString(R.string.str_calendar) -> CalendarTopBar(
+                        navController,
+                        scrollBehavior,
+                        CalendarViewModel()
+                    )
+                    context.getString(R.string.str_note) -> NoteTopBar(
+                        navController,
+                        scrollBehavior,
+                        NoteViewModel()
+                    )
+
+                }
             }
         },
         bottomBar = {
@@ -356,19 +379,28 @@ fun Main(
             }
 
 
-            composable(context.getString(R.string.str_calendar)) {
-                TabMainScreen(navController, 0)
-            }
-            composable(context.getString(R.string.str_note)) {
-                TabMainScreen(navController, 1)
-            }
-            composable(context.getString(R.string.str_favorite)) {
-                TabMainScreen(navController, 2)
-            }
+            navigation(
+                startDestination = context.getString((R.string.str_calendar)),
+                route = "personal_tools"
+            ) {
+                composable(context.getString(R.string.str_calendar)) {
+                    PersonalToolsScreen(navController, TabConstants.CALENDAR)
+                }
+                composable(context.getString(R.string.str_note)) {
+                    PersonalToolsScreen(navController, TabConstants.NOTE)
+                }
+                composable(context.getString(R.string.str_favorite)) {
+                    PersonalToolsScreen(navController, TabConstants.FAVORITE)
+                }
 
-            composable("${context.getString(R.string.str_note_edit)}/{noteId}") { backStackEntry ->
-                val noteId = backStackEntry.arguments?.getString("noteId")
-                NoteEdit(navController = navController, noteId = noteId)
+                composable(
+                    route = "note_edit/{noteId}",
+                    arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val noteId = backStackEntry.arguments?.getString("noteId")
+                        ?: return@composable  // 防止空值
+                    NoteEdit(navController = navController, noteId = noteId)
+                }
             }
 
         }

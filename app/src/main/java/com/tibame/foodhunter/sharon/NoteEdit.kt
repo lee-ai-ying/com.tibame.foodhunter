@@ -55,13 +55,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.sharon.data.noteList
 import kotlinx.coroutines.launch
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-    NoteEdit(navController = mockNavController, noteId = "123") // 傳入模擬的 noteId
+    NoteEdit(
+        navController = mockNavController,
+        noteId = "1",
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,11 +79,25 @@ fun NoteEdit(
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    // 定義狀態
-    var titleInputText by remember { mutableStateOf("") }
-    var bodyInputText by remember { mutableStateOf("") }
+    // 找到對應的筆記
+    val note = remember(noteId) {
+        noteList.find { it.id == noteId }
+    }
+
+    // 使用筆記資料初始化狀態
+    var titleInputText by remember {
+        mutableStateOf(note?.title ?: "")
+    }
+    var bodyInputText by remember {
+        mutableStateOf(note?.noteContent ?: "")
+    }
+    var selectedRestaurantName by remember {
+        mutableStateOf(note?.restaurantName ?: "")
+    }
+
+
     var isBottomSheetVisible by remember { mutableStateOf(false) }
-    var selectedRestaurantName by remember { mutableStateOf("") }
+//    var selectedRestaurantName by remember { mutableStateOf("") }
 
     // 定義樣式
     val editNoteBasicTextStyle = TextStyle(
@@ -102,7 +120,7 @@ fun NoteEdit(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            NoteTopBar(
+            NoteEditTopBar(
                 canback = true,
                 navController = navController,
                 scrollBehavior = scrollBehavior,

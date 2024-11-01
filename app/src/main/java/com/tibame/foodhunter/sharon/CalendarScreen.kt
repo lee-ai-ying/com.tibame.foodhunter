@@ -1,150 +1,184 @@
 package com.tibame.foodhunter.sharon
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.checkTopBarBackButtonShow
-import com.tibame.foodhunter.checkTopBarNoShow
-import com.tibame.foodhunter.global.TopFunctionBar
+import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.components.card.CardContentType
+import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
+import com.tibame.foodhunter.sharon.data.Book
+import com.tibame.foodhunter.sharon.data.CalendarUiState
+import com.tibame.foodhunter.sharon.util.DateUtil
+import com.tibame.foodhunter.sharon.util.getDisplayName
+import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
-import java.time.DayOfWeek
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter.ofLocalizedDate
-import java.time.format.FormatStyle
+import java.time.YearMonth
 
-/** 假裝這是會員功能準備進到-->日曆的入口點 **/
-@Composable
-fun CalendarScreen(
-    navController: NavHostController? = null,
-    callback: @Composable () -> Unit // 接收一個可組合的回調函數，用於在頁面中展示額外的 UI
-) {
-    // 使用 LazyColumn 以支持垂直滾動
-    LazyColumn(
-        modifier = Modifier
-            .background(Color.White)
-            .fillMaxSize(),
-//            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // DatePicker 組件
-        item {
-            CalendarComp()
-        }
-        // CalendarGroupItem 卡片
-        item {
-            CalendarGroupItem()
-        }
-        // NoteCardItem 卡片
-        item {
-            NoteCardItem(title = "小巷中的咖啡廳")
-        }
-    }
-}
-
-
-
-// 使用的DatePicker屬於androidx.compose.material3測試功能，需要加上"@OptIn"註記
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarComp() {
+fun CalendarScreen(
+    navController: NavHostController = rememberNavController(),
+    viewModel: CalendarViewModel = viewModel(),
+    bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
-    val today = LocalDate.now()
-    // 使用 atStartOfDay 將當前日期轉換為開始時間（00:00），然後轉換成 UTC 時區並轉換成毫秒（Epoch milliseconds）
-    val todayInMills = today.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
 
-    // 將 todayInMillis 作為初始選取日期傳入 rememberDatePickerState
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = todayInMills  // 設定初始值為今天日期
-            )
 
+    // 初始化當天的選中日期
+    var selectedDate by remember {
+        mutableStateOf<CalendarUiState.Date?>(null)  // 初始化為 null
+    }
+
+    // 在 LaunchedEffect 中設置初始日期
+    LaunchedEffect(Unit) {
+        if (selectedDate == null) {  // 只在 selectedDate 為 null 時設置
+            val today = LocalDate.now()
+            selectedDate = uiState.dates.find { date ->
+                date.dayOfMonth == today.dayOfMonth.toString() &&
+                        date.month == today.monthValue &&
+                        date.year == today.year
+            }
+        }
+    }
+
+    var selectedBooks by remember {
+        mutableStateOf(emptyList<Book>())
+    }
+
+    // 當 selectedDate 改變時更新 selectedBooks
+    LaunchedEffect(selectedDate, books) {
+        selectedBooks = books.filter { book ->
+            selectedDate?.let { date ->
+                book.date.dayOfMonth.toString() == date.dayOfMonth &&
+                        book.date.monthValue == date.month &&
+                        book.date.year == date.year
+            } ?: false
+        }
+    }
 
     Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+//            .fillMaxSize()
+            .padding(5.dp)
     ) {
-
-        DatePicker(
-//            modifier = Modifier.,
-            state = datePickerState,
-//            title = { Text(text = "") },
-            headline = {
-                DatePickerDefaults.DatePickerTitle(
-                    displayMode = datePickerState.displayMode,
-                    modifier = Modifier.padding(top = 0.dp) // 使用自定義的 titlePadding
-                )
-                       },
-            title = {
-                DatePickerDefaults.DatePickerTitle(
-                    displayMode = datePickerState.displayMode,
-                    modifier = Modifier.padding(top = 0.dp) // 使用自定義的 titlePadding
-                )
-            },
-            colors = DatePickerDefaults.colors(
-
-                todayContentColor = Color.Black,  // 今天日期字的顏色
-                todayDateBorderColor = Color.Red,  // 今天日期的邊緣線
-                selectedDayContainerColor = Color.LightGray,  // 選中日期的背景色
-                selectedDayContentColor = Color.Black,  // 選中日期的字顏色
+        // 更新日期列表，使得用戶選中的日期顯示選中狀態
+        val updatedDates = uiState.dates.map { date ->
+            date.copy(
+                isSelected = selectedDate?.let { selected ->
+                    date.dayOfMonth == selected.dayOfMonth &&
+                            date.month == selected.month &&
+                            date.year == selected.year
+                } ?: false
             )
+        }
 
+        CalendarWidget(
+            days = DateUtil.daysOfWeek,
+            yearMonth = uiState.yearMonth,
+            dates = updatedDates,  // 傳遞更新後的 dates 列表
+            selectedBooks = selectedBooks, // 傳入選中的書籍列表
+            // 切換到上一個月份
+            onPreviousMonthButtonClicked = { prevMonth ->
+                viewModel.toPreviousMonth(prevMonth)
+            },
+            // 切換到下一個月份
+            onNextMonthButtonClicked = { nextMonth ->
+                viewModel.toNextMonth(nextMonth)
+            },
+            // 點擊日期時更新選擇的日期和顯示的書籍
+            onDateClickListener = { date ->
+                selectedDate = date
+            },
+
+            onItemClick = { book ->
+                // 處理書籍項目點擊邏輯
+                println("Book clicked: ${book.name}")
+            },
+            onEditClick = { book ->
+                // 編輯書籍的邏輯
+                println("Edit book: ${book.name}")
+            },
+            onDeleteClick = { book ->
+                // 刪除書籍的邏輯
+                bookViewModel.removeItem(book)
+            }
         )
-        // 顯示選取日期(已格式化)
-//        Text(
-//            text = "Selected date: ${
-//                datePickerState.selectedDateMillis?.let {
-//                    Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-//                        .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
-//                } ?: "no selection"
-//            }"
-//        )
+
+        LazyColumn {
+            item {
+                NoteOrGroupCard(
+                    type = CardContentType.GROUP,
+                    date = "10/17",
+                    day = "星期四",
+                    title = "說好的減肥呢",
+                    restaurantName = "麥噹噹",
+                    restaurantAddress = "台北市中山區南京東路三段222號",
+                    headcount = 4,
+                    isPublic = false,
+                    onClick = {}
+                )
+            }
+
+            item {
+                NoteOrGroupCard(
+                    onClick = {},
+                    type = CardContentType.NOTE,
+                    date = "10/17",
+                    day = "星期四",
+                    title = "小巷中的咖啡廳",
+                    noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
+                    imageResId = R.drawable.sushi_image_1
+                )
+            }
+
+            item {
+                NoteOrGroupCard(
+                    type = CardContentType.GROUP,
+                    date = "10/17",
+                    day = "星期四",
+                    title = "說好的減肥呢",
+                    restaurantName = "麥噹噹",
+                    restaurantAddress = "台北市中山區南京東路三段222號",
+                    headcount = 4,
+                    isPublic = true,
+                    onClick = {}
+                )
+            }
+        }
     }
 }
 
 
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun DefaultPreview() {
-    FoodHunterTheme {
-
-        CalendarScreen {}
-    }
+fun CalendarScreenPreview() {
+    CalendarScreen()
 }
