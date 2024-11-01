@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -51,6 +52,7 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.zoe.Post
 import androidx.compose.ui.text.style.TextOverflow
+
 
 @Preview
 @Composable
@@ -179,26 +181,26 @@ fun RestaurantInfoDetail(
 
 
 /**相關貼文*/
-@Composable
-fun RelatedPost(posts: List<Post>) {
-    LazyRow(
-        modifier = Modifier
-            .padding(4.dp)
-    ) {
-        items(posts) { post ->
-            com.tibame.foodhunter.wei.PostItems(Post = post)
-            Spacer(modifier = Modifier.size(8.dp)) // 每筆貼文間的間距
-        }
-    }
-}
+//@Composable
+//fun RelatedPost(posts: List<Post>) {
+//    LazyRow(
+//        modifier = Modifier
+//            .padding(4.dp)
+//    ) {
+//        items(posts) { post ->
+//            PostItems(Post = RelatedPost)
+//            Spacer(modifier = Modifier.size(8.dp)) // 每筆貼文間的間距
+//        }
+//    }
+//}
 
 @Composable
-fun PostItems(Post: Post) {
+fun PostItems(Post: RelatedPost) {
     Card(
         modifier = Modifier
             .size(150.dp)
             .padding(8.dp),
-        //elevation = 4.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
