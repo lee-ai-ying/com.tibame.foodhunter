@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.wear.compose.material.SelectableChip
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
