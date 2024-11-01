@@ -110,7 +110,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/6",
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
-        context.getString(R.string.restaurantDetail)
+        context.getString(R.string.restaurantDetail),
+        "postDetail/{postId}"
     ).contains(destination?.route)
 }
 
@@ -129,7 +130,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         "PrivateChatRoom/{roomid}",
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood),
-        context.getString(R.string.str_create_group)
+        context.getString(R.string.str_create_group),
+        "postDetail/{postId}"
     ).contains(destination?.route)
 }
 
@@ -262,7 +264,7 @@ fun Main(
 
 
             composable(context.getString(R.string.str_post)) {
-                NewPost(navController)
+                NewPost(navController = navController,  postViewModel)
             }
             composable(context.getString(R.string.str_searchpost)) {
                 SearchPost(navController)

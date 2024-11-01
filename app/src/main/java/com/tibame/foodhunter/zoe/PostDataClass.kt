@@ -16,6 +16,14 @@ data class Post(
 
 )
 
+data class CarouselItem(
+    val id: Int,
+    val imageUri: Int,
+    val contentDescription: String
+)
+
+
+
 data class PostCreateData(
     var postId: Int = 0,
     var publisher: String="",
@@ -23,4 +31,5 @@ data class PostCreateData(
     var location: String = "",
     var timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
     var postTag: String = "",
+    var carouselItems: List<CarouselItem> = emptyList(),
 )

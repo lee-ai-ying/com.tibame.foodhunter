@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ai_ying.GroupViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
@@ -135,6 +136,9 @@ fun PostHeader(publisher: Publisher) {
         Text(text = "追蹤者: ${publisher.followers.size} | 追蹤中: ${publisher.following.size}")
     }
 }
+
+
+
 
 
 

@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -95,7 +92,7 @@ fun PostItem(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White // 设置卡片背景色为白色
+            containerColor = Color.White
         )
     ) {
         Column(
@@ -230,28 +227,4 @@ private fun PostHeader(post: Post) {
         }
     }
 }
-//    @Composable
-//    fun PostContent(content: String) {
-//        var expanded by remember { mutableStateOf(false) }
-//
-//        Column(modifier = Modifier.fillMaxWidth()) {
-//            Text(
-//                text = content,
-//                maxLines = if (expanded) Int.MAX_VALUE else 3,
-//                overflow = TextOverflow.Ellipsis,
-//                style = MaterialTheme.typography.bodyMedium,
-//                modifier = Modifier.animateContentSize()
-//            )
-//
-//            if (content.length > 100) {
-//                TextButton(
-//                    onClick = { expanded = !expanded },
-//                    modifier = Modifier.align(Alignment.End)
-//                ) {
-//                    Text(
-//                        text = if (expanded) "顯示較少" else "顯示更多"
-//                    )
-//                }
-//            }
-//        }
-//    }
+

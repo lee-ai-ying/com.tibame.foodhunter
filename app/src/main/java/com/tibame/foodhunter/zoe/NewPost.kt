@@ -141,7 +141,10 @@ fun NewPost(navController: NavHostController,
                 ) {
                     TextField(
                         value = text,
-                        onValueChange = { inputData.content = it.toString() },
+                        onValueChange = { newText ->
+                            text = newText                    // 更新text狀態
+                            inputData.content = newText.toString()       // 同時更新inputData
+                        },
                         label = { Text("貼文內容") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -155,10 +158,10 @@ fun NewPost(navController: NavHostController,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent,
                             errorIndicatorColor = Color.Transparent,
-                            focusedTextColor = Color.Black, // 設置文字顏色
-                            unfocusedTextColor = Color.Gray, // 設置失去焦點的文字顏色
-                            focusedLabelColor = Color.Gray, // 設置提示文字顏色
-                            unfocusedLabelColor = Color.LightGray // 設置未聚焦的提示文字顏色
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedLabelColor = Color.LightGray
                         )
                     )
                     Button(
@@ -243,7 +246,8 @@ fun NewPost(navController: NavHostController,
                     }
 
                     Button(
-                        onClick = {postViewModel.setPostCreateData(inputData)
+                        onClick = {
+                            postViewModel.setPostCreateData(inputData)
                             navController.popBackStack()},
                         modifier = Modifier.fillMaxWidth(),
 

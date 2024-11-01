@@ -66,11 +66,6 @@ import com.tibame.foodhunter.R
 
 
 
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
-)
 
 
 
@@ -141,7 +136,7 @@ private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier 
         modifier = modifier
     ) { page ->
         Image(
-            painter = painterResource(id = items[page].imageResId),
+            painter = painterResource(id = items[page].id),
             contentDescription = items[page].contentDescription,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -186,7 +181,7 @@ private fun ImageCarouselLayout(
                     modifier = Modifier
                         .padding(2.dp)
                         .clip(CircleShape)
-                        .background(color)
+                        .background(colorResource(R.color.orange_5th))
                         .size(8.dp)
                         .zIndex(1f)
                 )
@@ -214,7 +209,7 @@ fun ImageList(
                         .clickable { onPostClick(post.postId) } // 點擊時觸發回調，傳遞 postId
                 ) {
                     ImageItem(
-                        imageResId = post.carouselItems[0].imageResId,
+                        imageResId = post.carouselItems[0].id,
                         contentDescription = post.carouselItems[0].contentDescription
                     )
                 }

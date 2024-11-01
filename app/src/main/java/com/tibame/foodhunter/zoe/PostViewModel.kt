@@ -1,5 +1,8 @@
 package com.tibame.foodhunter.zoe
 
+import android.content.Context
+import android.net.Uri
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tibame.foodhunter.zoe.PostRepository.postList
@@ -11,6 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import java.io.InputStream
 
 class PostViewModel : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
@@ -36,7 +40,12 @@ class PostViewModel : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
 
-
+    fun uriToBase64(context: Context, uri: Uri): String? {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        return inputStream?.readBytes()?.let {
+            Base64.encodeToString(it, Base64.DEFAULT)
+        }
+    }
 
     private val _postCreateData = MutableStateFlow(PostCreateData())
     val postCreateData: StateFlow<PostCreateData> = _postCreateData.asStateFlow()
@@ -45,13 +54,20 @@ class PostViewModel : ViewModel() {
             data
         }
     }
+
+
     fun getPostById(postId: Int): StateFlow<Post?> {
         return postFlow.map { posts ->
             posts.find { it.postId == postId }
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
+    private val _selectedPostId = MutableStateFlow<Int?>(null)
+    val selectedPostId = _selectedPostId.asStateFlow()
 
+    fun setPostId(postId: Int) {
+        _selectedPostId.value = postId
+    }
 
 
     fun getFilteredPosts(): StateFlow<List<Post>> {
