@@ -60,6 +60,7 @@ import com.tibame.foodhunter.zoe.Home
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.sharon.NoteEditTopBar
 import com.tibame.foodhunter.sharon.TabConstants
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
@@ -397,9 +398,10 @@ fun Main(
                     route = "note_edit/{noteId}",
                     arguments = listOf(navArgument("noteId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val noteId = backStackEntry.arguments?.getString("noteId")
+                    val noteId = backStackEntry.arguments?.getInt("id")
                         ?: return@composable  // 防止空值
-                    NoteEdit(navController = navController, noteId = noteId)
+
+                    NoteEditRoute(navController = navController, noteId = noteId)
                 }
             }
 
