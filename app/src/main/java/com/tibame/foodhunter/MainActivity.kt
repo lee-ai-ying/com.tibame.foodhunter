@@ -47,6 +47,8 @@ import com.tibame.foodhunter.a871208s.MemberMainScreen
 import com.tibame.foodhunter.a871208s.ModifyInformationScreen
 import com.tibame.foodhunter.a871208s.OtherSettingScreen
 import com.tibame.foodhunter.a871208s.PrivateChatRoom
+import com.tibame.foodhunter.a871208s.PrivateChatRoomBottomBar
+import com.tibame.foodhunter.a871208s.PrivateChatRoomTopBar
 import com.tibame.foodhunter.a871208s.PrivateChatScreen
 import com.tibame.foodhunter.a871208s.PrivateViewModel
 import com.tibame.foodhunter.a871208s.RegisterScreen
@@ -161,6 +163,14 @@ fun Main(
                 )
                 return@Scaffold
             }
+            if (destination?.route == "PrivateChatRoom/{roomid}") {
+                PrivateChatRoomTopBar(
+                    navController,
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    pChatVM
+                )
+                return@Scaffold
+            }
             if (checkTopBarNoShow(destination)) {
                 TopFunctionBar(
                     checkTopBarBackButtonShow(destination),
@@ -172,6 +182,10 @@ fun Main(
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
                 GroupChatRoomBottomBar(navController,gChatVM)
+                return@Scaffold
+            }
+            if (destination?.route == "PrivateChatRoom/{roomId}") {
+                PrivateChatRoomBottomBar(pChatVM)
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
@@ -298,7 +312,7 @@ fun Main(
 
             composable("PrivateChatRoom/{roomid}",
                 arguments = listOf(
-                    navArgument("roomid") { type = NavType.IntType }
+                    navArgument("roomid") { type = NavType.StringType }
                 )
             ) {
                 PrivateChatRoom(it.arguments?.getString("roomid") ?: "-1", pChatVM)//,gChatRoomVM)
@@ -333,7 +347,7 @@ fun Main(
                 AddFriendScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/8") {
-                PrivateChatScreen(navController = navController)
+                PrivateChatScreen(navController = navController,pChatVM)
             }
 
 

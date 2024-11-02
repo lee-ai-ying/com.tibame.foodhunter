@@ -52,7 +52,7 @@ import com.tibame.foodhunter.ai_ying.GroupViewModel
 @Composable
 fun PrivateChatScreen(
     navController: NavHostController,
-    pChatVM: PrivateViewModel= viewModel()
+    pChatVM: PrivateViewModel
 ) {
     var searchInput by remember { mutableStateOf("") }
     val privateChats by pChatVM.PrivateChatFlow.collectAsState()
@@ -81,8 +81,8 @@ fun PrivateChatScreen(
 
                 Column(
                     modifier = Modifier.background(Color.White).clickable {
-                        pChatVM.setDetailGroupChat(privateChat)
-                        navController.navigate("GroupChatRoom/${privateChat.id}")
+                        pChatVM.setDetailPrivateChat(privateChat)
+                        navController.navigate("PrivateChatRoom/"+privateChat.roomid)
                     }
                 ) {
                     Row(

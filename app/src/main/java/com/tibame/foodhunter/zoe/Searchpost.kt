@@ -36,7 +36,7 @@ fun SearchPost(
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     val selectedTabIndex by postViewModel.selectedTabIndex.collectAsState()
     val context = LocalContext.current
-    val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
+    //val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
@@ -93,13 +93,13 @@ fun SearchPost(
             }
         )
 
-        ImageList(
+       /* ImageList(
             posts = filteredPosts,  // 你的貼文數據
             onPostClick = { postId ->
                 // 當圖片被點擊時，導航到詳情頁面
                 navController.navigate("post_detail/$postId")
             }
-        )
+        )*/
     }
 }
 
