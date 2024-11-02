@@ -2,17 +2,21 @@ package com.tibame.foodhunter.a871208s
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -54,163 +58,175 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FriendManagementScreen(navController: NavHostController = rememberNavController(),friendVM: FriendViewModel = viewModel()) {
-    val context = LocalContext.current
 
-// 設定內容向上捲動時，TopAppBar自動收起來；呼叫pinnedScrollBehavior()則不會收起來
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+@Composable
+fun FriendManagementScreen(
+    navController: NavHostController = rememberNavController(),
+    friendVM: FriendViewModel = viewModel()
+) {
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val frined by friendVM.FriendState.collectAsState()
-    Column(
+    val friend by friendVM.FriendState.collectAsState()
+    val sfriend by friendVM.SFriendState.collectAsState()
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        item {
+            // 新增好友
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "新增好友",
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Blue
+                )
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp, 0.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "新增好友",
+                        modifier = Modifier.clickable {
+                            navController.navigate(context.getString(R.string.str_member) + "/7")
+                        }
+                    )
+                }
+            }
+            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
+        }
+
+        item {
             Text(
-                text = "新增好友",
+                text = "已追蹤",
                 modifier = Modifier.padding(8.dp),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Blue
             )
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp, 0.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "date",
-                    modifier = Modifier.clickable {
-                        navController.navigate(context.getString(R.string.str_member) + "/7")
-                    })
-            }
+            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
         }
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
-        Text(
-            text = "已追蹤",
-            modifier = Modifier.padding(8.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Blue
-        )
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
-        Scaffold(
-            modifier = Modifier.fillMaxWidth(),
 
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            }
-        ) { innerPadding ->
-            // 一定要套用innerPadding，否則內容無法跟TopAppBar對齊
-            FriendLists(frined , innerPadding) { friend ->
+        // 已追蹤好友列表
+        items(friend) { friend ->
+            FriendListItem(friend, onItemClick = {
                 scope.launch {
-                    snackbarHostState.showSnackbar(
-                        "${friend.name}",
-                        withDismissAction = true
-                    )
+                    snackbarHostState.showSnackbar("${friend.name}", withDismissAction = true)
+                }
+            }, friendVM = friendVM) // 传递 friendVM
+        }
+
+        item {
+            Text(
+                text = "建議追蹤",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Blue
+            )
+            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
+        }
+
+        // 建議追蹤好友列表
+        items(sfriend) { sfriend ->
+            SFriendListItem(sfriend) {
+                scope.launch {
+                    snackbarHostState.showSnackbar("${sfriend.name}", withDismissAction = true)
                 }
             }
         }
-        Text(
-            text = "建議追蹤",
-            modifier = Modifier.padding(8.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Blue
-        )
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
     }
-
 }
 
-/**
- * 列表內容
- * @param friends 欲顯示的書籍清單
- * @param innerPadding 元件要套用innerPadding，否則內容無法跟TopAppBar對齊
- * @param onItemClick 點擊列表項目時所需呼叫的函式
- */
 @Composable
-fun FriendLists(
-    friends: List<Friend>,
-    innerPadding: PaddingValues,
-    onItemClick: (Friend) -> Unit
-) {
+fun FriendListItem(friend: Friend, onItemClick: () -> Unit, friendVM: FriendViewModel) {
     var showDialog by remember { mutableStateOf(false) }
     if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
+            onDismissRequest = { showDialog = false },
             text = { Text(text = "確定要取消追蹤?") },
             confirmButton = {
-                Button(
-                    onClick = {}  // 點擊確定按鈕，關閉對話框
-                ) {
-                    Text("確定")
-                }
-                Button(
-                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
-                ) {
-                    Text("取消")
-                }
+                Button(onClick = {// 將欲刪除的書從list移除
+                    friendVM.removeItem(friend)
+                    showDialog = false
+                }) { Text("確定") }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) { Text("取消") }
             }
         )
     }
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(innerPadding)
-    ) {
-        items(friends) { friend ->
-            // 用來建立Lists內容物
-            ListItem(
-                modifier = Modifier.clickable {
-                    onItemClick(friend)
-                },
-                headlineContent = { Text(friend.name) },
-                leadingContent = {
 
-                        Image(
-                            painter = painterResource(id = friend.image),
-                            contentDescription = "friend",
-                            modifier = Modifier.size(30.dp)
-                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-
-                },
-                        trailingContent = {
-
-                        Row {
-
-                            // 刪除按鈕
-                            IconButton(onClick = {showDialog = true}) {
-                                Icon(Icons.Filled.Delete, contentDescription = "delete")
-                            }
-
-                    }
-                }
+    ListItem(
+        modifier = Modifier.clickable(onClick = onItemClick),
+        headlineContent = { Text(friend.name) },
+        leadingContent = {
+            Image(
+                painter = painterResource(id = friend.image),
+                contentDescription = "friend",
+                modifier = Modifier
+                    .size(30.dp)
+                    .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
-            HorizontalDivider()
+        },
+        trailingContent = {
+            IconButton(onClick = { showDialog = true }) {
+                Icon(Icons.Filled.Delete, contentDescription = "delete")
+            }
         }
-    }
-
+    )
 }
 
+
+@Composable
+fun SFriendListItem(friend: Friend, onItemClick: () -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            text = { Text(text = "請確認是否要追蹤?") },
+            confirmButton = {
+                Button(onClick = { /* Handle confirm action */ }) { Text("確定") }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) { Text("取消") }
+            }
+        )
+    }
+
+    ListItem(
+        modifier = Modifier.clickable(onClick = onItemClick),
+        headlineContent = { Text(friend.name) },
+        leadingContent = {
+            Image(
+                painter = painterResource(id = friend.image),
+                contentDescription = "friend",
+                modifier = Modifier
+                    .size(30.dp)
+                    .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        },
+        trailingContent = {
+            IconButton(onClick = { showDialog = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "delete")
+            }
+        }
+    )
+}
 
 /**
  * 載入測試需要資料

@@ -54,7 +54,7 @@ fun PrivateChatRoom(
 ) {
     pChatVM.gotoChatRoom(PrivateRoomId)
     val item = listOf(
-        "111",
+        "測試",
         "222\n222",
         "333",
         "4444",
@@ -172,12 +172,12 @@ fun PrivateChatRoomTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     pChatVM: PrivateViewModel
 ) {
-    val chatRoom = pChatVM.chatRoom.collectAsState()
+    val chatRoom = pChatVM.chatRoom.collectAsState().value
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
             Text(
-                text = chatRoom.value.name,
+                text = chatRoom.name,
                 color = Color.White//colorResource(R.color.orange_1st)
             )
         },

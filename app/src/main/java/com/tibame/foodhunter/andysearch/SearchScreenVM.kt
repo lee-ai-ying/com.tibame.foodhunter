@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +58,7 @@ class SearchScreenVM: ViewModel(){
     private suspend fun fetchInitRestaurant(): List<Restaurant>{
         val url = "${serverUrl}/PreLoadRest"
         val gson = Gson()
-        val result = selectRestPost(url, "")
+        val result = CommonPost(url, "")
         val type = object : TypeToken<List<Restaurant>>() {}.type
         return gson.fromJson(result, type)
     }
@@ -72,7 +74,7 @@ class SearchScreenVM: ViewModel(){
         val jsonObject = JsonObject()
         jsonObject.addProperty("restaurantName", searchText)
         jsonObject.addProperty("restaurantLabel", searchText)
-        val result = selectRestPost(url, jsonObject.toString())
+        val result = CommonPost(url, jsonObject.toString())
         val type = object : TypeToken<List<Restaurant>>() {}.type
         return gson.fromJson(result, type)
     }

@@ -45,9 +45,12 @@ import com.tibame.foodhunter.a871208s.MemberMainScreen
 import com.tibame.foodhunter.a871208s.ModifyInformationScreen
 import com.tibame.foodhunter.a871208s.OtherSettingScreen
 import com.tibame.foodhunter.a871208s.PrivateChatRoom
+import com.tibame.foodhunter.a871208s.PrivateChatRoomBottomBar
+import com.tibame.foodhunter.a871208s.PrivateChatRoomTopBar
 import com.tibame.foodhunter.a871208s.PrivateChatScreen
 import com.tibame.foodhunter.a871208s.PrivateViewModel
 import com.tibame.foodhunter.a871208s.RegisterScreen
+import com.tibame.foodhunter.a871208s.UserViewModel
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
@@ -133,7 +136,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member),
         "GroupChatRoom/{groupId}",
         "PrivateChatRoom/{roomid}",
-        context.getString(R.string.SearchToGoogleMap) + "/{id}",
+        context.getString(R.string.SearchToGoogleMap) + "/{restId}",
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
         "postDetail/{postId}"
@@ -148,7 +151,8 @@ fun Main(
     searchVM: SearchScreenVM = viewModel(),
     friendVM: FriendViewModel = viewModel(),
     pChatVM: PrivateViewModel = viewModel(),
-    postViewModel: PostViewModel = viewModel()
+    postViewModel: PostViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -164,6 +168,14 @@ fun Main(
                     navController,
                     TopAppBarDefaults.pinnedScrollBehavior(),
                     gChatVM
+                )
+                return@Scaffold
+            }
+            if (destination?.route == "PrivateChatRoom/{roomid}") {
+                PrivateChatRoomTopBar(
+                    navController,
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    pChatVM
                 )
                 return@Scaffold
             }
@@ -198,6 +210,10 @@ fun Main(
                 GroupChatRoomBottomBar(navController,gChatVM)
                 return@Scaffold
             }
+            if (destination?.route == "PrivateChatRoom/{roomId}") {
+                PrivateChatRoomBottomBar(pChatVM)
+                return@Scaffold
+            }
             if (checkBottomButtonShow(destination)) {
                 BottomFunctionBar(
                     onHomeClick = {
@@ -230,7 +246,7 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController, )
+                LoginScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController)
@@ -296,16 +312,20 @@ fun Main(
             composable(context.getString(R.string.str_search)) {
                 SearchScreen(navController, searchVM)
             }
-            composable("${context.getString(R.string.SearchToGoogleMap)}/{id}") { backStackEntry ->
+            composable("${context.getString(R.string.SearchToGoogleMap)}/{restId}",
+                arguments = listOf(
+                    navArgument("restId") { type = NavType.IntType }
+                )
+            ) {
                 SearchResult(
                     navController = navController,
-                    restaurantID = backStackEntry.arguments?.getString("id") ?: "",
+                    restaurantID = it.arguments?.getInt("restId") ?: -1,
                     searchTextVM = searchVM
                 )
             }
             composable(context.getString(R.string.randomFood)) {
                 RandomFood(
-                    navController = navController, searchScreenVM = searchVM
+                    navController = navController, searchTextVM = searchVM
                 )
             }
 
@@ -340,7 +360,7 @@ fun Main(
 
             composable("PrivateChatRoom/{roomid}",
                 arguments = listOf(
-                    navArgument("roomid") { type = NavType.IntType }
+                    navArgument("roomid") { type = NavType.StringType }
                 )
             ) {
                 PrivateChatRoom(it.arguments?.getString("roomid") ?: "-1", pChatVM)//,gChatRoomVM)
@@ -375,7 +395,7 @@ fun Main(
                 AddFriendScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/8") {
-                PrivateChatScreen(navController = navController)
+                PrivateChatScreen(navController = navController,pChatVM)
             }
 
 

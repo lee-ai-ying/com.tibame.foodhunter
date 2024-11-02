@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.andysearch
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -58,6 +59,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,8 +72,8 @@ import kotlin.math.sin
 
 @Composable
 fun RandomFood(navController: NavHostController,
-               searchScreenVM: SearchScreenVM
-               , randomFoodVM: RandomFoodVM = viewModel()
+               searchTextVM: SearchScreenVM,
+               randomFoodVM: RandomFoodVM = viewModel()
 ) {
     var rotated by remember { mutableStateOf(false) }
     val rotateAngle by remember { mutableStateOf(0f) }
@@ -112,7 +114,9 @@ fun RandomFood(navController: NavHostController,
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
 
@@ -231,9 +235,12 @@ fun RandomFood(navController: NavHostController,
                 confirmButton = {
                     Button(
                         onClick = {
-                            val id = ""
-                            searchScreenVM.updateSearchText(selectedOption)
-                            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
+                            searchTextVM.updateSearchText(selectedOption)
+                            randomScope.launch { searchTextVM.updateSearchRest(selectedOption) }
+                            val restId = -1
+                            Log.d("random food1", restId.toString())
+                            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${restId}")
+                            Log.d("random food2", restId.toString())
                         }  // 點擊確定按鈕，關閉對話框
                     ) {
                         Text("確定")
@@ -312,7 +319,8 @@ fun foodLabel(selectLabel: String, randomFoodVM: RandomFoodVM){
             var selected by remember { mutableStateOf(false) }
             FilterChip(
                 selected = selected,
-                onClick = { selected = !selected
+                onClick = {
+                    selected = !selected
                     if (selected) {
                         selectedItems.add(filter)
                     } else {
@@ -321,18 +329,11 @@ fun foodLabel(selectLabel: String, randomFoodVM: RandomFoodVM){
                     // 更新 ViewModel 中的設定隨機食物列表
                     randomFoodVM.updateSettingRandomFood(selectedItems)
                           },
-                label = { Text(filter) },
-                leadingIcon = if (selected) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                }
+                label = { Text(filter) } ,
+                colors =
+                FilterChipDefaults.filterChipColors(
+                    containerColor = Color.White,
+                    selectedContainerColor = (colorResource(R.color.orange_5th)))
             )
         }
     }
