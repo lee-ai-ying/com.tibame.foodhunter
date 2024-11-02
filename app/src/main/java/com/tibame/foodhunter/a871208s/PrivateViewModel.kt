@@ -31,7 +31,7 @@ class PrivateViewModel : ViewModel() {
 
     private val _chatRoom = MutableStateFlow(PrivateChat())
     val chatRoom: StateFlow<PrivateChat> = _chatRoom.asStateFlow()
-    fun setDetailGroupChat(privateChat: PrivateChat) {
+    fun setDetailPrivateChat(privateChat: PrivateChat) {
         _chatRoom.update {
             privateChat
         }
