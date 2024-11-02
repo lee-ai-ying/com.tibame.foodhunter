@@ -3,7 +3,7 @@ package com.tibame.foodhunter.a871208s
 import com.tibame.foodhunter.R
 
 
-class Friend(var id: String, var name: String, var image: Int){
+data class Friend(var id: String, var name: String, var image: Int){
     override fun equals(other: Any?): Boolean {
         return this.id == (other as Friend).id
     }
@@ -13,7 +13,9 @@ class Friend(var id: String, var name: String, var image: Int){
     }
 }
 
-class PrivateChat(var roomid: String ="",var id: String ="", var name: String="", var image: Int=0,var status: Int=0){
 
 
-}
+
+
+
+data class PrivateChat(var roomid: String ="",var id: String ="", var name: String="6", var image: Int=0,var status: Int=0)

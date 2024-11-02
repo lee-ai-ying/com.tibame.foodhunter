@@ -79,7 +79,7 @@ fun PostList(posts: List<Post>) {
 fun PostItem(
     post: Post,
 
-) {
+    ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()

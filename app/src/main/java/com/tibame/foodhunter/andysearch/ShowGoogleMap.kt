@@ -45,7 +45,7 @@ import kotlin.math.sqrt
 fun ShowGoogleMap(
     modifier : Modifier = Modifier.fillMaxWidth().fillMaxHeight(.8f).padding(16.dp),
     restaurants: List<Restaurant>,
-    restaurantID: String = "",
+    restaurantID: Int = -1,
     onLocationUpdate: (LatLng?) -> Unit
 ){
 
@@ -63,11 +63,6 @@ fun ShowGoogleMap(
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var newPosition by remember { mutableStateOf<LatLng?>(null) }
 
-    if(restaurantID != ""){
-        newPosition = LatLng(
-            restaurants[restaurantID.toInt()-1].latitude.toDouble(),
-            restaurants[restaurantID.toInt()-1].longitude.toDouble())
-    }
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
 
 
@@ -112,7 +107,7 @@ fun ShowGoogleMap(
             )
         ) {
 
-
+            // 定位的圖案
             currentLocation?.let { location ->
                 Circle(
                     center = location,
@@ -123,18 +118,23 @@ fun ShowGoogleMap(
                 )
             }
 
-            if (restaurantID != ""){
+            // 如果有選餐廳的話就單一標點
+            if (restaurantID != -1){
+                newPosition = LatLng(
+                    restaurants[restaurantID-1].latitude,
+                    restaurants[restaurantID-1].longitude)
+
                 Marker(
                     state = MarkerState(position = newPosition ?: defaultPosition),
-                    title = restaurants[restaurantID.toInt()-1].name,
-                    snippet = restaurants[restaurantID.toInt()-1].address
+                    title = restaurants[restaurantID-1].name,
+                    snippet = restaurants[restaurantID-1].address
                 )
             } else {
                 restaurants.forEach {
                     restaurant ->
                     Marker(
-                        state = MarkerState(position = LatLng(restaurant.latitude.toDouble()
-                            , restaurant.longitude.toDouble())
+                        state = MarkerState(position = LatLng(restaurant.latitude
+                            , restaurant.longitude)
                         ),
                         title = restaurant.name,
                         snippet = restaurant.address

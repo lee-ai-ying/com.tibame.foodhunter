@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,19 +36,23 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun LoginScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    userVM: UserViewModel
 ) {
     val context = LocalContext.current
     var uid by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -116,7 +121,7 @@ fun LoginScreen(
 
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(0.dp),
             horizontalArrangement = Arrangement.Center
         ) {
@@ -124,7 +129,14 @@ fun LoginScreen(
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_Recommended_posts)) }
+                onClick = {
+                    coroutineScope.launch {
+                        val logged = userVM.login(uid, password)
+                        if (logged) {
+                            navController.navigate(context.getString(R.string.str_Recommended_posts))
+                        }
+                    }
+                }
             ) {
                 Text(text = "登入")
             }
@@ -138,7 +150,16 @@ fun LoginScreen(
                 Text(text = "註冊")
             }
         }
-
+        Button(
+            modifier = Modifier
+                .size(120.dp, 60.dp)
+                .padding(8.dp),
+            onClick = {
+                navController.navigate(context.getString(R.string.str_Recommended_posts))
+            }
+        ) {
+            Text(text = "快速登入")
+        }
     }
 
 }

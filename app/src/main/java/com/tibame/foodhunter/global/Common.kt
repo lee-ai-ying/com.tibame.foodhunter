@@ -1,4 +1,4 @@
-package com.tibame.foodhunter.andysearch
+package com.tibame.foodhunter.global
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
@@ -7,8 +7,8 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-const val serverUrl = "http://10.2.17.120:8080/com.tibame.foodhunter_server"
-suspend fun selectRestPost(
+const val serverUrl = "http://10.2.17.40:8080/com.tibame.foodhunter_server"
+suspend fun CommonPost(
     url:String,
     dataOut: String
 ): String {

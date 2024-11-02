@@ -17,21 +17,20 @@ data class City(
 
 
 data class Restaurant(
-    val restaurant_id: String,
+    val restaurant_id: Int,
     val name: String,
     val address: String,
-    val rating: String,
-    val total_review: String,
-    val latitude: String,
-    val longitude: String,
+    val total_scores: Int,
+    val total_review: Int,
+    val latitude: Double,
+    val longitude: Double,
     val restaurant_label: String,
     val opening_hours: String,
     val home_phone: String,
     val email: String,
-    val price_range_max: String,
-    val price_range_min: String,
+    val price_range_max: Int,
+    val price_range_min: Int,
     val service_charge: String,
-    val photo_url: String
 )
 
 
@@ -49,10 +48,4 @@ fun parseCityJson(context: Context, fileName: String):List<City>{
 }
 
 
-fun parseRestaurantJson(context: Context, fileName: String):List<Restaurant>{
-    val jsonString = readJson(context, fileName)
-    val gson = Gson()
-    val inputType = object : TypeToken<List<Restaurant>>() {}.type
-    return gson.fromJson(jsonString, inputType)
-}
 

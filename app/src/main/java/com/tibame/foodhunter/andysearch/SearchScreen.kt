@@ -42,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -57,7 +58,8 @@ fun SearchScreen(
     searchTextVM: SearchScreenVM
 ){
     val context = LocalContext.current
-    val restaurants by searchTextVM.preRestaurantList.collectAsState()
+    val preRestaurants by searchTextVM.preRestaurantList.collectAsState()
+    val selectRest by searchTextVM.selectRestList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
@@ -67,10 +69,10 @@ fun SearchScreen(
                 .fillMaxWidth()
                 .fillMaxHeight(.4f)
                 .padding(16.dp),
-            restaurants,
+            preRestaurants,
             onLocationUpdate = {location -> currentLocation = location}
         )
-        ShowRestaurantLists(restaurants, true, navController, currentLocation, searchTextVM)
+        ShowRestaurantLists(preRestaurants, true, navController, currentLocation, searchTextVM)
     }
 
 }
@@ -135,15 +137,15 @@ fun ShowSearchBar(cities: List<City>,
     SearchBar(
         query = searchText,
         onQueryChange = {searchTextVM.updateSearchText(it)},
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         onSearch = {
             isActive = false
             if (it.isNotBlank()){
                 coroutineScope.launch { searchTextVM.updateSearchRest(it) }
             }
             searchTextVM.updateSearchText(it)
-            val id = ""
-            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
+            val restId = -1
+            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${restId}")
                    },
         active = isActive,
         onActiveChange = {
@@ -209,7 +211,8 @@ fun ShowSearchBar(cities: List<City>,
         var minPrice by remember { mutableStateOf(0.0f) }
         Column(
             modifier = Modifier
-                .fillMaxWidth().padding(24.dp)
+                .fillMaxWidth()
+                .padding(24.dp)
         ) {
             Row(modifier = Modifier.clickable {
                 priceExpand = !priceExpand
@@ -246,7 +249,6 @@ fun ShowSearchBar(cities: List<City>,
     }
 }
 
-
 @Composable
 fun ShowRestaurantLists(
     restaurants: List<Restaurant>,
@@ -257,15 +259,14 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ){
     val context = LocalContext.current
-    val selectRest by searchTextVM.selectRestList.collectAsState()
     val sortedRestaurants = restaurants.sortedBy {
         restaurant ->
         currentLocation?.let{location ->
             haversine(
                 location.latitude, location.longitude,
-                restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+                restaurant.latitude, restaurant.longitude
             )
-        }?:restaurant.restaurant_id
+        }?:restaurant.restaurant_id.toString()
     }
     Log.d("Restaurant", "1")
     if (state){
@@ -297,56 +298,23 @@ fun ShowRestaurantLists(
         ){
             items(sortedRestaurants){
                 restaurant ->
-                val distance = currentLocation?.let{location ->
-                    haversine(
-                        location.latitude, location.longitude,
-                        restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
-                    )
-                } ?: "尚未開啟定位"
-                Card (modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp).clickable {
-                        searchTextVM.updateChoiceOneRest(restaurant)
-                        navController.navigate(context.getString(R.string.restaurantDetail))
-                    }){
-                    ListItem(
-                        headlineContent = {
-                            Text(text = restaurant.name ,
-                                modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis) },
-                        supportingContent = {
-                            Column(modifier = Modifier.fillMaxWidth()){
-                                Row(modifier = Modifier.fillMaxWidth()){
-                                    Text(
-                                        text = "$distance 公里",
-                                    )
-                                    Icon(
-                                        painter = painterResource(R.drawable.baseline_location_pin_24),
-                                        contentDescription = "calculator KM"
-                                    )
-                                }
-                                Text(text = restaurant.address,
-                                    modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis)
-                            }
-                        },
-                        leadingContent = { ImageScreen() },
-                        trailingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.arrow_right),
-                                contentDescription = "Go to Map",
-                                modifier = Modifier.clickable{
-                                    val id = restaurant.restaurant_id
-                                    navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${id}")
-                                }
-                            )
-                        },
-                        modifier = Modifier.height(100.dp)
-                    )
-                    HorizontalDivider()
-                }
+                RestCard(
+                    searchTextVM = searchTextVM,
+                    restaurant = restaurant,
+                    navController = navController,
+                    currentLocation = currentLocation,
+                    cardClick = null,
+                    trailingIcon = {
+                        Icon(
+                        painter = painterResource(R.drawable.arrow_right),
+                        contentDescription = "Go to Map",
+                        modifier = Modifier.clickable{
+                            val restId = restaurant.restaurant_id
+                            Log.d("restaurant_id", restaurant.restaurant_id.toString())
+                            navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${restId}")
+                        })
+                    }
+                )
             }
         }
     } else {
@@ -356,55 +324,24 @@ fun ShowRestaurantLists(
                 .fillMaxWidth()
                 .padding(4.dp),
         ){
-            items(restaurants){
+            items(sortedRestaurants){
                 restaurant ->
-                val distance = currentLocation?.let{location ->
-                    haversine(
-                        location.latitude, location.longitude,
-                        restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
-                    )
-                } ?: "尚未開啟定位"
-                Card (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp).clickable {
-                            searchTextVM.updateChoiceOneRest(restaurant)
-                            if (cardClick != null){
-                                cardClick(restaurant)
-                            } else {
-                                navController.navigate(context.getString(R.string.restaurantDetail))
-                            }
-                        }
-                ){
-                    ListItem(
-                        headlineContent = {
-                            Text(text = restaurant.name ,
-                            modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis) },
-                        supportingContent = {
-                            Column(modifier = Modifier.fillMaxWidth()){
-                                Row(modifier = Modifier.fillMaxWidth()){
-                                    Text(
-                                        text = "$distance 公里",
-                                    )
-                                    Icon(
-                                        painter = painterResource(R.drawable.baseline_location_pin_24),
-                                        contentDescription = "calculator KM"
-                                    )
-                                }
-                                Text(text = restaurant.address,
-                                    modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis)
-                            }
-                        },
-
-                        leadingContent = { ImageScreen() },
-                        modifier = Modifier.height(100.dp)
-                    )
-                    HorizontalDivider()
-                }
+                RestCard(
+                    searchTextVM = searchTextVM,
+                    restaurant = restaurant,
+                    navController = navController,
+                    currentLocation = currentLocation,
+                    cardClick = cardClick,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_right),
+                            contentDescription = "Go to Map",
+                            modifier = Modifier.clickable{
+                                searchTextVM.updateChoiceOneRest(restaurant)
+                            })
+                    },
+                    cardPadding = 8.dp
+                )
             }
         }
     }
@@ -412,6 +349,67 @@ fun ShowRestaurantLists(
 
 
 
+@Composable
+fun RestCard(
+    searchTextVM: SearchScreenVM, // 帶入餐廳相關的VM
+    restaurant: Restaurant,
+    navController: NavHostController,
+    currentLocation: LatLng?,  //傳入當前位子
+    cardClick: ((Restaurant) -> Unit)?, // 對這個Card點擊要做的動作 沒有的話會到餐廳詳細的頁面
+    trailingIcon: @Composable () -> Unit = {},
+    cardPadding: Dp = 16.dp
+){
+    val distance = currentLocation?.let{location ->
+        haversine(
+            location.latitude, location.longitude,
+            restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+        )
+    } ?: "尚未開啟定位"
+    val context = LocalContext.current
+    Card (modifier = Modifier
+        .fillMaxWidth()
+        .padding(cardPadding)
+        .clickable {
+            searchTextVM.updateChoiceOneRest(restaurant)
+            if (cardClick != null) {
+                cardClick(restaurant)
+            } else {
+                navController.navigate(context.getString(R.string.restaurantDetail))
+            }
+        }){
+        ListItem(
+            headlineContent = {
+                Text(text = restaurant.name ,
+                    modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis) },
+            supportingContent = {
+                Column(modifier = Modifier.fillMaxWidth()){
+                    Row(modifier = Modifier.fillMaxWidth()){
+                        Text(
+                            text = "$distance 公里",
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_location_pin_24),
+                            contentDescription = "calculator KM"
+                        )
+                    }
+                    Text(text = restaurant.address,
+                        modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis)
+                }
+            },
+            leadingContent = { ImageScreen() }, // 預計放的預覽圖片
+            trailingContent = { trailingIcon()},
+            modifier = Modifier.height(100.dp)
+        )
+        HorizontalDivider()
+    }
+}
+
+
+// 照片顯示 url 版
 @Composable
 fun DisplayImage(modifier: Modifier = Modifier) {
     // 使用 Coil 的 rememberImagePainter 加载图片
