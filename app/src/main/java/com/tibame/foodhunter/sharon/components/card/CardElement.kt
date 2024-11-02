@@ -36,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
+import com.tibame.foodhunter.ui.theme.FoodHunterFont
 
 
 // 邊條顏色
@@ -134,9 +136,9 @@ fun GroupTextContent(
                 text = title,
                 style = TextStyle(
                     fontSize = 16.sp,
-                    fontFamily = Roboto,  // 使用定義的 Roboto 字體系列
+                    fontFamily = FoodHunterFont,  // 使用定義的 Roboto 字體系列
                     fontWeight = FontWeight.Bold, // 使用 SemiBold (700)
-                    color = Color(0xFF2A2F3D)
+                    color = FColor.Dark_20
                 )
             )
             Spacer(modifier = Modifier.size(6.dp))
