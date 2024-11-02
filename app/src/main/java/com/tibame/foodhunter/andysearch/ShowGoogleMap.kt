@@ -45,7 +45,7 @@ import kotlin.math.sqrt
 fun ShowGoogleMap(
     modifier : Modifier = Modifier.fillMaxWidth().fillMaxHeight(.8f).padding(16.dp),
     restaurants: List<Restaurant>,
-    restaurantID: String = "",
+    restaurantID: Int = -1,
     onLocationUpdate: (LatLng?) -> Unit
 ){
 
@@ -119,23 +119,22 @@ fun ShowGoogleMap(
             }
 
             // 如果有選餐廳的話就單一標點
-            if (restaurantID != ""){
-
+            if (restaurantID != -1){
                 newPosition = LatLng(
-                    restaurants[restaurantID.toInt()-1].latitude.toDouble(),
-                    restaurants[restaurantID.toInt()-1].longitude.toDouble())
+                    restaurants[restaurantID-1].latitude,
+                    restaurants[restaurantID-1].longitude)
 
                 Marker(
                     state = MarkerState(position = newPosition ?: defaultPosition),
-                    title = restaurants[restaurantID.toInt()-1].name,
-                    snippet = restaurants[restaurantID.toInt()-1].address
+                    title = restaurants[restaurantID-1].name,
+                    snippet = restaurants[restaurantID-1].address
                 )
             } else {
                 restaurants.forEach {
                     restaurant ->
                     Marker(
-                        state = MarkerState(position = LatLng(restaurant.latitude.toDouble()
-                            , restaurant.longitude.toDouble())
+                        state = MarkerState(position = LatLng(restaurant.latitude
+                            , restaurant.longitude)
                         ),
                         title = restaurant.name,
                         snippet = restaurant.address

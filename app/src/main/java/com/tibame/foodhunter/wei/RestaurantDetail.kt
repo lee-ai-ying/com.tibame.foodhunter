@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -138,7 +139,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
+                            RestaurantInfoDetail(snackbarHostState = snackbarHostState, restaurantVM)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -186,8 +187,8 @@ fun RestaurantDetail(
 }
 
 
-//@Preview(showBackground = true)
-//@Composable
-//fun RestaurantDetailPreview() {
-//    RestaurantDetail(navController = rememberNavController())
-//}
+@Preview(showBackground = true)
+@Composable
+fun RestaurantDetailPreview() {
+    RestaurantDetail(navController = rememberNavController(), viewModel())
+}

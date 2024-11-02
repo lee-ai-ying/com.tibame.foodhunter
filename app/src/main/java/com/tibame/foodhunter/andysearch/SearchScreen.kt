@@ -58,7 +58,8 @@ fun SearchScreen(
     searchTextVM: SearchScreenVM
 ){
     val context = LocalContext.current
-    val restaurants by searchTextVM.preRestaurantList.collectAsState()
+    val preRestaurants by searchTextVM.preRestaurantList.collectAsState()
+    val selectRest by searchTextVM.selectRestList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
     var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
     Column(modifier = Modifier.fillMaxSize()){
@@ -68,10 +69,10 @@ fun SearchScreen(
                 .fillMaxWidth()
                 .fillMaxHeight(.4f)
                 .padding(16.dp),
-            restaurants,
+            preRestaurants,
             onLocationUpdate = {location -> currentLocation = location}
         )
-        ShowRestaurantLists(restaurants, true, navController, currentLocation, searchTextVM)
+        ShowRestaurantLists(preRestaurants, true, navController, currentLocation, searchTextVM)
     }
 
 }
@@ -136,15 +137,15 @@ fun ShowSearchBar(cities: List<City>,
     SearchBar(
         query = searchText,
         onQueryChange = {searchTextVM.updateSearchText(it)},
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         onSearch = {
             isActive = false
             if (it.isNotBlank()){
                 coroutineScope.launch { searchTextVM.updateSearchRest(it) }
             }
             searchTextVM.updateSearchText(it)
-            val id = ""
-            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${id}")
+            val restId = -1
+            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${restId}")
                    },
         active = isActive,
         onActiveChange = {
@@ -210,7 +211,8 @@ fun ShowSearchBar(cities: List<City>,
         var minPrice by remember { mutableStateOf(0.0f) }
         Column(
             modifier = Modifier
-                .fillMaxWidth().padding(24.dp)
+                .fillMaxWidth()
+                .padding(24.dp)
         ) {
             Row(modifier = Modifier.clickable {
                 priceExpand = !priceExpand
@@ -247,7 +249,6 @@ fun ShowSearchBar(cities: List<City>,
     }
 }
 
-
 @Composable
 fun ShowRestaurantLists(
     restaurants: List<Restaurant>,
@@ -258,15 +259,14 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ){
     val context = LocalContext.current
-    val selectRest by searchTextVM.selectRestList.collectAsState()
     val sortedRestaurants = restaurants.sortedBy {
         restaurant ->
         currentLocation?.let{location ->
             haversine(
                 location.latitude, location.longitude,
-                restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+                restaurant.latitude, restaurant.longitude
             )
-        }?:restaurant.restaurant_id
+        }?:restaurant.restaurant_id.toString()
     }
     Log.d("Restaurant", "1")
     if (state){
@@ -309,8 +309,9 @@ fun ShowRestaurantLists(
                         painter = painterResource(R.drawable.arrow_right),
                         contentDescription = "Go to Map",
                         modifier = Modifier.clickable{
-                            val id = restaurant.restaurant_id
-                            navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${id}")
+                            val restId = restaurant.restaurant_id
+                            Log.d("restaurant_id", restaurant.restaurant_id.toString())
+                            navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${restId}")
                         })
                     }
                 )
@@ -323,14 +324,14 @@ fun ShowRestaurantLists(
                 .fillMaxWidth()
                 .padding(4.dp),
         ){
-            items(restaurants){
+            items(sortedRestaurants){
                 restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
                     restaurant = restaurant,
                     navController = navController,
                     currentLocation = currentLocation,
-                    cardClick = null,
+                    cardClick = cardClick,
                     trailingIcon = {
                         Icon(
                             painter = painterResource(R.drawable.arrow_right),
@@ -367,9 +368,10 @@ fun RestCard(
     val context = LocalContext.current
     Card (modifier = Modifier
         .fillMaxWidth()
-        .padding(cardPadding).clickable {
+        .padding(cardPadding)
+        .clickable {
             searchTextVM.updateChoiceOneRest(restaurant)
-            if (cardClick != null){
+            if (cardClick != null) {
                 cardClick(restaurant)
             } else {
                 navController.navigate(context.getString(R.string.restaurantDetail))

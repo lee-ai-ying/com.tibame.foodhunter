@@ -30,6 +30,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.zoe.Post
 import com.tibame.foodhunter.zoe.PostItem
 import kotlinx.coroutines.launch
@@ -61,7 +63,8 @@ fun PreviewInfoDetail() {
 /**餐廳資訊*/
 @Composable
 fun RestaurantInfoDetail(
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    restaurantVM: SearchScreenVM
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -70,6 +73,8 @@ fun RestaurantInfoDetail(
     val scope = rememberCoroutineScope()
     // 控制收藏狀態(icon圖示及snackbar文字)
 
+    // 選擇到的餐廳詳細
+    val restaurant by restaurantVM.choiceOneRest.collectAsState()
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -94,19 +99,19 @@ fun RestaurantInfoDetail(
             //星星
 
             Text(
-                text = "餐廳名稱",
+                text = restaurant?.name.toString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = "描述1(地址)",
+                text = restaurant?.address.toString(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
             Text(
-                text = "描述2(電話、營業狀態)",
+                text = restaurant?.home_phone.toString(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
