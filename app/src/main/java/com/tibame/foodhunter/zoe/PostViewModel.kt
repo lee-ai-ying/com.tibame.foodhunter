@@ -101,7 +101,11 @@ class PostViewModel : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
 
-
+    fun getPostByLocation(location: String): StateFlow<Post?> {
+        return postFlow.map { posts ->
+            posts.find { it.location == location }
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    }
 
 
 

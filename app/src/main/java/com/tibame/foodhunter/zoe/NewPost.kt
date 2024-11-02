@@ -72,7 +72,7 @@ enum class NewPostSheetContent {
 fun NewPost(
     navController: NavHostController,
     postViewModel: PostViewModel = viewModel()
-) {
+) { 
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
     var selectedLocation by remember { mutableStateOf("") }
     var text by remember { mutableStateOf(TextFieldValue("")) }
