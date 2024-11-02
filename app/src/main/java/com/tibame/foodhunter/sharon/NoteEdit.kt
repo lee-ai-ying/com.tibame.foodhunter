@@ -37,6 +37,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,45 +56,77 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
+import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
-import com.tibame.foodhunter.sharon.data.noteList
+import com.tibame.foodhunter.sharon.components.card.CardContentType
+import com.tibame.foodhunter.sharon.data.Note
+import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import kotlinx.coroutines.launch
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
+    NoteScreen(navController = mockNavController)
+
     NoteEdit(
         navController = mockNavController,
-        noteId = "1",
+        note = Note(
+            noteId = 1,
+            type = CardContentType.NOTE,
+            date = "10/15",
+            day = "星期二",
+            title = "巷弄甜點店",
+            noteContent = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
+            imageResId = R.drawable.sushi_image_1,
+            restaurantName = "法式甜點工作室"
+        )
     )
+}
+
+@Composable
+fun NoteEditRoute(
+    navController: NavHostController = rememberNavController(),
+    noteId: Int?,  // 1. noteId 是從導航參數傳入的筆記識別碼
+    noteViewModel: NoteViewModel = viewModel(),  // 2. 獲取或創建 ViewModel
+) {
+    // 1. 先檢查 noteId
+    if (noteId == null) {
+        // 處理 noteId 為空的情況
+        LaunchedEffect(Unit) {
+            navController.popBackStack()  // 或顯示錯誤訊息
+        }
+        return
+    }
+    val note by noteViewModel.getNoteById(noteId).collectAsStateWithLifecycle()
+
+    // 3. 使用 noteId 從 ViewModel 獲取對應的筆記數據
+    //使用 collectAsStateWithLifecycle 更安全地收集數據
+    val noteBook = note ?: return
+
+
+    NoteEdit(navController = navController, note = noteBook)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEdit(
     navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
-    noteId: String? // 接收 noteId
-
-    ) {
+    note: Note,
+) {
     // 初始化 scrollBehavior
-    val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    // 找到對應的筆記
-    val note = remember(noteId) {
-        noteList.find { it.id == noteId }
-    }
-
-    // 使用筆記資料初始化狀態
+    // 4. 使用 note 數據初始化 UI 狀態
     var titleInputText by remember {
-        mutableStateOf(note?.title ?: "")
+        mutableStateOf(note?.title ?: "")  // 如果有筆記就用筆記標題，沒有就空字串
     }
     var bodyInputText by remember {
         mutableStateOf(note?.noteContent ?: "")
@@ -101,7 +134,6 @@ fun NoteEdit(
     var selectedRestaurantName by remember {
         mutableStateOf(note?.restaurantName ?: "")
     }
-
 
     var isBottomSheetVisible by remember { mutableStateOf(false) }
 //    var selectedRestaurantName by remember { mutableStateOf("") }
@@ -297,7 +329,7 @@ fun SelectRestaurantChip(
 @Composable
 fun DisplayRestaurantChip(
     label: String,
-    onClear: () -> Unit
+    onClear: () -> Unit,
 ) {
     // 只有當 label 非空時才渲染 FilterChip
     if (label.isNotEmpty()) {
@@ -326,12 +358,11 @@ fun DisplayRestaurantChip(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectRestaurantBottomSheet(
     onRestaurantPicked: (String) -> Unit,
-    onClose: () -> Unit // 關閉 BottomSheet 的回調
+    onClose: () -> Unit, // 關閉 BottomSheet 的回調
 ) {
     // 開滿頁面或開一半
     val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -349,7 +380,7 @@ fun SelectRestaurantBottomSheet(
         onDismissRequest = {
             coroutineScope.launch { modalSheetState.hide() }
             onClose() // 關閉 BottomSheet，在外部控制
-       },
+        },
         scrimColor = Color.Black.copy(alpha = 0.5f), // 半透明灰色背景
         properties = ModalBottomSheetProperties(
             isFocusable = true,  // 允許接收焦點，例如接收TextFiled輸入事件
@@ -378,7 +409,7 @@ fun SelectRestaurantBottomSheet(
 @Composable
 fun BottomSheetContent(
     onClose: () -> Unit, // 設定 Bottom Sheet 關閉的回調參數
-    onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
+    onRestaurantPicked: (String) -> Unit, // 餐廳資訊回調
 
 ) {
 
@@ -438,7 +469,7 @@ fun BottomSheetContent(
             Text("我是肯德基")
         }
 
-    // TODO(接入餐廳)
+        // TODO(接入餐廳)
 //        RestaurantSelectionScreen { selectedRestaurant ->
 //            onRestaurantPicked(selectedRestaurant)
 //            onClose()
@@ -447,9 +478,12 @@ fun BottomSheetContent(
     }
 
     ShowGoogleMap(
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f).padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .padding(8.dp),
         restaurants = test_restaurant,
-        onLocationUpdate = {location -> currentLocation = location}
+        onLocationUpdate = { location -> currentLocation = location }
     )
     ShowRestaurantLists(
         restaurants = test_restaurant,
