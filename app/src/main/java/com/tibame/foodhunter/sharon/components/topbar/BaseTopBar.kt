@@ -126,16 +126,16 @@ fun BaseTopBar(
 fun CalendarTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    calendarViewModel: CalendarViewModel,
+    calendarViewModel: CalendarViewModel? = null ,
 ) {
     BaseTopBar(
         navController = navController,
         scrollBehavior = scrollBehavior,
         onSearch = {
-            calendarViewModel.handleSearch("")
+            calendarViewModel?.handleSearch("")
         },
         onFilter = {
-            calendarViewModel.handleFilter(listOf())
+            calendarViewModel?.handleFilter(listOf())
         },
     )
 }
