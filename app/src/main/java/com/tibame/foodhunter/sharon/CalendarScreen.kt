@@ -28,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.card.CardContentType
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
+import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.data.Book
 import com.tibame.foodhunter.sharon.data.CalendarUiState
 import com.tibame.foodhunter.sharon.util.DateUtil
@@ -85,7 +86,7 @@ fun CalendarScreen(
     Column(
         modifier = Modifier
 //            .fillMaxSize()
-            .padding(5.dp)
+//            .padding(5.dp)
     ) {
         // 更新日期列表，使得用戶選中的日期顯示選中狀態
         val updatedDates = uiState.dates.map { date ->
@@ -177,8 +178,26 @@ fun CalendarScreen(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CalendarScreenPreview() {
-    CalendarScreen()
+    val navController = rememberNavController()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val calendarViewModel: CalendarViewModel = viewModel() // 取得 ViewModel
+
+    Scaffold(
+        topBar = {
+            CalendarTopBar(
+                navController = navController,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        content = { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues)) {
+                CalendarScreen()
+            }
+        }
+    )
 }
+

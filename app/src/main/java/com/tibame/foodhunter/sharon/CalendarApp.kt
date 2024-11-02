@@ -180,7 +180,6 @@ fun CalendarApp(
     ) { padding ->
         Surface(
             modifier = Modifier
-//                .fillMaxSize()
                 .padding(padding)
         ) {
             // 更新日期列表，使得用戶選中的日期顯示選中狀態
@@ -372,43 +371,6 @@ fun Content(
         }
     }
 }
-
-//@Composable
-//fun ContentItem(
-//    date: CalendarUiState.Date,
-//    onClickListener: (CalendarUiState.Date) -> Unit,
-//    modifier: Modifier = Modifier
-////    var isSelected
-//) {
-//    Box( // 外層 Box，不需要保持正方形
-//        modifier = modifier
-//            .fillMaxWidth() // 外層可以使用 fillMaxWidth 或其他設計
-//            .clickable { onClickListener(date) }
-//            .padding(9.dp) // 外層的內間距
-//    ) {
-//        Box( // 內層 Box，保持正方形
-//            modifier = Modifier
-//                .aspectRatio(1f) // 確保內層 Box 為正方形
-//                .background(
-//                    color = if (date.isSelected) {
-//                        MaterialTheme.colorScheme.secondaryContainer
-//                    } else {
-//                        Color.Transparent
-//                    },
-//                    shape = CircleShape
-//                )
-//        ) {
-//            // 內層的日期文字
-//            Text(
-//                text = date.dayOfMonth,
-//                style = MaterialTheme.typography.bodyMedium,
-//                modifier = Modifier
-//                    .align(Alignment.Center)
-//                    .padding(8.dp) // 調整文字的內間距
-//            )
-//        }
-//    }
-//}
 
 @Composable
 fun ContentItem(
