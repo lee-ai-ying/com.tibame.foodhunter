@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -92,7 +93,14 @@ fun PostDetailScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.popBackStack() }) {
+        Button(onClick = { navController.popBackStack() },
+            colors = ButtonDefaults.buttonColors(
+                colorResource(id = R.color.orange_2nd)
+            ),
+        )
+
+
+        {
             Text("返回")
         }
     }
@@ -103,60 +111,64 @@ fun PostDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
- fun PostDetail(post: Post) {
-    val scaffoldState = rememberBottomSheetScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
+fun PostDetail(post: Post) {
+    var showBottomSheet by remember { mutableStateOf(false) }
     var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
 
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = 0.dp,
-        sheetContent = {
-            when (currentSheet) {
-                SheetContent.MESSAGE -> MessageSheet(post = post)
-                SheetContent.EDIT -> EditSheet()
-                SheetContent.NONE -> {
-                    // 空的內容，保持 BottomSheet 關閉
-                }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        PostDetailItem(
+            post = post,
+            onEditClick = {
+                currentSheet = SheetContent.EDIT
+                showBottomSheet = true
+            },
+            onMessageClick = {
+                currentSheet = SheetContent.MESSAGE
+                showBottomSheet = true
             }
-        }
-    ) { paddingValues ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+        )
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+                currentSheet = SheetContent.NONE
+            },
+            containerColor = Color.White
         ) {
-            PostDetailItem(
-                post = post,
-                onEditClick = {
-                    currentSheet = SheetContent.EDIT
-                    coroutineScope.launch { scaffoldState.bottomSheetState.expand() }
-                },
-                onMessageClick = {
-                    currentSheet = SheetContent.MESSAGE
-                    coroutineScope.launch { scaffoldState.bottomSheetState.expand() }
-                }
-            )
+            when (currentSheet) {
+                SheetContent.MESSAGE -> MessageSheet(
+                    post = post,
+                    onConfirm = { showBottomSheet = false }
+                )
+                SheetContent.EDIT -> EditSheet(
+                    onConfirm = { showBottomSheet = false }
+                )
+                SheetContent.NONE -> { /* No content to display */ }
+            }
         }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
-fun PostDetailItem(post: Post,
-                   onEditClick: () -> Unit,
-                   onMessageClick: () -> Unit) {
-
-    val sheetState = rememberModalBottomSheetState()
-    var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
-
-
+fun PostDetailItem(
+    post: Post,
+    onEditClick: () -> Unit,
+    onMessageClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color(0xFFFFFFFF), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp),
+            .background(color = Color.White, shape = RoundedCornerShape(16.dp))
+            .padding(16.dp)
     ) {
         // User info section
         Row(
@@ -173,14 +185,12 @@ fun PostDetailItem(post: Post,
                     .clip(CircleShape)
             )
 
-            Column ( modifier = Modifier.weight(1f)){
+            Column(modifier = Modifier.weight(1f)) {
                 Text(text = post.publisher.name)
                 Text(text = post.location)
             }
 
-
-
-            IconButton(onClick =onEditClick) {
+            IconButton(onClick = onEditClick) {
                 Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More options")
             }
         }
@@ -230,23 +240,10 @@ fun PostDetailItem(post: Post,
             overflow = TextOverflow.Ellipsis
         )
     }
-
-    if (currentSheet != SheetContent.NONE) {
-        ModalBottomSheet(
-            onDismissRequest = { currentSheet = SheetContent.NONE },
-            sheetState = sheetState,
-        ) {
-            when (currentSheet) {
-                SheetContent.MESSAGE -> MessageSheet(post = post)
-                SheetContent.EDIT -> EditSheet()
-                SheetContent.NONE -> { /* 不需要做任何事 */ }
-            }
-        }
-    }
 }
 
 @Composable
-fun MessageSheet(post: Post) {
+fun MessageSheet(post: Post, onConfirm: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -254,8 +251,6 @@ fun MessageSheet(post: Post) {
             .fillMaxHeight(0.5f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        // Add title
         Text(
             text = "留言",
             fontSize = 20.sp,
@@ -264,7 +259,9 @@ fun MessageSheet(post: Post) {
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f), // allows LazyColumn to take available height
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(post.comments) { comment ->
@@ -291,7 +288,6 @@ fun MessageSheet(post: Post) {
             }
         }
 
-        // Input section with rounded corners
         OutlinedTextField(
             value = "",
             onValueChange = { /* Handle input */ },
@@ -314,17 +310,13 @@ fun MessageSheet(post: Post) {
                     )
                 }
             },
-            shape = RoundedCornerShape(16.dp) // Increased roundness for a more rounded look
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
 
-
 @Composable
-
-fun EditSheet(
-
-) {
+fun EditSheet(onConfirm: () -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
@@ -334,66 +326,58 @@ fun EditSheet(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedButton(
-            onClick = {
-                // 編輯按鈕點擊事件
-            },
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.Transparent // 背景透明
-            ),
-            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)), // 邊框設置為橘色
+            onClick = { /* Handle edit */ },
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
         ) {
             Text(
                 text = stringResource(id = R.string.edit),
-                color = colorResource(id = R.color.orange_1st) // 文字顏色設置為橘色
+                color = colorResource(id = R.color.orange_1st)
             )
         }
 
-        Spacer(modifier = Modifier.height(22.dp)) // 兩個按鈕之間的間距
+        Spacer(modifier = Modifier.height(22.dp))
 
         OutlinedButton(
-            onClick = {
-                showDialog = true
-            },
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.Transparent // 背景透明
-            ),
-            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)), // 邊框設置為橘色
+            onClick = { showDialog = true },
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
         ) {
             Text(
                 text = stringResource(id = R.string.delete),
-                color = colorResource(id = R.color.orange_1st) // 文字顏色設置為橘色
+                color = colorResource(id = R.color.orange_1st)
             )
         }
     }
     if (showDialog) {
+
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "確定要刪除？") },
+            title = {
+
+                Text(text = "確定要刪除？", color = colorResource(id = R.color.black)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        // 執行刪除邏輯
-                        showDialog = false
-                    }
-                ) {
+                TextButton(onClick = { showDialog = false /* Perform delete logic here */ }) {
                     Text(text = "刪除", color = colorResource(id = R.color.orange_1st))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text(text = "取消")
+                    Text(text = "取消", color = colorResource(id = R.color.black))
                 }
-            }
+            },
+            containerColor = Color.White
+
         )
     }
-
 }
+
 
 @Preview(showBackground = true)
 @Composable
