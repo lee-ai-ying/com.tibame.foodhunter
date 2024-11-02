@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 
 import java.io.InputStream
 
@@ -20,7 +22,7 @@ class UserViewModel: ViewModel() {
         jsonObject.addProperty("password", password)
 
         // 發出POST請求，取得登入結果後回傳
-        val result = httpPost(url, jsonObject.toString())
+        val result = CommonPost(url, jsonObject.toString())
         jsonObject = gson.fromJson(result, jsonObject::class.java)
         return jsonObject.get("logged").asBoolean
     }catch (e: Exception){
