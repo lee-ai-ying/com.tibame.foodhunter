@@ -1,31 +1,36 @@
-/*package com.tibame.foodhunter.a871208s
+package com.tibame.foodhunter.a871208s
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+
 import java.io.InputStream
 
 class UserViewModel: ViewModel() {
     // 登入
-    suspend fun login(uid: String, password: String): Boolean {
-        // server URL
-        val url = "${serverUrl}/LoginServlet"
+    suspend fun login(username: String, password: String): Boolean {
+      try{  // server URL
+        val url = "${serverUrl}/member/login"
         val gson = Gson()
         var jsonObject = JsonObject()
 
         // 將帳密轉成JSON
-        jsonObject.addProperty("uid", uid)
+        jsonObject.addProperty("username", username)
         jsonObject.addProperty("password", password)
 
         // 發出POST請求，取得登入結果後回傳
         val result = httpPost(url, jsonObject.toString())
         jsonObject = gson.fromJson(result, jsonObject::class.java)
         return jsonObject.get("logged").asBoolean
+    }catch (e: Exception){
+          return false
+    }
     }
 
+
     /** 上傳帳密與圖像 */
-    suspend fun uploadImageWithUser(
+    /*suspend fun uploadImageWithUser(
         uid: String,
         password: String,
         inputStream: InputStream?
@@ -51,8 +56,7 @@ class UserViewModel: ViewModel() {
         }
         Log.d("tag_UserVM", httpResponse.bodyAsText())
         return registered
-    }
+    }*/
 
 }
 
- */

@@ -50,6 +50,7 @@ import com.tibame.foodhunter.a871208s.PrivateChatRoomTopBar
 import com.tibame.foodhunter.a871208s.PrivateChatScreen
 import com.tibame.foodhunter.a871208s.PrivateViewModel
 import com.tibame.foodhunter.a871208s.RegisterScreen
+import com.tibame.foodhunter.a871208s.UserViewModel
 
 import com.tibame.foodhunter.global.*
 import com.tibame.foodhunter.ai_ying.*
@@ -150,7 +151,8 @@ fun Main(
     searchVM: SearchScreenVM = viewModel(),
     friendVM: FriendViewModel = viewModel(),
     pChatVM: PrivateViewModel = viewModel(),
-    postViewModel: PostViewModel = viewModel()
+    postViewModel: PostViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -244,7 +246,7 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController, )
+                LoginScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController)
