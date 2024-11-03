@@ -1,114 +1,160 @@
 package com.tibame.foodhunter.zoe
 
+import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.global.CommonPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-object PostRepository {
+class PostRepository {
+    private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
     private val _postList = MutableStateFlow<List<Post>>(emptyList())
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
+    private val gson = Gson()
 
-    // 创建一些示例用户
-    private val samplePublishers = listOf(
-        Publisher(
-            id = "user1",
-            name = "John Doe",
-            avatarImage = R.drawable.user1,
-            joinDate = "2024-01-01"
-        ),
-        Publisher(
-            id = "user2",
-            name = "Mary Johnson",
-            avatarImage = R.drawable.user2,
-            joinDate = "2024-01-15"
-        ),
-        Publisher(
-            id = "user3",
-            name = "Sarah Chen",
-            avatarImage = R.drawable.user3,
-            joinDate = "2024-02-01"
-        )
-    )
 
-    init {
-        // 初始化示例数据
-        _postList.value = listOf(
-            Post(
-                postId = 1,
-                publisher = samplePublishers[0],  // 使用 Publisher 对象
-                content = "這是一個美味的早午餐！推薦大家來試試。",
-                location = "台北市信義區",
-                timestamp = "2024-03-15 10:30",
-                postTag = "早午餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.sushi_image_1, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c1",
-                        commenter = Commenter(
-                            id = "user2",
-                            name = "Jane Smith",
-                            avatarImage = R.drawable.user2
-                        ),
-                        content = "看起來好好吃！",
-                        timestamp = "2024-03-15 11:00"
-                    )
-                )
+
+
+    // 獲取貼文列表
+    private suspend fun fetchPosts(): List<PostResponse> {
+        val url = "${serverUrl}/post/preLoad"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<PostResponse>>() {}.type
+        return gson.fromJson(result, type)
+    }
+
+    // 獲取餐廳資訊
+    private suspend fun fetchRestaurant(restaurantId: Int): RestaurantResponse? {
+        val url = "${serverUrl}/restaurant/$restaurantId"
+        val result = CommonPost(url, "")
+        return try {
+            gson.fromJson(result, RestaurantResponse::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // 獲取用戶資訊
+    private suspend fun fetchUser(userId: Int): UserResponse? {
+        val url = "${serverUrl}/user/$userId"
+        val result = CommonPost(url, "")
+        return try {
+            gson.fromJson(result, UserResponse::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // 將 PostResponse 轉換為 Post
+    private suspend fun PostResponse.toPost(): Post {
+        val restaurant = fetchRestaurant(this.restaurantId)
+        val user = fetchUser(this.publisher)
+
+        return Post(
+            postId = this.postId,
+            publisher = Publisher(
+                id = this.publisher.toString(),
+                name = this.publisherNickname ?: "Unknown User",
+                avatarImage = R.drawable.user1,
+                joinDate = user?.joinDate ?: ""
             ),
-            Post(
-                postId = 2,
-                publisher = samplePublishers[1],
-                content = "今天的午餐很特別，是米其林餐廳的特製料理。",
-                location = "台北市大安區",
-                timestamp = "2024-03-15 13:30",
-                postTag = "午餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.steak_image, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c2",
-                        commenter = Commenter(
-                            id = "user4",
-                            name = "Bob Wilson",
-                            avatarImage = R.drawable.user4
-                        ),
-                        content = "看起來超高級的！",
-                        timestamp = "2024-03-15 14:00"
-                    )
-                )
-            ),
-            Post(
-                postId = 3,
-                publisher = samplePublishers[2],
-                content = "晚餐約會的好去處，氣氛很好！",
-                location = "台北市中山區",
-                timestamp = "2024-03-15 19:30",
-                postTag = "晚餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.breakfast_image_1, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c3",
-                        commenter = Commenter(
-                            id = "user6",
-                            name = "David Lee",
-                            avatarImage = R.drawable.user1
-                        ),
-                        content = "謝謝推薦，我也想去試試！",
-                        timestamp = "2024-03-15 20:00"
-                    )
-                )
-            )
+            content = this.content,
+            location = this.restaurantName ?: "Unknown Location",
+            timestamp = this.postTime,
+            postTag = this.postTag,
+            carouselItems = emptyList(),
+            comments = emptyList(),
+            isFavorited = false
         )
     }
 
+    // 載入所有貼文
+    suspend fun loadPosts() {
+        try {
+            val postResponses = fetchPosts()
+            val posts = postResponses.mapNotNull { response ->
+                try {
+                    response.toPost()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            _postList.value = posts
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error loading posts", e)
+        }
+    }
 
+    // 創建新貼文
+    suspend fun createPost(postData: PostCreateData): Boolean {
+        val url = "${serverUrl}/post/create"
+        val postRequest = CreatePostRequest(
+            publisher = postData.publisher.toInt(),
+            content = postData.content,
+            postTag = postData.postTag,
+            restaurantId = 0,  // 需要從 location 獲取或由使用者選擇
+            visibility = 0
+        )
 
+        return try {
+            val json = gson.toJson(postRequest)
+            val result = CommonPost(url, json)
+            true
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating post", e)
+            false
+        }
+    }
+    companion object {
+        @Volatile
+        private var INSTANCE: PostRepository? = null
+
+        fun getInstance(): PostRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: PostRepository().also { INSTANCE = it }
+            }
+        }
+    }
 }
+
+// 數據類別
+data class PostResponse(
+    val postId: Int,
+    val postTag: String,
+    val publisher: Int,
+    val content: String,
+    val postTime: String,
+    val visibility: Int,
+    val restaurantId: Int,
+    val likeCount: Int,
+    val publisherNickname: String?,
+    val restaurantName: String? // 新增餐廳名稱欄位
+)
+
+
+data class RestaurantResponse(
+    val restaurantId: Int,
+    val name: String,
+    val address: String
+)
+
+data class UserResponse(
+    val userId: Int,
+    val name: String,
+    val avatar: String?,
+    val joinDate: String
+)
+
+data class CreatePostRequest(
+    val publisher: Int,
+    val content: String,
+    val postTag: String,
+    val restaurantId: Int,
+    val visibility: Int
+)
+
+
+
