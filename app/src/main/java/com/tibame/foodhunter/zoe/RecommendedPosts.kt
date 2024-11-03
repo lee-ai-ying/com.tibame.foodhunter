@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun RecommendedPosts(
@@ -48,42 +49,56 @@ fun RecommendedPosts(
 ) {
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
-    FilterChips(
-        filters = listOf("早午餐", "午餐", "晚餐","下午茶","宵夜"),
-        selectedFilters = selectedFilters,
-        onFilterChange = { updatedFilters ->
-            postViewModel.updateFilters(updatedFilters)
-        }
-    )
+    // 取得當前用戶ID
+    val currentUserId = 1 // 替換為實際的用戶ID獲取方式
 
+    Column {
+        FilterChips(
+            filters = listOf("早午餐", "午餐", "晚餐", "下午茶", "宵夜"),
+            selectedFilters = selectedFilters,
+            onFilterChange = { updatedFilters ->
+                postViewModel.updateFilters(updatedFilters)
+            }
+        )
 
-    PostList(posts = filteredPosts)
+        PostList(
+            posts = filteredPosts,
+            viewModel = postViewModel,
+            currentUserId = currentUserId
+        )
+    }
 }
 
 @Composable
-fun PostList(posts: List<Post>) {
+fun PostList(
+    posts: List<Post>,
+    viewModel: PostViewModel,  // 添加 ViewModel
+    currentUserId: Int        // 添加當前用戶 ID
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(posts) { post ->
-            PostItem(post = post)
+            PostItem(
+                post = post,
+                viewModel = viewModel,
+                currentUserId = currentUserId
+            )
         }
     }
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostItem(
     post: Post,
-
-    ) {
+    viewModel: PostViewModel,  // 添加 ViewModel
+    currentUserId: Int        // 添加當前用戶 ID
+) {
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-
 
     Card(
         modifier = Modifier
@@ -122,11 +137,21 @@ fun PostItem(
                 ) {
                     FavoriteIcon()
 
-                    IconButton(onClick = { showBottomSheet = true }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                            contentDescription = "Chat Bubble",
-                            modifier = Modifier.size(24.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showBottomSheet = true }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                                contentDescription = "Chat Bubble",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        // 顯示留言數量
+                        Text(
+                            text = "${post.comments.size}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
                 }
@@ -149,11 +174,20 @@ fun PostItem(
             onDismissRequest = { showBottomSheet = false },
             sheetState = sheetState,
         ) {
-            MessageSheet(post = post, onConfirm = { showBottomSheet = false })
+            MessageSheet(
+                post = post,
+                viewModel = viewModel,
+                currentUserId = currentUserId,
+                onConfirm = {
+                    scope.launch {
+                        sheetState.hide()
+                        showBottomSheet = false
+                    }
+                }
+            )
         }
     }
 }
-
 
 @Composable
 private fun PostHeader(post: Post) {

@@ -68,12 +68,19 @@ fun PostDetailScreen(
     navController: NavHostController,
     postViewModel: PostViewModel = viewModel()
 ) {
+    // 獲取當前用戶 ID，這裡應該從你的用戶管理系統獲取
+    val currentUserId = 1 // 替換為實際的用戶 ID 獲取方式
+
     // 根據 postId 從 ViewModel 中取得特定的貼文
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
 
     post?.let { nonNullPost ->
-        // 顯示貼文詳細內容
-        PostDetail(post = nonNullPost)
+        // 顯示貼文詳細內容，傳入必要的參數
+        PostDetail(
+            post = nonNullPost,
+            viewModel = postViewModel,
+            currentUserId = currentUserId
+        )
     } ?: Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,14 +94,12 @@ fun PostDetailScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.popBackStack() },
+        Button(
+            onClick = { navController.popBackStack() },
             colors = ButtonDefaults.buttonColors(
                 colorResource(id = R.color.orange_2nd)
-            ),
-        )
-
-
-        {
+            )
+        ) {
             Text("返回")
         }
     }
@@ -102,10 +107,13 @@ fun PostDetailScreen(
 
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostDetail(post: Post) {
+fun PostDetail(
+    post: Post,
+    viewModel: PostViewModel,  // 添加 ViewModel
+    currentUserId: Int        // 添加當前用戶 ID
+) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
 
@@ -140,6 +148,8 @@ fun PostDetail(post: Post) {
             when (currentSheet) {
                 SheetContent.MESSAGE -> MessageSheet(
                     post = post,
+                    viewModel = viewModel,
+                    currentUserId = currentUserId,
                     onConfirm = { showBottomSheet = false }
                 )
                 SheetContent.EDIT -> EditSheet(
@@ -150,7 +160,6 @@ fun PostDetail(post: Post) {
         }
     }
 }
-
 
 @Composable
 fun PostDetailItem(
@@ -235,9 +244,15 @@ fun PostDetailItem(
         )
     }
 }
-
 @Composable
-fun MessageSheet(post: Post, onConfirm: () -> Unit) {
+fun MessageSheet(
+    post: Post,
+    viewModel: PostViewModel,  // 添加 ViewModel 參數
+    currentUserId: Int,       // 添加當前使用者 ID
+    onConfirm: () -> Unit
+) {
+    var commentText by remember { mutableStateOf("") }  // 儲存留言內容的狀態
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -283,8 +298,8 @@ fun MessageSheet(post: Post, onConfirm: () -> Unit) {
         }
 
         OutlinedTextField(
-            value = "",
-            onValueChange = { /* Handle input */ },
+            value = commentText,  // 使用 state 來管理輸入值
+            onValueChange = { commentText = it },  // 更新輸入值
             placeholder = { Text(text = stringResource(id = R.string.Add_message)) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -296,7 +311,20 @@ fun MessageSheet(post: Post, onConfirm: () -> Unit) {
                 focusedContainerColor = Color.Transparent
             ),
             trailingIcon = {
-                IconButton(onClick = { /* Handle send comment */ }) {
+                IconButton(
+                    onClick = {
+                        if (commentText.isNotBlank()) {
+                            // 發送留言
+                            viewModel.createComment(
+                                postId = post.postId,
+                                userId = currentUserId,
+                                content = commentText
+                            )
+                            // 清空輸入框
+                            commentText = ""
+                        }
+                    }
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_send_24),
                         contentDescription = "Send Comment",

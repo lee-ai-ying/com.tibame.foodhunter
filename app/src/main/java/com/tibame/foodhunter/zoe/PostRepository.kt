@@ -15,6 +15,30 @@ class PostRepository {
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
     private val gson = Gson()
 
+    private suspend fun fetchComments(postId: Int): List<CommentResponse> {
+        val url = "${serverUrl}/comment/byPost?postId=$postId"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<CommentResponse>>() {}.type
+        return try {
+            gson.fromJson(result, type)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error fetching comments", e)
+            emptyList()
+        }
+    }
+
+    private suspend fun CommentResponse.toComment(): Comment {
+        return Comment(
+            id = this.messageId,  // 直接使用 Int
+            commenter = Commenter(
+                id = this.memberId,  // 直接使用 Int
+                name = this.memberNickname,
+                avatarImage = R.drawable.user1
+            ),
+            content = this.content,
+            timestamp = this.messageTime
+        )
+    }
 
 
 
@@ -48,15 +72,15 @@ class PostRepository {
         }
     }
 
-    // 將 PostResponse 轉換為 Post
     private suspend fun PostResponse.toPost(): Post {
         val restaurant = fetchRestaurant(this.restaurantId)
         val user = fetchUser(this.publisher)
+        val comments = fetchComments(this.postId).map { it.toComment() }
 
         return Post(
             postId = this.postId,
             publisher = Publisher(
-                id = this.publisher.toString(),
+                id = this.publisher,  // 如果 Publisher 的 id 也需要改為 Int，請告訴我
                 name = this.publisherNickname ?: "Unknown User",
                 avatarImage = R.drawable.user1,
                 joinDate = user?.joinDate ?: ""
@@ -66,11 +90,28 @@ class PostRepository {
             timestamp = this.postTime,
             postTag = this.postTag,
             carouselItems = emptyList(),
-            comments = emptyList(),
+            comments = comments,
             isFavorited = false
         )
     }
+    suspend fun createComment(postId: Int, userId: Int, content: String): Boolean {
+        val url = "${serverUrl}/comment/create"
+        val commentRequest = mapOf(
+            "postId" to postId,
+            "memberId" to userId,
+            "content" to content
+        )
 
+        return try {
+            val json = gson.toJson(commentRequest)
+            val result = CommonPost(url, json)
+            loadPosts()
+            true
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating comment", e)
+            false
+        }
+    }
     // 載入所有貼文
     suspend fun loadPosts() {
         try {
@@ -158,3 +199,11 @@ data class CreatePostRequest(
 
 
 
+data class CommentResponse(
+    val messageId: Int,
+    val postId: Int,
+    val memberId: Int,
+    val content: String,
+    val messageTime: String,
+    val memberNickname: String
+)

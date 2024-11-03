@@ -39,7 +39,7 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 @Composable
 fun PersonHomepage(
-    userId: String,
+    userId: Int,
     publisher: Publisher,
     postViewModel: PostViewModel = viewModel(),
     navController: NavHostController

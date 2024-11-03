@@ -37,7 +37,7 @@ class PostViewModel : ViewModel() {
         _selectedFilters.value = filters
     }
 
-    fun getPersonalPosts(userId: String): StateFlow<List<Post>> {
+    fun getPersonalPosts(userId: Int): StateFlow<List<Post>> {
         return repository.postList.map { posts ->
             posts.filter { post -> post.publisher.id == userId }
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -99,7 +99,26 @@ class PostViewModel : ViewModel() {
             }
         }
     }
-}
+
+
+        fun createComment(postId: Int, userId: Int, content: String) {
+            viewModelScope.launch {
+                try {
+                    val success = repository.createComment(postId, userId, content)
+                    if (success) {
+                        // 留言成功後重新載入貼文
+                        repository.loadPosts()
+                    }
+                } catch (e: Exception) {
+                    // 處理錯誤
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+
+
 
 
 
