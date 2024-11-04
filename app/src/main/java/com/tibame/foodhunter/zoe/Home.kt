@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.sharon.NiaTab
-import com.tibame.foodhunter.sharon.NiaTabRow
+import com.tibame.foodhunter.sharon.components.NiaTab
+import com.tibame.foodhunter.sharon.components.NiaTabRow
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 @Composable
