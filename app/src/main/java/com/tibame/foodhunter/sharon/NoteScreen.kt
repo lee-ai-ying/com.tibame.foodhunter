@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.sharon.components.card.CardContentType
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.data.NoteRepository
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
@@ -33,7 +32,7 @@ fun NoteScreen(
     noteViewModel: NoteViewModel = viewModel()
 ) {
     // 使用 collectAsStateWithLifecycle 收集筆記列表
-    val notes by noteViewModel.noteList.collectAsStateWithLifecycle()
+    val notes by noteViewModel.notes.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier

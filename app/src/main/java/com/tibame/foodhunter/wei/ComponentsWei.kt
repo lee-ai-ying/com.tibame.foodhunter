@@ -586,16 +586,16 @@ fun ReviewTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     noteViewModel: NoteViewModel
 ) {
-    BaseTopBar(
-        navController = navController,
-        scrollBehavior = scrollBehavior,
-        onSearch = {
-            noteViewModel.handleSearch("")
-        },
-        onFilter = {
-            noteViewModel.handleFilter(listOf())
-        },
-    )
+//    BaseTopBar(
+//        navController = navController,
+//        scrollBehavior = scrollBehavior,
+//        onSearchQueryChange = {
+//            noteViewModel.selectedFilters
+//        },
+//        onFilter = {
+//            noteViewModel.handleFilter(listOf())
+//        },
+//
 }
 
 @Composable

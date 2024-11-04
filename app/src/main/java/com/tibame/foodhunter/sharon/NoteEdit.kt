@@ -72,10 +72,12 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
+import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -561,23 +563,46 @@ fun BottomSheetContent(
 
     }
 
-    ShowGoogleMap(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.5f)
-            .padding(8.dp),
-        restaurants = test_restaurant,
-        onLocationUpdate = { location -> currentLocation = location }
-    )
-    ShowRestaurantLists(
-        restaurants = test_restaurant,
-        state = false,
-        currentLocation = currentLocation,
-        searchTextVM = testVM,
-        cardClick = { choiceRest ->
-            onRestaurantPicked(choiceRest?.name.toString())
-            onClose()
+    val scope = rememberCoroutineScope()
+    var searchQuery by remember { mutableStateOf("") }
+    var isActive by remember { mutableStateOf(false) }
+    SearchBar(
+        query = searchQuery,
+        onQueryChange = { searchQuery = it },
+        placeholder = {
+            Text(
+                "搜尋",
+                color = FColor.Gary,
+                fontSize = 16.sp
+            )
+        },
+        active = isActive,
+        onActiveChange = { isActive = it },
+        modifier = Modifier.padding(horizontal = 16.dp),
+        onSearch = {
+            scope.launch { testVM.updateSearchRest(searchQuery) }
         }
     )
 
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        ShowGoogleMap(
+            modifier = Modifier.weight(0.7f).padding(16.dp),
+            restaurants = test_restaurant,
+            restaurantVM = testVM,
+            onLocationUpdate = { location -> currentLocation = location }
+        )
+        ShowRestaurantLists(
+            restaurants = test_restaurant,
+            state = false,
+            currentLocation = currentLocation,
+            searchTextVM = testVM,
+            cardClick = { choiceRest ->
+                onRestaurantPicked(choiceRest?.name.toString())
+                onClose()
+            }
+        )
+    }
 }
