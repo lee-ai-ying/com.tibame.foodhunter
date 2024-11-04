@@ -1,4 +1,4 @@
-package com.tibame.foodhunter.wei
+/*package com.tibame.foodhunter.wei
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -87,4 +87,4 @@ fun RelatedPostsPreview() {
 
         RelatedPosts("台北市信義區" )
     }
-}
+}*/

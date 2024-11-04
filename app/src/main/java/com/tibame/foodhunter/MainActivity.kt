@@ -385,7 +385,7 @@ fun Main(
             }
 
             composable(context.getString(R.string.str_member) + "/2") {
-                MemberInformationScreen(navController = navController)
+                MemberInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/3") {
                 ModifyInformationScreen(navController = navController)

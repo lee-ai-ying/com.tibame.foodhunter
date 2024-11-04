@@ -107,7 +107,7 @@ fun RestaurantDetail(
 //                                text = "社群預覽  待修",
 //                                fontSize = 18.sp
 //                            )
-                            RelatedPosts("")
+                //            RelatedPosts("")
 
 
                             HorizontalDivider(
