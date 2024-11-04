@@ -23,7 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.zoe.PostRepository.postList
+
 import com.tibame.foodhunter.zoe.PostDetail
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
@@ -40,51 +40,51 @@ data class RelatedPost(
     var postTag: String,
     )
 
-
-@Composable
-fun RelatedPosts(
-    location: String?,
-    postViewModel: PostViewModel = viewModel()
-) {
-    val navController = rememberNavController()
+//
+//@Composable
+//fun RelatedPosts(
+//    location: String?,
+//    postViewModel: PostViewModel = viewModel()
+//) {
+//    val navController = rememberNavController()
     // 根據 location 從 ViewModel 中取得特定的貼文
-    val post = location?.let { postViewModel.getPostByLocation(it).collectAsState().value }
+//    val post = location?.let { postViewModel.getPostByLocation(it).collectAsState().value }
+//
+//    post?.let { nonNullPost ->
+//        // 顯示貼文詳細內容
+//        PostDetail(post = nonNullPost)
+//    } ?: Column(
+//        modifier = Modifier
+//            .height(200.dp)
+//            .padding(16.dp),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        // 當找不到貼文時顯示的訊息
+//        Text(
+//            text = "尚未有相關貼文",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        Button(onClick = { navController.navigate("發文")
+//             },
+//            colors = ButtonDefaults.buttonColors(
+//                colorResource(id = R.color.orange_2nd)
+//            ),
+//        ) {
+//            Text("建立第一篇貼文")
+//        }
+//    }
+//}
 
-    post?.let { nonNullPost ->
-        // 顯示貼文詳細內容
-        PostDetail(post = nonNullPost)
-    } ?: Column(
-        modifier = Modifier
-            .height(200.dp)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 當找不到貼文時顯示的訊息
-        Text(
-            text = "尚未有相關貼文",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { navController.navigate("發文")
-             },
-            colors = ButtonDefaults.buttonColors(
-                colorResource(id = R.color.orange_2nd)
-            ),
-        ) {
-            Text("建立第一篇貼文")
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun RelatedPostsPreview() {
-    MaterialTheme {
-
-        RelatedPosts("台北市信義區" )
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun RelatedPostsPreview() {
+//    MaterialTheme {
+//
+//        RelatedPosts("台北市信義區" )
+//    }
+//}
