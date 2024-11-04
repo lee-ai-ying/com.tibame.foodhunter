@@ -48,6 +48,7 @@ import androidx.navigation.compose.rememberNavController
 
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
+import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,10 +103,11 @@ fun RestaurantDetail(
 
                             //社群預覽
 
-                            Text(
-                                text = "社群預覽  待修",
-                                fontSize = 18.sp
-                            )
+//                            Text(
+//                                text = "社群預覽  待修",
+//                                fontSize = 18.sp
+//                            )
+                            RelatedPosts("")
 
 
                             HorizontalDivider(
@@ -113,7 +115,7 @@ fun RestaurantDetail(
                                 thickness = 1.5.dp,
                                 color = FColor.Orange_1st
                             )
-                            Spacer(modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.size(10.dp))
 
                             //評論顯示區
                             Text(
@@ -135,5 +137,9 @@ fun RestaurantDetail(
 @Preview(showBackground = true)
 @Composable
 fun RestaurantDetailPreview() {
+    // 提供一個模擬的 NavHostController 和 SearchScreenVM
+    val navController = rememberNavController()
+    val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
 
+    RestaurantDetail(navController = navController, restaurantVM = restaurantVM)
 }

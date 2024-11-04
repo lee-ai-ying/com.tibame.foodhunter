@@ -19,6 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.zoe.PostRepository.postList
@@ -44,6 +46,7 @@ fun RelatedPosts(
     location: String?,
     postViewModel: PostViewModel = viewModel()
 ) {
+    val navController = rememberNavController()
     // 根據 location 從 ViewModel 中取得特定的貼文
     val post = location?.let { postViewModel.getPostByLocation(it).collectAsState().value }
 
@@ -52,7 +55,7 @@ fun RelatedPosts(
         PostDetail(post = nonNullPost)
     } ?: Column(
         modifier = Modifier
-            .fillMaxSize()
+            .height(200.dp)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -65,7 +68,7 @@ fun RelatedPosts(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { //前往發文
+        Button(onClick = { navController.navigate("發文")
              },
             colors = ButtonDefaults.buttonColors(
                 colorResource(id = R.color.orange_2nd)

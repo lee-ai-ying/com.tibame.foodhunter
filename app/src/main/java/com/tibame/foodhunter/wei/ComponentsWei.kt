@@ -66,10 +66,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.components.topbar.BaseTopBar
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import com.tibame.foodhunter.zoe.FilterChips
+import com.tibame.foodhunter.zoe.PostCreateData
 import com.tibame.foodhunter.zoe.PostViewModel
 
 
@@ -91,6 +93,7 @@ fun RestaurantInfoDetail(
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
     // 控制收藏狀態(icon圖示及snackbar文字)
+    val navController = rememberNavController()
 
 
     Row(
@@ -191,6 +194,11 @@ fun RestaurantInfoDetail(
                     onClick = {
                         // 跳到各功能
                         expanded = false
+                        when (option) {
+                            "建立揪團" -> navController.navigate("建立揪團")
+                            "建立筆記" -> navController.navigate("手札")
+                            "建立貼文" -> navController.navigate("發文")
+                        }
                     }
                 )
             }
@@ -228,14 +236,14 @@ fun PostItems(
         ) {
             Row {
                 Image(
-                painter = painterResource(id = R.drawable.account_circle),
-                contentDescription = "發文者",
-                modifier = Modifier
-                    .size(30.dp)
-                    .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
-                    .clip(RoundedCornerShape(12)),
-                contentScale = ContentScale.Crop
-            )
+                    painter = painterResource(id = R.drawable.account_circle),
+                    contentDescription = "發文者",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
+                        .clip(RoundedCornerShape(12)),
+                    contentScale = ContentScale.Crop
+                )
                 Text(
                     text = "發文者",
                     fontWeight = FontWeight.Bold,
@@ -288,10 +296,10 @@ fun ReviewZone() {
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
-                // navController.navigate("ReviewDetail")
+                 //navController.navigate("評論頁面")
             },
             modifier = Modifier
-                .width(140.dp)
+                .width(150.dp)
                 .height(50.dp),
 
             shape = ButtonDefaults.outlinedShape,
@@ -303,7 +311,7 @@ fun ReviewZone() {
             Text(
                 text = "顯示所有評論",
                 modifier = Modifier,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
 
                 )
@@ -436,6 +444,8 @@ fun ReviewItem(review: Review) {
 }
 
 
+
+
 /**星星*/
 @Composable
 fun RatingBar(
@@ -460,14 +470,22 @@ fun RatingBar(
     }
 }
 
+/**新增評論的按鈕*/
 @Composable
-fun CommentButton() {
+fun CommentButton(ReviewViewModel: ReviewVM = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
 
     Button(
         onClick = { showDialog = true },
         modifier = Modifier.padding(16.dp)
     ) {
+//        Icon(
+//            painter = painterResource(
+//                id = R.drawable.新增評論的圖示
+//            ),
+//            contentDescription = "建立評論",
+//            modifier = Modifier.size(30.dp)
+//        )
         Text("新增評論")
     }
 
@@ -475,7 +493,6 @@ fun CommentButton() {
         CommentDialog(
             onDismiss = { showDialog = false },
             onSubmit = { comment, rating ->
-                // 在這裡處理評論提交邏輯
                 println("評論: $comment, 評分: $rating")
                 showDialog = false
             }
@@ -487,9 +504,11 @@ fun CommentButton() {
 @Composable
 fun CommentDialog(
     onDismiss: () -> Unit,
-    onSubmit: (String, Int) -> Unit
+    onSubmit: (String, Int) -> Unit,
+    reviewViewModel: ReviewVM = viewModel()
 ) {
     var commentText by remember { mutableStateOf("") }
+    var inputData by remember { mutableStateOf(ReviewCreateData()) }
     var rating by remember { mutableStateOf(0) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -543,9 +562,13 @@ fun CommentDialog(
                     }
 
                     Button(
-                        onClick = { onSubmit(commentText, rating) },
-                        enabled = commentText.isNotEmpty() && rating > 0
-                    ) {
+                        onClick = {
+                            onSubmit(commentText, rating)
+                            reviewViewModel.setReviewCreateData(inputData)
+                        },
+                        enabled = commentText.isNotEmpty() && rating > 0,
+
+                        ) {
                         Text("送出")
                     }
                 }
@@ -553,7 +576,6 @@ fun CommentDialog(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -593,7 +615,7 @@ fun ReviewInfoDetail(
         modifier = Modifier.height(120.dp)
 
     ) {
-        Column(modifier = Modifier.weight(1f)){
+        Column(modifier = Modifier.weight(1f)) {
             SearchBar(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
@@ -602,9 +624,9 @@ fun ReviewInfoDetail(
             )
 
             FilterChips(
-                filters = listOf("服務費", "環境", "價格","清潔"),
-                selectedFilters = listOf("價格"),
-                onFilterChange = { } ,
+                filters = listOf("服務費", "環境", "價格", "清潔"),
+                selectedFilters = listOf(""),
+                onFilterChange = { },
             )
         }
 
@@ -671,5 +693,206 @@ fun ReviewInfoDetail(
 //        }
 
 
+    }
+}
+
+
+
+/**評論顯示區*/
+@Composable
+fun DetailReviewZone() {
+
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.Top,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        HorizontalDivider(
+            modifier = Modifier,
+            thickness = 2.5.dp,
+            color = Color(0xFFFE724C)
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+
+
+        GetDetailReviews()
+    }
+}
+
+@Composable
+fun ReviewItems(review: Reviews) {
+    var rememberRating by remember { mutableStateOf(review.rating) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        // 顯示頭像
+        Image(
+            painter = painterResource(id = review.reviewer.avatarImage),
+            contentDescription = "Reviewer Avatar",
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .border(1.dp, Color.Gray, RoundedCornerShape(20.dp)),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            // 顯示評論者名稱
+            Text(
+                text = review.reviewer.name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color.Black
+            )
+
+            // 顯示評分
+            RatingBar(
+                rating = rememberRating,
+                onRatingChanged = { newRememberRating ->
+                    rememberRating = newRememberRating
+                }
+            )
+            Text(
+                text = "評分: ${review.rating}",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            // 顯示評論內容
+            Text(
+                text = review.content,
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+
+            // 顯示時間戳
+            Text(
+                text = review.timestamp,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+/**詳細評論範例**/
+@Composable
+fun GetDetailReviews() {
+    val reviews = listOf(
+        Reviews(
+            reviewId = 1,
+            reviewer = Reviewer(
+                id = 1,
+                name = "使用者名稱1",
+                avatarImage = R.drawable.account_circle,
+                followers = 10,
+                following = 5
+            ),
+            restaurantId = 101,
+            rating = 4,
+            content = "這家餐廳的食物非常美味！",
+            timestamp = "2024-11-01 12:00",
+            isLiked = false,
+            isDisliked = false,
+            replies = emptyList(),
+            maxPrice = 500,
+            minPrice = 200,
+            serviceCharge = false
+        ),
+        Reviews(
+            reviewId = 2,
+            reviewer = Reviewer(
+                id = 2,
+                name = "使用者名稱2",
+                avatarImage = R.drawable.account_circle,
+                followers = 20,
+                following = 10
+            ),
+            restaurantId = 102,
+            rating = 5,
+            content = "服務態度非常好，食物也很新鮮！",
+            timestamp = "2024-11-02 13:00",
+            isLiked = true,
+            isDisliked = false,
+            replies = emptyList(),
+            maxPrice = 600,
+            minPrice = 300,
+            serviceCharge = true
+        ),
+        Reviews(
+            reviewId = 3,
+            reviewer = Reviewer(
+                id = 3,
+                name = "使用者名稱3",
+                avatarImage = R.drawable.account_circle,
+                followers = 5,
+                following = 2
+            ),
+            restaurantId = 103,
+            rating = 3,
+            content = "食物還可以，但環境有點吵。",
+            timestamp = "2024-11-03 14:00",
+            isLiked = false,
+            isDisliked = true,
+            replies = emptyList(),
+            maxPrice = 400,
+            minPrice = 150,
+            serviceCharge = false
+        ),
+        Reviews(
+            reviewId = 4,
+            reviewer = Reviewer(
+                id = 4,
+                name = "使用者名稱4",
+                avatarImage = R.drawable.account_circle,
+                followers = 15,
+                following = 7
+            ),
+            restaurantId = 104,
+            rating = 2,
+            content = "不太好，食物冷掉了。",
+            timestamp = "2024-11-04 15:00",
+            isLiked = false,
+            isDisliked = true,
+            replies = emptyList(),
+            maxPrice = 300,
+            minPrice = 100,
+            serviceCharge = false
+        ),
+        Reviews(
+            reviewId = 5,
+            reviewer = Reviewer(
+                id = 5,
+                name = "使用者名稱5",
+                avatarImage = R.drawable.account_circle,
+                followers = 8,
+                following = 3
+            ),
+            restaurantId = 105,
+            rating = 1,
+            content = "非常失望，不會再來了。",
+            timestamp = "2024-11-05 16:00",
+            isLiked = false,
+            isDisliked = true,
+            replies = emptyList(),
+            maxPrice = 200,
+            minPrice = 50,
+            serviceCharge = false
+        )
+    )
+
+    LazyColumn {
+        items(reviews) { review ->
+            ReviewItems(review) // 假設有一個 ReviewItem 函數處理每個評論的顯示
+            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+        }
     }
 }

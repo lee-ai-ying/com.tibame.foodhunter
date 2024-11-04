@@ -28,17 +28,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RewiewDetail(
+fun ReviewDetail(
     navController: NavHostController = rememberNavController(),
 ) {
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
+    var mainSceneName by remember { mutableStateOf("評論頁面") }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val snackbarHostState = remember { SnackbarHostState() }
@@ -82,7 +81,7 @@ fun RewiewDetail(
 //                                color = FColor.Orange_1st
 //                            )
 
-                            ReviewZone()
+                            DetailReviewZone()
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -100,6 +99,6 @@ fun RewiewDetail(
 
 @Preview(showBackground = true)
 @Composable
-fun RewiewDetailPreview() {
-    RewiewDetail(navController = rememberNavController())
+fun ReviewDetailPreview() {
+    ReviewDetail(navController = rememberNavController())
 }
