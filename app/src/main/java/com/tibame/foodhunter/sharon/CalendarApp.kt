@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -61,11 +59,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.data.Book
-import com.tibame.foodhunter.sharon.data.CalendarUiState
+import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.util.getDisplayName
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarViewMode1
 
 
 /**
@@ -127,7 +125,7 @@ fun BookListComposable(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarApp(
-    viewModel: CalendarViewModel = viewModel(),
+    viewModel: CalendarViewMode1 = viewModel(),
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
