@@ -2,6 +2,7 @@ package com.tibame.foodhunter
 
 import NewPost
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -61,10 +62,9 @@ import com.tibame.foodhunter.sharon.PersonalToolsScreen
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
-import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditRoute
-import com.tibame.foodhunter.sharon.NoteEditTopBar
+import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
 import com.tibame.foodhunter.sharon.TabConstants
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
@@ -188,16 +188,19 @@ fun Main(
                 )
             }
             if (destination?.parent?.route == "personal_tools") {
-                when (destination.route) {
-                    "note_edit" -> NoteEditTopBar(
-
+                Log.d("Navigation", "Current route: ${destination.route}")
+                Log.d("Navigation", "Parent route: ${destination?.parent?.route}")
+                when {
+                    destination.route?.startsWith("note_edit") == true -> NoteEditTopBar(
+                        navController = navController,
+                        scrollBehavior=  scrollBehavior
                     )
-                    context.getString(R.string.str_calendar) -> CalendarTopBar(
+                    destination.route == context.getString(R.string.str_calendar) -> CalendarTopBar(
                         navController,
                         scrollBehavior,
                         CalendarViewModel()
                     )
-                    context.getString(R.string.str_note) -> NoteTopBar(
+                    destination.route == context.getString(R.string.str_note) -> NoteTopBar(
                         navController,
                         scrollBehavior,
                         NoteViewModel()
@@ -405,20 +408,22 @@ fun Main(
                 route = "personal_tools"
             ) {
                 composable(context.getString(R.string.str_calendar)) {
-                    PersonalToolsScreen(navController, TabConstants.CALENDAR)
+                    PersonalToolsScreen(navController)
                 }
                 composable(context.getString(R.string.str_note)) {
-                    PersonalToolsScreen(navController, TabConstants.NOTE)
-                }
-                composable(context.getString(R.string.str_favorite)) {
-                    PersonalToolsScreen(navController, TabConstants.FAVORITE)
+                    PersonalToolsScreen(navController)
                 }
 
+                composable("note/add") {
+                    NoteEditRoute(navController, noteId = null)  // 新增模式
+                }
+
+
                 composable(
-                    route = "note_edit/{noteId}",
+                    route = "note/edit/{noteId}",
                     arguments = listOf(navArgument("noteId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val noteId = backStackEntry.arguments?.getInt("id")
+                    val noteId = backStackEntry.arguments?.getInt("noteId")
                         ?: return@composable  // 防止空值
 
                     NoteEditRoute(navController = navController, noteId = noteId)
