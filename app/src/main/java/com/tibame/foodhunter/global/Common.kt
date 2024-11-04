@@ -27,7 +27,7 @@ suspend fun CommonPost(
             outputStream.bufferedWriter().use{ it.write(dataOut) }
             if(responseCode == 200){
                 respose = inputStream.bufferedReader().use { it.readText() }
-                Log.d("respose", respose)
+                Log.d("respose200", respose)
             } else {
                 println("false")
             }
