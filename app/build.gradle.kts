@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.espresso.core)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.benchmark.common)
+    implementation(libs.generativeai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
