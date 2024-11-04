@@ -1,6 +1,8 @@
 package com.tibame.foodhunter.sharon
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -31,8 +36,10 @@ import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
@@ -56,7 +63,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -65,10 +71,14 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
-import com.tibame.foodhunter.sharon.components.card.CardContentType
+import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
+import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -79,7 +89,7 @@ fun AddNotePreview() {
     NoteEdit(
         navController = mockNavController,
         note = Note(
-            noteId = 1,
+            noteId =1,
             type = CardContentType.NOTE,
             date = "10/15",
             day = "星期二",
@@ -105,15 +115,23 @@ fun NoteEditRoute(
         }
         return
     }
-    val note by noteViewModel.getNoteById(noteId).collectAsStateWithLifecycle()
 
-    // 3. 使用 noteId 從 ViewModel 獲取對應的筆記數據
-    //使用 collectAsStateWithLifecycle 更安全地收集數據
-    val noteBook = note ?: return
+    // 收集對應 noteId 的 note
+    val note =  noteViewModel.getNoteById(noteId)  // 測試查詢 ID=3 的筆記
+
+    // 如果 note 還在加載中，顯示進度指示器
+//    if (note == null) {
+//        // 可以在這裡顯示一個進度條或 Loading UI
+////        CircularProgressIndicator()
+//        return
+//    } else {
+//        // 顯示編輯頁面
+//        NoteEdit(navController = navController, note = note)
+//    }
 
 
-    NoteEdit(navController = navController, note = noteBook)
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,13 +229,25 @@ fun NoteEdit(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
             ) {
-                // 顯示餐廳名稱
-                DisplayRestaurantChip(
-                    label = selectedRestaurantName,
-                    onClear = { selectedRestaurantName = "" }
-                )
-                VerticalLine()
-                // 顯示日期
+                // 只在有選中餐廳時顯示 DisplayRestaurantChip
+                if (selectedRestaurantName.isNotEmpty()) {
+                    DisplayRestaurantChip(
+                        label = selectedRestaurantName,
+                        onClear = { selectedRestaurantName = "" }
+                    )
+                    VerticalLine()
+                }
+
+                // 只在沒有選中餐廳時顯示 SelectRestaurantChip
+                if (selectedRestaurantName.isEmpty()) {
+                    SelectRestaurantChip(
+                        onClick = { isBottomSheetVisible = true },
+                        selectedRestaurant = true  // 因為只在需要選擇時顯示，所以直接設為 true
+                    )
+                    VerticalLine()
+                }
+
+                // 日期顯示保持不變
                 DisplayDateChip()
             }
 
@@ -242,14 +272,8 @@ fun NoteEdit(
                 }
             }
 
-            // 選擇 bottomSheet 的 chip
-            SelectRestaurantChip(
-                selectedRestaurant = true,
-                onClick = {
-                    isBottomSheetVisible = true
-                }
-            )
-// 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
+
+            // 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
             if (isBottomSheetVisible) {
                 SelectRestaurantBottomSheet(
                     onRestaurantPicked = { restaurant ->
@@ -283,25 +307,84 @@ fun VerticalLine() {
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayDateChip(
-//    isVisible: Boolean,
+    initialDate: LocalDate = LocalDate.now(), // 預設今天，之後可改為從資料庫獲取
+    onDateSelected: (LocalDate) -> Unit = {} // 當日期改變時的回調
 ) {
     var selected by remember { mutableStateOf(true) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var currentDate by remember { mutableStateOf(initialDate) }
+
+    // 日期格式化
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+
+    // 設置 DatePicker 的初始狀態
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = currentDate.atStartOfDay(ZoneId.systemDefault())
+            .toInstant().toEpochMilli(),
+        initialDisplayMode = DisplayMode.Picker
+    )
 
     FilterChip(
         modifier = Modifier
-            .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp)
             .height(32.dp),
-        // TODO(更改日期: 串接日曆、把參數帶入)
-        onClick = {},
+        onClick = { showDatePicker = true },
         label = {
             Text(
-                text = "2024-10-12", modifier = Modifier
+                text = currentDate.format(dateFormatter),
+                modifier = Modifier
             )
         },
         selected = selected,
     )
+
+    // 顯示日期選擇器對話框
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { milliseconds ->
+                            val newDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                LocalDate.ofInstant(
+                                    java.time.Instant.ofEpochMilli(milliseconds),
+                                    ZoneId.systemDefault()
+                                )
+                            } else {
+                                TODO("VERSION.SDK_INT < UPSIDE_DOWN_CAKE")
+                            }
+                            currentDate = newDate
+
+                            // TODO: 更新資料庫中的日期
+                            // viewModel.updateNoteDate(noteId, newDate)
+
+                            onDateSelected(newDate)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("確認")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false // 設置為 true 可以切換between calendar/input modes
+            )
+        }
+    }
 }
 
 @Composable
