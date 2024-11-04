@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.andysearch
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -28,15 +27,12 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -237,10 +233,7 @@ fun RandomFood(navController: NavHostController,
                         onClick = {
                             searchTextVM.updateSearchText(selectedOption)
                             randomScope.launch { searchTextVM.updateSearchRest(selectedOption) }
-                            val restId = -1
-                            Log.d("random food1", restId.toString())
-                            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${restId}")
-                            Log.d("random food2", restId.toString())
+                            navController.navigate(context.getString(R.string.SearchToGoogleMap))
                         }  // 點擊確定按鈕，關閉對話框
                     ) {
                         Text("確定")

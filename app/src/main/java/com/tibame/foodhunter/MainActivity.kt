@@ -329,7 +329,7 @@ fun Main(
                 SearchScreen(navController, searchVM)
             }
             composable(context.getString(R.string.SearchToGoogleMap)) {
-                SearchResult(navController = navController, searchTextVM = searchVM, paddingValues = innerPadding)
+                SearchResult(navController = navController, searchTextVM = searchVM)
             }
             composable(context.getString(R.string.randomFood)) {
                 RandomFood(
