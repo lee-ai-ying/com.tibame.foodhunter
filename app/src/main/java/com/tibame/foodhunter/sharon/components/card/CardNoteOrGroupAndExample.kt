@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.tooling.preview.Preview
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.data.CardContentType
 
 @Preview(showBackground = true)
 @Composable
