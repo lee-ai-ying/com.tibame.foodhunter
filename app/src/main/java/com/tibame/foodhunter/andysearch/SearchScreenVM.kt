@@ -34,7 +34,7 @@ class SearchScreenVM: ViewModel(){
     init {
         // 初始化時設置預設值
         _searchText.update { "" }
-        preloadRestaurants()
+
     }
 
 
@@ -42,12 +42,17 @@ class SearchScreenVM: ViewModel(){
         _searchText.update {newText}
     }
 
+    // 選擇餐廳
     fun updateChoiceOneRest(choiceRest: Restaurant){
         _choiceOneRest.update { choiceRest }
     }
+    // 清空單一餐廳
+    fun clearChoiceRest(){
+        _choiceOneRest.update { null }
+    }
 
     // 預先載入10家餐廳
-    private fun preloadRestaurants(){
+    fun preloadRestaurants(){
         CoroutineScope(Dispatchers.IO).launch {
             val initialRestaurants = fetchInitRestaurant()
             _preRestaurantList.update { initialRestaurants }
@@ -72,8 +77,7 @@ class SearchScreenVM: ViewModel(){
         val url = "${serverUrl}/SelectRestController"
         val gson = Gson()
         val jsonObject = JsonObject()
-        jsonObject.addProperty("restaurantName", searchText)
-        jsonObject.addProperty("restaurantLabel", searchText)
+        jsonObject.addProperty("searchText", searchText)
         val result = CommonPost(url, jsonObject.toString())
         val type = object : TypeToken<List<Restaurant>>() {}.type
         return gson.fromJson(result, type)

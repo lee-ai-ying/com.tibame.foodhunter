@@ -1,114 +1,269 @@
 package com.tibame.foodhunter.zoe
 
+import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.global.CommonPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
-object PostRepository {
+class PostRepository {
+    private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
     private val _postList = MutableStateFlow<List<Post>>(emptyList())
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
+    private val gson = Gson()
 
-    // 创建一些示例用户
-    private val samplePublishers = listOf(
-        Publisher(
-            id = "user1",
-            name = "John Doe",
-            avatarImage = R.drawable.user1,
-            joinDate = "2024-01-01"
-        ),
-        Publisher(
-            id = "user2",
-            name = "Mary Johnson",
-            avatarImage = R.drawable.user2,
-            joinDate = "2024-01-15"
-        ),
-        Publisher(
-            id = "user3",
-            name = "Sarah Chen",
-            avatarImage = R.drawable.user3,
-            joinDate = "2024-02-01"
-        )
-    )
+    private suspend fun fetchComments(postId: Int): List<CommentResponse> {
+        val url = "${serverUrl}/comment/byPost?postId=$postId"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<CommentResponse>>() {}.type
+        return try {
+            gson.fromJson(result, type)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error fetching comments", e)
+            emptyList()
+        }
+    }
 
-    init {
-        // 初始化示例数据
-        _postList.value = listOf(
-            Post(
-                postId = 1,
-                publisher = samplePublishers[0],  // 使用 Publisher 对象
-                content = "這是一個美味的早午餐！推薦大家來試試。",
-                location = "台北市信義區",
-                timestamp = "2024-03-15 10:30",
-                postTag = "早午餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.sushi_image_1, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c1",
-                        commenter = Commenter(
-                            id = "user2",
-                            name = "Jane Smith",
-                            avatarImage = R.drawable.user2
-                        ),
-                        content = "看起來好好吃！",
-                        timestamp = "2024-03-15 11:00"
-                    )
-                )
+//    private suspend fun fetchUserPosts(userId: Int): List<PostResponse> {
+//        val url = "${serverUrl}/post/byUser?userId=$userId"
+//        val result = CommonPost(url, "")
+//        val type = object : TypeToken<List<PostResponse>>() {}.type
+//        return try {
+//            gson.fromJson(result, type)
+//        } catch (e: Exception) {
+//            Log.e("PostRepository", "Error fetching user posts", e)
+//            emptyList()
+//        }
+//    }
+
+    private suspend fun CommentResponse.toComment(): Comment {
+        return Comment(
+            id = this.messageId,  // 直接使用 Int
+            commenter = Commenter(
+                id = this.memberId,  // 直接使用 Int
+                name = this.memberNickname,
+                avatarImage = R.drawable.user1
             ),
-            Post(
-                postId = 2,
-                publisher = samplePublishers[1],
-                content = "今天的午餐很特別，是米其林餐廳的特製料理。",
-                location = "台北市大安區",
-                timestamp = "2024-03-15 13:30",
-                postTag = "午餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.steak_image, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c2",
-                        commenter = Commenter(
-                            id = "user4",
-                            name = "Bob Wilson",
-                            avatarImage = R.drawable.user4
-                        ),
-                        content = "看起來超高級的！",
-                        timestamp = "2024-03-15 14:00"
-                    )
-                )
-            ),
-            Post(
-                postId = 3,
-                publisher = samplePublishers[2],
-                content = "晚餐約會的好去處，氣氛很好！",
-                location = "台北市中山區",
-                timestamp = "2024-03-15 19:30",
-                postTag = "晚餐",
-                carouselItems = listOf(
-                    CarouselItem(0, R.drawable.breakfast_image_1, "Breakfast image 1"),
-                    CarouselItem(1, R.drawable.breakfast_image_2, "Breakfast image 2")
-                ),
-                comments = listOf(
-                    Comment(
-                        id = "c3",
-                        commenter = Commenter(
-                            id = "user6",
-                            name = "David Lee",
-                            avatarImage = R.drawable.user1
-                        ),
-                        content = "謝謝推薦，我也想去試試！",
-                        timestamp = "2024-03-15 20:00"
-                    )
-                )
-            )
+            content = this.content,
+            timestamp = this.messageTime
         )
     }
 
+    private suspend fun fetchPostById(postId: Int): PostResponse? {
+        val url = "${serverUrl}/post/get?postId=$postId"
+        val result = CommonPost(url, "")
+
+        return try {
+            val response = gson.fromJson(result, ApiResponse::class.java)
+            if (response.success) {
+                gson.fromJson(gson.toJson(response.data), PostResponse::class.java)
+            } else {
+                Log.e("PostRepository", "Error fetching post: ${response.message}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error fetching post", e)
+            null
+        }
+    }
 
 
+    // 獲取貼文列表
+    private suspend fun fetchPosts(): List<PostResponse> {
+        val url = "${serverUrl}/post/preLoad"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<PostResponse>>() {}.type
+        return gson.fromJson(result, type)
+    }
+
+    // 獲取餐廳資訊
+    private suspend fun fetchRestaurant(restaurantId: Int): RestaurantResponse? {
+        val url = "${serverUrl}/restaurant/$restaurantId"
+        val result = CommonPost(url, "")
+        return try {
+            gson.fromJson(result, RestaurantResponse::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // 獲取用戶資訊
+    private suspend fun fetchUser(userId: Int): UserResponse? {
+        val url = "${serverUrl}/user/$userId"
+        val result = CommonPost(url, "")
+        return try {
+            gson.fromJson(result, UserResponse::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
+    private suspend fun PostResponse.toPost(): Post {
+        val restaurant = fetchRestaurant(this.restaurantId)
+        val user = fetchUser(this.publisher)
+        val comments = fetchComments(this.postId).map { it.toComment() }
+
+        return Post(
+            postId = this.postId,
+            publisher = Publisher(
+                id = this.publisher,  // 如果 Publisher 的 id 也需要改為 Int，請告訴我
+                name = this.publisherNickname ?: "Unknown User",
+                avatarImage = R.drawable.user1,
+
+            ),
+            content = this.content,
+            location = this.restaurantName ?: "Unknown Location",
+            timestamp = this.postTime,
+            postTag = this.postTag,
+            carouselItems = emptyList(),
+            comments = comments,
+            isFavorited = false
+        )
+    }
+    suspend fun createComment(postId: Int, userId: Int, content: String): Boolean {
+        val url = "${serverUrl}/comment/create"
+        val commentRequest = mapOf(
+            "postId" to postId,
+            "memberId" to userId,
+            "content" to content
+        )
+
+        return try {
+            val json = gson.toJson(commentRequest)
+            val result = CommonPost(url, json)
+            loadPosts()
+            true
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating comment", e)
+            false
+        }
+    }
+    // 載入所有貼文
+    suspend fun loadPosts() {
+        try {
+            val postResponses = fetchPosts()
+            val posts = postResponses.mapNotNull { response ->
+                try {
+                    response.toPost()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            _postList.update { posts }
+
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error loading posts", e)
+        }
+    }
+
+    // 創建新貼文
+    suspend fun createPost(postData: PostCreateData): Boolean {
+        val url = "${serverUrl}/post/create"
+        val postRequest = CreatePostRequest(
+            publisher = postData.publisher.toInt(),
+            content = postData.content,
+            postTag = postData.postTag,
+            restaurantId = 0,  // 需要從 location 獲取或由使用者選擇
+            visibility = 0
+        )
+
+        return try {
+            val json = gson.toJson(postRequest)
+            val result = CommonPost(url, json)
+            true
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating post", e)
+            false
+        }
+    }
+    companion object {
+        @Volatile
+        private var INSTANCE: PostRepository? = null
+
+        fun getInstance(): PostRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: PostRepository().also { INSTANCE = it }
+            }
+        }
+    }
+
+    suspend fun deletePost(postId: Int): Boolean {
+        val url = "${serverUrl}/post/delete/$postId"
+        return try {
+            val result = CommonPost(url, "")
+            val response = gson.fromJson(result, DeleteResponse::class.java)
+            if (response.success) {
+                // 刪除成功後更新本地貼文列表
+                _postList.value = _postList.value.filter { it.postId != postId }
+                true
+            } else {
+                Log.e("PostRepository", "Delete failed: ${response.message}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error deleting post", e)
+            false
+        }
+    }
 }
+
+// 數據類別
+data class PostResponse(
+    val postId: Int,
+    val postTag: String,
+    val publisher: Int,
+    val content: String,
+    val postTime: String,
+    val visibility: Int,
+    val restaurantId: Int,
+    val likeCount: Int,
+    val publisherNickname: String?,
+    val restaurantName: String? // 新增餐廳名稱欄位
+)
+
+data class DeleteResponse(
+    val success: Boolean,
+    val message: String
+)
+
+data class RestaurantResponse(
+    val restaurantId: Int,
+    val name: String,
+    val address: String
+)
+
+data class UserResponse(
+    val userId: Int,
+    val name: String,
+    val avatar: String?,
+    val joinDate: String
+)
+
+data class CreatePostRequest(
+    val publisher: Int,
+    val content: String,
+    val postTag: String,
+    val restaurantId: Int,
+    val visibility: Int
+)
+
+data class ApiResponse<T>(
+    val success: Boolean,
+    val message: String,
+    val data: T
+)
+
+
+data class CommentResponse(
+    val messageId: Int,
+    val postId: Int,
+    val memberId: Int,
+    val content: String,
+    val messageTime: String,
+    val memberNickname: String
+)

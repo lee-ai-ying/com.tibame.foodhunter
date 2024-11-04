@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -113,6 +115,9 @@ fun GroupCreate(
                             gChatVM.setGroupCreateData(inputData)
                             navController.popBackStack()
                         },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FColor.Orange_1st
+                        )
                     ) {
                         Text("確定")
                     }
@@ -133,7 +138,7 @@ fun GroupCreate(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
                             //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
 
                     }

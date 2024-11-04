@@ -71,6 +71,7 @@ import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
 import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
@@ -137,7 +138,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member),
         "GroupChatRoom/{groupId}",
         "PrivateChatRoom/{roomid}",
-        context.getString(R.string.SearchToGoogleMap) + "/{restId}",
+        context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
         "postDetail/{postId}"
@@ -253,7 +254,7 @@ fun Main(
                 LoginScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/2") {
-                RegisterScreen(navController = navController)
+                RegisterScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/3") {
                 ForgetPassword1Screen(navController = navController, {})
@@ -278,6 +279,21 @@ fun Main(
                     postViewModel = postViewModel
                 )
             }
+
+            composable(
+                "person_homepage/{publisherId}",
+                arguments = listOf(navArgument("publisherId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
+                val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
+                PersonHomepage(
+                    currentUserId = currentUserId,
+                    publisherId = publisherId,
+                    postViewModel = postViewModel,
+                    navController = navController
+                )
+            }
+
 
 
 
@@ -316,16 +332,8 @@ fun Main(
             composable(context.getString(R.string.str_search)) {
                 SearchScreen(navController, searchVM)
             }
-            composable("${context.getString(R.string.SearchToGoogleMap)}/{restId}",
-                arguments = listOf(
-                    navArgument("restId") { type = NavType.IntType }
-                )
-            ) {
-                SearchResult(
-                    navController = navController,
-                    restaurantID = it.arguments?.getInt("restId") ?: -1,
-                    searchTextVM = searchVM
-                )
+            composable(context.getString(R.string.SearchToGoogleMap)) {
+                SearchResult(navController = navController, searchTextVM = searchVM)
             }
             composable(context.getString(R.string.randomFood)) {
                 RandomFood(
@@ -377,11 +385,11 @@ fun Main(
 
 
             composable(context.getString(R.string.str_member)) {
-                MemberMainScreen(navController = navController)
+                MemberMainScreen(navController = navController,userViewModel)
             }
 
             composable(context.getString(R.string.str_member) + "/2") {
-                MemberInformationScreen(navController = navController)
+                MemberInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/3") {
                 ModifyInformationScreen(navController = navController)

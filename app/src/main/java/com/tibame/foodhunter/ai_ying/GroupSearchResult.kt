@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 
 @Composable
 fun GroupSearchResult(
@@ -64,6 +66,9 @@ fun GroupSearchResult(
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
+                items(1){
+                    GroupTitleText(text = "搜尋結果")
+                }
                 items(result.value) {
                     Row(
                         modifier = Modifier
@@ -105,48 +110,57 @@ fun GroupSearchResult(
 
             }
             Button(
-                onClick = onBackClick
+                onClick = onBackClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = FColor.Orange_5th
+                )
             ) {
                 Text("返回")
             }
             Spacer(modifier = Modifier.size(8.dp))
         }
     } else {
-        Column(
+        LazyColumn(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            GroupTitleText(text = selectGroupChat.name)
-            GroupText(text = stringResource(R.string.str_create_location))
-            GroupTextWithBackground(text = "肯德基南京復興店")
-            GroupText(text = stringResource(R.string.str_create_time))
-            GroupTextWithBackground(text = "2024/12/25")
-            GroupText(text = stringResource(R.string.str_create_price))
-            GroupTextWithBackground(text = "1-200")
-            GroupText(text = stringResource(R.string.str_create_member))
-            GroupTextWithBackground(text = "參加人數:1")
-            GroupText(text = stringResource(R.string.str_create_public))
-            GroupTextWithBackground(text = "公開")
-            GroupText(text = stringResource(R.string.str_create_describe))
-            GroupTextWithBackground(text = "肯德基\n南\n京\n復\n興店")
-            Spacer(modifier = Modifier.size(8.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onJoinClick,
-                ) {
-                    Text("加入")
-                }
-                Button(
-                    onClick = {
-                        showGroupChatDetail = false
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text("返回", color = MaterialTheme.colorScheme.onPrimaryContainer)
+            items(1) {
+                GroupTitleText(text = selectGroupChat.name)
+                GroupText(text = stringResource(R.string.str_create_location))
+                GroupTextWithBackground(text = "肯德基南京復興店")
+                GroupText(text = stringResource(R.string.str_create_time))
+                GroupTextWithBackground(text = "2024/12/25")
+                GroupText(text = stringResource(R.string.str_create_price))
+                GroupTextWithBackground(text = "1-200")
+                GroupText(text = stringResource(R.string.str_create_member))
+                GroupTextWithBackground(text = "參加人數:1")
+                GroupText(text = stringResource(R.string.str_create_public))
+                GroupTextWithBackground(text = "公開")
+                GroupText(text = stringResource(R.string.str_create_describe))
+                GroupTextWithBackground(text = "肯德基\n南\n京\n復\n興店")
+                Spacer(modifier = Modifier.size(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onJoinClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FColor.Orange_1st
+                        )
+                    ) {
+                        Text("加入")
+                    }
+                    Button(
+                        onClick = {
+                            showGroupChatDetail = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Text(
+                            text = "返回",
+                            color = Color.Black//MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             }
         }

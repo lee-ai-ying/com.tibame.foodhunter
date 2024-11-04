@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -147,6 +151,9 @@ fun GroupSearch(
                                 gChatVM.setGroupSearchData(inputData)
                                 onSearchClick()
                             },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = FColor.Orange_1st
+                            )
                         ) {
                             Text("搜尋")
                         }
@@ -155,10 +162,13 @@ fun GroupSearch(
 
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                containerColor = FColor.Orange_5th
                             )
                         ) {
-                            Text("清空", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(
+                                text = "清空",
+                                color = Color.Black
+                            )
                         }
                     }
                 }
@@ -178,7 +188,7 @@ fun GroupSearch(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
 //                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
                     }
                     showDatePickerDialog = false
@@ -195,43 +205,67 @@ fun GroupSearch(
 @Composable
 fun FoodLabel(text: String, onClick: () -> Unit) {
     var selected by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier.clickable {
+    FilterChip(
+        selected = selected,
+        onClick = {
             selected = !selected
             onClick()
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .background(
-                    when (selected) {
-                        true -> MaterialTheme.colorScheme.primary//colorResource(R.color.orange_1st)
-                        false -> MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(top = 8.dp, end = 16.dp, start = 8.dp, bottom = 8.dp)
-        ) {
-            Icon(
-                when (selected) {
-                    true -> Icons.Outlined.Check
-                    false -> Icons.Outlined.Add
-                },
-                contentDescription = "",
-                tint = when (selected) {
-                    true -> Color.White
-                    false -> Color.Black
-                }
-            )
-            Text(
-                text = text,
-                color = when (selected) {
-                    true -> Color.White
-                    false -> Color.Black
-                }
-            )
-        }
-    }
+        },
+        label = { Text(text) },
+        leadingIcon = if (selected) {
+            {
+//                Icon(
+//                    imageVector = Icons.Filled.Done,
+//                    contentDescription = "Done icon",
+//                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+//                )
+            }
+        } else {
+            null
+        },
+        enabled = true,
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = Color.White,
+            selectedContainerColor = FColor.Orange_5th
+        )
+    )
+//    Column(
+//        modifier = Modifier.clickable {
+//            selected = !selected
+//            onClick()
+//        }
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .background(
+//                    when (selected) {
+//                        true -> MaterialTheme.colorScheme.primary//colorResource(R.color.orange_1st)
+//                        false -> MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
+//                    },
+//                    shape = RoundedCornerShape(8.dp)
+//                )
+//                .padding(top = 8.dp, end = 16.dp, start = 8.dp, bottom = 8.dp)
+//        ) {
+//            Icon(
+//                when (selected) {
+//                    true -> Icons.Outlined.Check
+//                    false -> Icons.Outlined.Add
+//                },
+//                contentDescription = "",
+//                tint = when (selected) {
+//                    true -> Color.White
+//                    false -> Color.Black
+//                }
+//            )
+//            Text(
+//                text = text,
+//                color = when (selected) {
+//                    true -> Color.White
+//                    false -> Color.Black
+//                }
+//            )
+//        }
+//    }
 
 //    TextField(
 //        value = text,
@@ -252,5 +286,6 @@ fun FoodLabel(text: String, onClick: () -> Unit) {
 fun GroupSearchPreview() {
     MaterialTheme {
         GroupSearch(rememberNavController(), viewModel())
+//        FoodLabel("aaa",{})
     }
 }

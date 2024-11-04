@@ -2,9 +2,13 @@ package com.tibame.foodhunter.andysearch
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,17 +19,21 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,10 +42,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,28 +68,40 @@ import kotlinx.coroutines.launch
 fun SearchScreen(
     navController: NavHostController,
     searchTextVM: SearchScreenVM
-){
+) {
+    searchTextVM.preloadRestaurants()
     val context = LocalContext.current
     val preRestaurants by searchTextVM.preRestaurantList.collectAsState()
-    val selectRest by searchTextVM.selectRestList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
-    var currentLocation by remember{ mutableStateOf<LatLng?>(null) }
-    Column(modifier = Modifier.fillMaxSize()){
-        ShowSearchBar(cities, searchTextVM, navController = navController)
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Top
+    ) {
+        ShowSearchBar(
+            cities = cities,
+            searchTextVM = searchTextVM,
+            state = true, navController = navController
+        ) // state 如果true 導覽頁面到搜尋結果
+
+
         ShowGoogleMap(
             Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(.4f)
                 .padding(16.dp),
             preRestaurants,
-            onLocationUpdate = {location -> currentLocation = location}
+            restaurantVM = searchTextVM,
+            onLocationUpdate = { location -> currentLocation = location }
         )
-        ShowRestaurantLists(preRestaurants, true, navController, currentLocation, searchTextVM)
+        ShowRestaurantLists(
+            preRestaurants, true, navController,
+            currentLocation, searchTextVM
+        )
     }
 
 }
-
-
 
 
 @Composable
@@ -92,18 +116,20 @@ fun CityLists(
     ) {
         items(cities) { city ->
             var districtExpand by remember { mutableStateOf(false) }
-            Column(modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier
                     .clickable {
-                        districtExpand = !districtExpand // 点击时切换展开/收起状态
-                        selectedCity = if (selectedCity == city.name) null else city.name }
-                ){
+                        districtExpand = !districtExpand
+                        selectedCity = if (selectedCity == city.name) null else city.name
+                    }
+                ) {
                     val textColor = if (selectedCity == city.name) Color.Blue else Color.Black
                     Text(text = city.name, color = textColor)
                 }
                 if (districtExpand) {
-                    Column (modifier = Modifier.clickable{  }){
+                    Column(modifier = Modifier.clickable { }) {
                         city.districts.forEach { district ->
                             Text(
                                 text = district.name,
@@ -119,10 +145,12 @@ fun CityLists(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowSearchBar(cities: List<City>,
-                  searchTextVM: SearchScreenVM,
-                  navController: NavHostController = rememberNavController()
-){
+fun ShowSearchBar(
+    cities: List<City>,
+    searchTextVM: SearchScreenVM,
+    state: Boolean = false,
+    navController: NavHostController = rememberNavController()
+) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val searchText by searchTextVM.searchText.collectAsState()
@@ -136,30 +164,34 @@ fun ShowSearchBar(cities: List<City>,
     var arrowIcon3 by remember { mutableStateOf(R.drawable.arrow_right) }
     SearchBar(
         query = searchText,
-        onQueryChange = {searchTextVM.updateSearchText(it)},
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        onQueryChange = { searchTextVM.updateSearchText(it) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+//        windowInsets =if (isActive) SearchBarDefaults.windowInsets else WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
+        windowInsets =  WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
         onSearch = {
             isActive = false
-            if (it.isNotBlank()){
+            if (it.isNotBlank()) {
                 coroutineScope.launch { searchTextVM.updateSearchRest(it) }
             }
-            searchTextVM.updateSearchText(it)
-            val restId = -1
-            navController.navigate("${context.getString(R.string.SearchToGoogleMap)}/${restId}")
-                   },
-        active = isActive,
-        onActiveChange = {
-            isActive = it
+            searchTextVM.updateSearchText(it) // 更新找到餐廳
+            searchTextVM.clearChoiceRest() // 清空選擇餐廳
+            if (state) {
+                navController.navigate(context.getString(R.string.SearchToGoogleMap))
+            }
         },
-        placeholder = { Text(text = "請輸入地名, 食物, 店家") },
+        active = isActive,
+        onActiveChange = { isActive = it },
+        placeholder = { Text(text = "搜尋想吃的食物, 店家") },
         leadingIcon = {
-            if (isActive){
+            if (isActive) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "ArrowBack",
                     modifier = Modifier.clickable { isActive = false }
                 )
-            }else{
+            } else {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "search",
@@ -168,9 +200,9 @@ fun ShowSearchBar(cities: List<City>,
 
         },
         trailingIcon = {
-            if (searchText != ""){
+            if (searchText != "") {
                 Icon(
-                    imageVector =Icons.Default.Clear,
+                    imageVector = Icons.Default.Clear,
                     contentDescription = "clear",
                     modifier = Modifier.clickable {
                         searchTextVM.updateSearchText("")
@@ -232,13 +264,12 @@ fun ShowSearchBar(cities: List<City>,
                 )
             }
             if (priceExpand) {
-                Row(modifier = Modifier.fillMaxWidth()){
+                Row(modifier = Modifier.fillMaxWidth()) {
                     RangeSlider(
                         value = minPrice..maxPrice,
                         steps = 9,
                         valueRange = 0f..2000f,
-                        onValueChange = {
-                            rangeValues ->
+                        onValueChange = { rangeValues ->
                             minPrice = rangeValues.start
                             maxPrice = rangeValues.endInclusive
                         }
@@ -257,47 +288,72 @@ fun ShowRestaurantLists(
     currentLocation: LatLng?,
     searchTextVM: SearchScreenVM,
     cardClick: ((Restaurant?) -> Unit)? = null
-){
+) {
     val context = LocalContext.current
-    val sortedRestaurants = restaurants.sortedBy {
-        restaurant ->
-        currentLocation?.let{location ->
+    val sortedRestaurants = restaurants.sortedBy { restaurant ->
+        currentLocation?.let { location ->
             haversine(
                 location.latitude, location.longitude,
                 restaurant.latitude, restaurant.longitude
             )
-        }?:restaurant.restaurant_id.toString()
+        } ?: restaurant.restaurant_id.toString()
     }
     Log.d("Restaurant", "1")
-    if (state){
-        Row(modifier = Modifier.fillMaxWidth()){
-            Text(text = "美食餐廳", style = TextStyle(
-                color = Color.Black,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            ),
+    if (state) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "", style = TextStyle(
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                ),
                 modifier = Modifier.padding(start = 16.dp)
             )
 
-            Icon(
-                painter = painterResource(R.drawable.bookmark),
-                contentDescription = "Go to Map",
+            Spacer(modifier = Modifier.weight(0.6f))
+            Row(
                 modifier = Modifier
                     .clickable {
                         navController.navigate(route = context.getString(R.string.randomFood))
                     }
-                    .size(30.dp, 30.dp)
-            )
+                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(colorResource(R.color.orange_3rd)),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.random_food_icon),
+                    contentDescription = "Go to Map",
+                    modifier = Modifier
+                        .clickable {
+                            navController.navigate(route = context.getString(R.string.randomFood))
+                        }
+                        .size(40.dp, 40.dp)
+                        .padding(start = 8.dp, end = 4.dp)
+                )
+                Text(
+                    text = "美食轉盤", style = TextStyle(
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.W300
+                    )
+                )
+            }
+
 
         }
         // 垂直互動
-        LazyColumn (
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(4.dp)
-        ){
-            items(sortedRestaurants){
-                restaurant ->
+        ) {
+            items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
                     restaurant = restaurant,
@@ -306,26 +362,24 @@ fun ShowRestaurantLists(
                     cardClick = null,
                     trailingIcon = {
                         Icon(
-                        painter = painterResource(R.drawable.arrow_right),
-                        contentDescription = "Go to Map",
-                        modifier = Modifier.clickable{
-                            val restId = restaurant.restaurant_id
-                            Log.d("restaurant_id", restaurant.restaurant_id.toString())
-                            navController.navigate(route = "${context.getString(R.string.SearchToGoogleMap)}/${restId}")
-                        })
+                            painter = painterResource(R.drawable.arrow_right),
+                            contentDescription = "Go to Map",
+                            modifier = Modifier.clickable {
+                                searchTextVM.updateChoiceOneRest(restaurant)
+                                navController.navigate(route = context.getString(R.string.SearchToGoogleMap))
+                            })
                     }
                 )
             }
         }
     } else {
         // 橫向滑動
-        LazyRow (
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(4.dp),
-        ){
-            items(sortedRestaurants){
-                restaurant ->
+        ) {
+            items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
                     restaurant = restaurant,
@@ -336,7 +390,7 @@ fun ShowRestaurantLists(
                         Icon(
                             painter = painterResource(R.drawable.arrow_right),
                             contentDescription = "Go to Map",
-                            modifier = Modifier.clickable{
+                            modifier = Modifier.clickable {
                                 searchTextVM.updateChoiceOneRest(restaurant)
                             })
                     },
@@ -348,7 +402,6 @@ fun ShowRestaurantLists(
 }
 
 
-
 @Composable
 fun RestCard(
     searchTextVM: SearchScreenVM, // 帶入餐廳相關的VM
@@ -358,17 +411,19 @@ fun RestCard(
     cardClick: ((Restaurant) -> Unit)?, // 對這個Card點擊要做的動作 沒有的話會到餐廳詳細的頁面
     trailingIcon: @Composable () -> Unit = {},
     cardPadding: Dp = 16.dp
-){
-    val distance = currentLocation?.let{location ->
+) {
+    val distance = currentLocation?.let { location ->
         haversine(
             location.latitude, location.longitude,
-            restaurant.latitude.toDouble(), restaurant.longitude.toDouble()
+            restaurant.latitude, restaurant.longitude
         )
     } ?: "尚未開啟定位"
     val context = LocalContext.current
-    Card (modifier = Modifier
+    Card(modifier = Modifier
         .fillMaxWidth()
         .padding(cardPadding)
+        .shadow(elevation = 8.dp)
+        .background(colorResource(R.color.orange_d2))
         .clickable {
             searchTextVM.updateChoiceOneRest(restaurant)
             if (cardClick != null) {
@@ -376,16 +431,19 @@ fun RestCard(
             } else {
                 navController.navigate(context.getString(R.string.restaurantDetail))
             }
-        }){
+        }) {
         ListItem(
             headlineContent = {
-                Text(text = restaurant.name ,
+                Text(
+                    text = restaurant.name,
                     modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis) },
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             supportingContent = {
-                Column(modifier = Modifier.fillMaxWidth()){
-                    Row(modifier = Modifier.fillMaxWidth()){
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "$distance 公里",
                         )
@@ -394,20 +452,38 @@ fun RestCard(
                             contentDescription = "calculator KM"
                         )
                     }
-                    Text(text = restaurant.address,
+                    Text(
+                        text = restaurant.address,
                         modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis)
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             },
             leadingContent = { ImageScreen() }, // 預計放的預覽圖片
-            trailingContent = { trailingIcon()},
-            modifier = Modifier.height(100.dp)
+            trailingContent = { trailingIcon() },
+            modifier = Modifier.height(100.dp),
+            colors = ListItemColors(
+                containerColor = colorResource(R.color.orange_5th),
+                headlineColor = colorResource(R.color.black),
+                leadingIconColor = colorResource(R.color.black),
+                overlineColor = colorResource(R.color.orange_4th),
+                supportingTextColor = colorResource(R.color.black),
+                trailingIconColor = colorResource(R.color.gary),
+                colorResource(R.color.orange_4th),
+                colorResource(R.color.orange_4th),
+                colorResource(R.color.orange_4th)
+            )
         )
         HorizontalDivider()
     }
 }
 
+//地區選擇
+@Composable
+fun ChoiceCity() {
+
+}
 
 // 照片顯示 url 版
 @Composable
