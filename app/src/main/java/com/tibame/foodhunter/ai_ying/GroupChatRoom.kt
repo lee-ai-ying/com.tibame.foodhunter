@@ -67,7 +67,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -134,7 +136,7 @@ fun GroupChatRoom(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow)//colorResource(R.color.orange_6th))
+                    .background(FColor.Orange_6th)//MaterialTheme.colorScheme.surfaceContainerLow)
                     .padding(start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -185,7 +187,7 @@ fun GroupChatRoom(
                             modifier = Modifier
                                 .background(
                                     when (it) {
-                                        "111" -> MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
+                                        "111" -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
                                         else -> Color.White
                                     },
                                     shape = RoundedCornerShape(8.dp)
@@ -237,13 +239,14 @@ fun GroupChatRoomTopBar(
                 contentDescription = stringResource(R.string.str_back),
                 modifier = Modifier.clickable {
                     gChatVM.chatRoomInput("")
+                    gChatVM.setShowEditMember(false)
                     navController.popBackStack()
                 },
                 tint = Color.White
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary//colorResource(R.color.orange_2nd)
+            containerColor = FColor.Orange_1st//MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -274,6 +277,7 @@ fun GroupChatRoomBottomBar(
     var stars by remember { mutableIntStateOf(0) }
     val showEditGroup=gChatVM.showEditGroup.asStateFlow().collectAsState().value
     val showEditMember=gChatVM.showEditMember.asStateFlow().collectAsState().value
+    val showMemberControl = gChatVM.showEditMember.asStateFlow().collectAsState().value
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -282,14 +286,15 @@ fun GroupChatRoomBottomBar(
         if (!showEditGroup && !showEditMember){
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Add,
                     contentDescription = "",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = FColor.Orange_1st,//MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
                         showFunc = !showFunc
                     }
@@ -305,8 +310,8 @@ fun GroupChatRoomBottomBar(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,//colorResource(R.color.orange_4th),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
+                        focusedContainerColor = FColor.Orange_4th,//MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedContainerColor = FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
                     ),
                     placeholder = {
                         Text(text = "請輸入訊息")
@@ -315,11 +320,8 @@ fun GroupChatRoomBottomBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = FColor.Orange_1st//MaterialTheme.colorScheme.primary
                 )
-            }
-            if (showFunc){
-                Spacer(Modifier.height(16.dp))
             }
         }
         if (showFunc) {
@@ -347,7 +349,7 @@ fun GroupChatRoomBottomBar(
                         }
                         GroupFunction("管理成員", Icons.Outlined.Person) {
                             if (true) {
-                                gChatVM.setShowEditMember(true)
+                                gChatVM.setShowEditMember(!showMemberControl)
                             } else {
                                 showNotManagerAlert = true
                             }
@@ -374,6 +376,7 @@ fun GroupChatRoomBottomBar(
 //                        }
 //                    }
                 }
+                Spacer(Modifier.height(16.dp))
             }
         }
         if (showNotManagerAlert) {
@@ -422,6 +425,7 @@ fun GroupChatRoomBottomBar(
         }
         if (showBottomSheet) {
             ModalBottomSheet(
+                containerColor = Color.White,
                 // 使用者點擊bottom sheet以外區域時執行
                 onDismissRequest = {
                     showBottomSheet = false
@@ -447,7 +451,8 @@ fun GroupChatRoomBottomBar(
                                 contentDescription = "",
                                 modifier = Modifier.clickable {
                                     stars = it + 1
-                                }
+                                },
+                                tint = FColor.Orange_1st
                             )
                         }
                         repeat(5 - stars) {
@@ -456,7 +461,8 @@ fun GroupChatRoomBottomBar(
                                 contentDescription = "",
                                 modifier = Modifier.clickable {
                                     stars += it + 1
-                                }
+                                },
+                                tint = FColor.Orange_1st
                             )
                         }
                     }
@@ -464,19 +470,9 @@ fun GroupChatRoomBottomBar(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .padding(16.dp)
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(16.dp)
-                            ),
+                            .padding(16.dp),
                         singleLine = false,
                         maxLines = 5,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,//colorResource(R.color.orange_4th),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer//colorResource(R.color.orange_4th)
-                        ),
                         onValueChange = {}
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -492,10 +488,10 @@ fun GroupChatRoomBottomBar(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
                             )
                         ) {
-                            Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text("取消", color = Color.Black)//MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                         Button(
                             onClick = {
@@ -505,6 +501,9 @@ fun GroupChatRoomBottomBar(
                                     }
                                 }
                             },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = FColor.Orange_1st
+                            )
                         ) {
                             Text("送出")
                         }
@@ -700,6 +699,9 @@ fun EndGroupChatDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = FColor.Orange_1st
+                )
             ) {
                 Text("確定")
             }
@@ -708,12 +710,16 @@ fun EndGroupChatDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    text = "取消",
+                    color = Color.Black//MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
-        }
+        },
+        containerColor = FColor.Orange_6th
     )
 }
 @Composable
@@ -732,6 +738,9 @@ fun LeaveGroupChatDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = FColor.Orange_1st
+                )
             ) {
                 Text("確定")
             }
@@ -740,12 +749,16 @@ fun LeaveGroupChatDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    text = "取消",
+                    color = Color.Black//MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
-        }
+        },
+        containerColor = FColor.Orange_6th
     )
 }
 
@@ -766,7 +779,7 @@ fun NotManagerDialog(
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().background(FColor.Orange_6th),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -779,6 +792,9 @@ fun NotManagerDialog(
                 Button(
                     onClick = { onDismissRequest() },
                     modifier = Modifier.padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FColor.Orange_1st
+                    )
                 ) {
                     Text("確定")
                 }
@@ -807,22 +823,25 @@ fun GroupFunction(
         Icon(
             imageVector = imageVector,
             contentDescription = "",
-            tint = MaterialTheme.colorScheme.primary,
+            tint = FColor.Orange_1st//MaterialTheme.colorScheme.primary,
         )
         Text(
             text = text,
-            color = MaterialTheme.colorScheme.primary
+            color = FColor.Orange_1st//MaterialTheme.colorScheme.primary
         )
     }
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 fun GroupChatRoomPreview() {
     MaterialTheme {
+//        GroupChatRoomTopBar(rememberNavController(),TopAppBarDefaults.pinnedScrollBehavior(), viewModel())
 //        GroupChatRoom(0, viewModel())
-//        GroupChatRoomBottomBar(rememberNavController(), viewModel())
-        EditGroupMember(viewModel())
+        GroupChatRoomBottomBar(rememberNavController(), viewModel())
+//        EditGroupMember(viewModel())
+
     }
 }
