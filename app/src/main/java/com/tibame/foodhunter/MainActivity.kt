@@ -249,7 +249,7 @@ fun Main(
                 LoginScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/2") {
-                RegisterScreen(navController = navController)
+                RegisterScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/3") {
                 ForgetPassword1Screen(navController = navController, {})
@@ -373,7 +373,7 @@ fun Main(
 
 
             composable(context.getString(R.string.str_member)) {
-                MemberMainScreen(navController = navController)
+                MemberMainScreen(navController = navController,userViewModel)
             }
 
             composable(context.getString(R.string.str_member) + "/2") {

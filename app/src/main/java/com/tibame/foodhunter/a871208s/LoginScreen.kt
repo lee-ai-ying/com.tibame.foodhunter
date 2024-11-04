@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +37,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
@@ -49,10 +50,26 @@ fun LoginScreen(
     navController: NavHostController = rememberNavController(),
     userVM: UserViewModel
 ) {
+
     val context = LocalContext.current
-    var uid by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("000001") }
+    var password by remember { mutableStateOf("000001") }
     val coroutineScope = rememberCoroutineScope()
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "帳號或密碼錯誤") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定")
+                }
+            }
+        )
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -69,8 +86,8 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
-            value = uid,
-            onValueChange = { uid = it },
+            value = username,
+            onValueChange = { username = it },
             label = { Text(text = "User ID") },
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
@@ -131,10 +148,12 @@ fun LoginScreen(
                     .padding(8.dp),
                 onClick = {
                     coroutineScope.launch {
-                        val logged = userVM.login(uid, password)
+                        val logged = userVM.login(username, password)
                         if (logged) {
+                            userVM.username.value = username
                             navController.navigate(context.getString(R.string.str_Recommended_posts))
-                        }
+                        }else
+                        {showDialog=true}
                     }
                 }
             ) {
