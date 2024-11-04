@@ -12,11 +12,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,15 +26,23 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterFont
 
 @Composable
-fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scrollBehavior: TopAppBarScrollBehavior){
+fun TopFunctionBar(
+    canback: Boolean = false,
+    navController: NavHostController,
+    scrollBehavior: TopAppBarScrollBehavior
+) {
     val context = LocalContext.current
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
-            Text(stringResource(R.string.app_name), fontFamily = FoodHunterFont)
+            Text(
+                stringResource(R.string.app_name),
+                fontFamily = FoodHunterFont
+            )
         },
         navigationIcon = {
             if (canback) {
@@ -41,7 +51,8 @@ fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scroll
                 }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.str_back)
+                        contentDescription = stringResource(R.string.str_back),
+                        tint = Color.White
                     )
                 }
             }
@@ -50,19 +61,21 @@ fun TopFunctionBar(canback:Boolean=false,navController: NavHostController,scroll
             IconButton(onClick = {}) {
                 Icon(
                     Icons.Outlined.Notifications,
-                    contentDescription = stringResource(R.string.str_notice)
+                    contentDescription = stringResource(R.string.str_notice),
+                    tint = Color.White
                 )
             }
             IconButton(onClick = {navController.navigate(context.getString(R.string.str_member)+"/8")}) {
                 Icon(
                     Icons.Filled.MailOutline,
-                    contentDescription = stringResource(R.string.str_chat)
+                    contentDescription = stringResource(R.string.str_chat),
+                    tint = Color.White
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.primary,
+            containerColor = FColor.Orange_1st,//MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = Color.White//MaterialTheme.colorScheme.primary,
         )
     )
 }
@@ -74,10 +87,11 @@ fun BottomFunctionBar(
     onPostClick: () -> Unit,
     onGroupClick: () -> Unit,
     onMemberClick: () -> Unit,
-    selectScene:String
+    selectScene: String
 ) {
-
     NavigationBar(
+//        contentColor = FColor.Orange_3rd,
+        containerColor = FColor.Orange_6th
     ) {
         NavigationBarItem(
             icon = {
@@ -89,10 +103,14 @@ fun BottomFunctionBar(
             label = {
                 Text(stringResource(id = R.string.str_home))
             },
-            selected = selectScene==stringResource(id = R.string.str_home),
+            selected = selectScene == stringResource(id = R.string.str_home),
             onClick = {
                 onHomeClick()
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor= Color.White,
+                indicatorColor=FColor.Orange_3rd
+            )
         )
         NavigationBarItem(
             icon = {
@@ -104,10 +122,14 @@ fun BottomFunctionBar(
             label = {
                 Text(stringResource(id = R.string.str_search))
             },
-            selected = selectScene==stringResource(id = R.string.str_search),
+            selected = selectScene == stringResource(id = R.string.str_search),
             onClick = {
                 onSearchClick()
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor= Color.White,
+                indicatorColor=FColor.Orange_3rd
+            )
         )
         NavigationBarItem(
             icon = {
@@ -119,10 +141,14 @@ fun BottomFunctionBar(
             label = {
                 Text(stringResource(id = R.string.str_post))
             },
-            selected = selectScene==stringResource(id = R.string.str_post),
+            selected = selectScene == stringResource(id = R.string.str_post),
             onClick = {
                 onPostClick()
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor= Color.White,
+                indicatorColor=FColor.Orange_3rd
+            )
         )
         NavigationBarItem(
             icon = {
@@ -137,7 +163,11 @@ fun BottomFunctionBar(
             selected = selectScene == stringResource(id = R.string.str_group),
             onClick = {
                 onGroupClick()
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor= Color.White,
+                indicatorColor=FColor.Orange_3rd
+            )
         )
         NavigationBarItem(
             icon = {
@@ -152,7 +182,11 @@ fun BottomFunctionBar(
             selected = selectScene == stringResource(id = R.string.str_member),
             onClick = {
                 onMemberClick()
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor= Color.White,
+                indicatorColor=FColor.Orange_3rd
+            )
         )
     }
 }
@@ -161,6 +195,7 @@ fun BottomFunctionBar(
 @Composable
 fun FoodHunterPreview() {
     MaterialTheme {
-        Main()
+//        Main()
+        BottomFunctionBar({},{},{},{},{},stringResource(id = R.string.str_post))
     }
 }
