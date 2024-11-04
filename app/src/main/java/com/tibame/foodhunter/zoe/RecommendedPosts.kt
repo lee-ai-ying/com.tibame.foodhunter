@@ -1,6 +1,7 @@
 package com.tibame.foodhunter.zoe
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
-
+import kotlinx.coroutines.launch
 @Composable
 fun RecommendedPosts(
     navController: NavHostController? = null,
@@ -48,42 +49,65 @@ fun RecommendedPosts(
 ) {
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
-    FilterChips(
-        filters = listOf("早午餐", "午餐", "晚餐","下午茶","宵夜"),
-        selectedFilters = selectedFilters,
-        onFilterChange = { updatedFilters ->
-            postViewModel.updateFilters(updatedFilters)
-        }
-    )
+    // 取得當前用戶ID
+    val currentUserId = 1 // 替換為實際的用戶ID獲取方式
 
+    Column {
+        FilterChips(
+            filters = listOf("早午餐", "午餐", "晚餐", "下午茶", "宵夜"),
+            selectedFilters = selectedFilters,
+            onFilterChange = { updatedFilters ->
+                postViewModel.updateFilters(updatedFilters)
+            }
+        )
 
-    PostList(posts = filteredPosts)
+        PostList(
+            posts = filteredPosts,
+            viewModel = postViewModel,
+            currentUserId = currentUserId,
+            onUserClick = { publisherId ->
+                navController?.navigate("person_homepage/$publisherId") {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        )
+    }
 }
-
 @Composable
-fun PostList(posts: List<Post>) {
+fun PostList(
+    posts: List<Post>,
+    viewModel: PostViewModel,
+    currentUserId: Int,
+    onUserClick: (Int) -> Unit // 新增參數用於處理用戶點擊
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(posts) { post ->
-            PostItem(post = post)
+            PostItem(
+                post = post,
+                viewModel = viewModel,
+                currentUserId = currentUserId,
+                onUserClick = onUserClick // 傳遞點擊事件處理函數
+            )
         }
     }
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostItem(
     post: Post,
-
-    ) {
+    viewModel: PostViewModel,  // 添加 ViewModel
+    currentUserId: Int,        // 添加當前用戶 ID
+    onUserClick: (Int) -> Unit
+) {
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-
 
     Card(
         modifier = Modifier
@@ -100,7 +124,10 @@ fun PostItem(
                 .fillMaxWidth()
                 .padding(16.dp),
         ) {
-            PostHeader(post = post)
+            PostHeader(
+                post = post,
+                onUserClick = onUserClick // 傳遞點擊事件
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -122,11 +149,21 @@ fun PostItem(
                 ) {
                     FavoriteIcon()
 
-                    IconButton(onClick = { showBottomSheet = true }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                            contentDescription = "Chat Bubble",
-                            modifier = Modifier.size(24.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showBottomSheet = true }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                                contentDescription = "Chat Bubble",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        // 顯示留言數量
+                        Text(
+                            text = "${post.comments.size}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
                 }
@@ -149,14 +186,25 @@ fun PostItem(
             onDismissRequest = { showBottomSheet = false },
             sheetState = sheetState,
         ) {
-            MessageSheet(post = post, onConfirm = { showBottomSheet = false })
+            MessageSheet(
+                post = post,
+                viewModel = viewModel,
+                currentUserId = currentUserId,
+                onConfirm = {
+                    scope.launch {
+                        sheetState.hide()
+                        showBottomSheet = false
+                    }
+                }
+            )
         }
     }
 }
-
-
 @Composable
-private fun PostHeader(post: Post) {
+private fun PostHeader(
+    post: Post,
+    onUserClick: (Int) -> Unit // 新增點擊事件回調
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -169,10 +217,13 @@ private fun PostHeader(post: Post) {
             modifier = Modifier
                 .size(30.dp)
                 .clip(CircleShape)
-
+                .clickable { onUserClick(post.publisher.id) }
         )
 
-        Column {
+        Column(
+            modifier = Modifier
+                .clickable { onUserClick(post.publisher.id) }
+        ) {
             Text(
                 text = post.publisher.name,
                 style = MaterialTheme.typography.titleMedium
@@ -182,49 +233,6 @@ private fun PostHeader(post: Post) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-        }
-    }
-
-    @Composable
-    fun PostActions(
-        onCommentClick: () -> Unit,
-        onFavoriteClick: () -> Unit,
-        onBookmarkClick: () -> Unit
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onFavoriteClick) {
-                    FavoriteIcon()
-                }
-
-                IconButton(onClick = onCommentClick) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            IconButton(onClick = onBookmarkClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
         }
     }
 }
-

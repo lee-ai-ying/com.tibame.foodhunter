@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,7 +53,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -78,6 +82,19 @@ enum class NewPostSheetContent {
     TAGS,
     LOCATION
 }
+//@Composable
+//fun InsertPostRoute(navController: NavHostController){
+//    val insertViewModel = ...
+//    NewPost(navController)
+//}
+//
+//@Composable
+//fun UpdatePostRoute(navController: NavHostController){
+//    val updateViewModel = ...
+//
+//
+//    NewPost(navController)
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +104,7 @@ fun NewPost(
     testVM: SearchScreenVM = viewModel()
 ) {
     val choiceRest by testVM.choiceOneRest.collectAsState()
+    val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
     var selectedLocation by remember { mutableStateOf("") }
     var text by remember { mutableStateOf(TextFieldValue("")) }
@@ -115,12 +133,18 @@ fun NewPost(
     }
 
     if (showBottomSheet) {
+
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet = false
                 currentSheet = NewPostSheetContent.NONE
             },
             containerColor = Color.White,
+
+            sheetMaxWidth = Dp.Unspecified, // 确保宽度不被限制
+            windowInsets = WindowInsets(0), // 移除边距限制以全屏显示
+
+
         ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(

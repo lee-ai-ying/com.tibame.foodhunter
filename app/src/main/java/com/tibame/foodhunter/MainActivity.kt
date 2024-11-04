@@ -70,6 +70,7 @@ import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
 import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
 import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
@@ -274,6 +275,21 @@ fun Main(
                     postViewModel = postViewModel
                 )
             }
+
+            composable(
+                "person_homepage/{publisherId}",
+                arguments = listOf(navArgument("publisherId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
+                val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
+                PersonHomepage(
+                    currentUserId = currentUserId,
+                    publisherId = publisherId,
+                    postViewModel = postViewModel,
+                    navController = navController
+                )
+            }
+
 
 
 

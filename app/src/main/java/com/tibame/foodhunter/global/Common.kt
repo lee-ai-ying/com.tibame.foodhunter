@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.global
 
+
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -7,7 +8,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-const val serverUrl = "http://10.2.17.40:8080/com.tibame.foodhunter_server"
+const val serverUrl = "http://10.2.17.85/com.tibame.foodhunter_server"
 suspend fun CommonPost(
     url:String,
     dataOut: String
