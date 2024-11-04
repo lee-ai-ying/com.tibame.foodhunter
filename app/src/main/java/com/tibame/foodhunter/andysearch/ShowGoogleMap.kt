@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,12 +46,13 @@ import kotlin.math.sqrt
 fun ShowGoogleMap(
     modifier : Modifier = Modifier.fillMaxWidth().fillMaxHeight(.8f).padding(16.dp),
     restaurants: List<Restaurant>,
-    restaurantID: Int = -1,
+    restaurantVM: SearchScreenVM,
     onLocationUpdate: (LatLng?) -> Unit
 ){
 
-    // 預設位子
-    val defaultPosition = LatLng(25.092713, 121.543442)
+    val choiceOneRest by restaurantVM.choiceOneRest.collectAsState()
+    // 預設位子 - 台北車站
+    val defaultPosition = LatLng(25.04776, 121.517059)
 
 
     val cameraPositionState = rememberCameraPositionState {
@@ -64,7 +66,6 @@ fun ShowGoogleMap(
     var newPosition by remember { mutableStateOf<LatLng?>(null) }
 
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
-
 
     Column (
         modifier = modifier
@@ -119,15 +120,15 @@ fun ShowGoogleMap(
             }
 
             // 如果有選餐廳的話就單一標點
-            if (restaurantID != -1){
+            if (choiceOneRest != null){
                 newPosition = LatLng(
-                    restaurants[restaurantID-1].latitude,
-                    restaurants[restaurantID-1].longitude)
+                    choiceOneRest!!.latitude,
+                    choiceOneRest!!.longitude)
 
                 Marker(
                     state = MarkerState(position = newPosition ?: defaultPosition),
-                    title = restaurants[restaurantID-1].name,
-                    snippet = restaurants[restaurantID-1].address
+                    title = choiceOneRest!!.name,
+                    snippet = choiceOneRest!!.address
                 )
             } else {
                 restaurants.forEach {
@@ -146,7 +147,7 @@ fun ShowGoogleMap(
         LaunchedEffect(newPosition) {
             newPosition?.let {
                 cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(it, 15f)
+                    CameraUpdateFactory.newLatLngZoom(it, 10f)
                 )
             }
         }

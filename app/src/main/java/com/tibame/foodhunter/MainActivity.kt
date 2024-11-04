@@ -136,7 +136,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member),
         "GroupChatRoom/{groupId}",
         "PrivateChatRoom/{roomid}",
-        context.getString(R.string.SearchToGoogleMap) + "/{restId}",
+        context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
         "postDetail/{postId}"
@@ -312,16 +312,8 @@ fun Main(
             composable(context.getString(R.string.str_search)) {
                 SearchScreen(navController, searchVM)
             }
-            composable("${context.getString(R.string.SearchToGoogleMap)}/{restId}",
-                arguments = listOf(
-                    navArgument("restId") { type = NavType.IntType }
-                )
-            ) {
-                SearchResult(
-                    navController = navController,
-                    restaurantID = it.arguments?.getInt("restId") ?: -1,
-                    searchTextVM = searchVM
-                )
+            composable(context.getString(R.string.SearchToGoogleMap)) {
+                SearchResult(navController = navController, searchTextVM = searchVM, paddingValues = innerPadding)
             }
             composable(context.getString(R.string.randomFood)) {
                 RandomFood(
