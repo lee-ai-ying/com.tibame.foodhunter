@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 
 @Composable
 fun GroupChatList(
@@ -61,7 +62,8 @@ fun GroupChatList(
         items(groupChats.filter { it.name.contains(searchInput) }) { groupChat ->
             if (groupChat.state == 99 && searchInput.isEmpty()) {
                 Column(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primary)//colorResource(R.color.orange_3rd))
+                    modifier = Modifier
+                        .background(FColor.Orange_3rd)//MaterialTheme.colorScheme.primary)
                 ) {
                     Text(
                         modifier = Modifier
@@ -124,7 +126,8 @@ fun GroupChatList(
 @Composable
 fun GroupChatListPreview(groupVM:GroupViewModel= viewModel()) {
     MaterialTheme {
-        val groupChats by groupVM.groupChatFlow.collectAsState()
-        GroupChatList(groupChats, rememberNavController(), viewModel())
+        GroupMain(rememberNavController(), viewModel())
+    //val groupChats by groupVM.groupChatFlow.collectAsState()
+        //GroupChatList(groupChats, rememberNavController(), viewModel())
     }
 }

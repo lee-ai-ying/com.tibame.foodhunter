@@ -58,4 +58,5 @@
     <string name="show_less">Show less</string>
     <string name="str_Recommended_posts">推薦貼文</string>
     <string name="postDetail">貼文詳情</string>
+    <string name="PersonHomepage">個人貼文</string>
 </resources>

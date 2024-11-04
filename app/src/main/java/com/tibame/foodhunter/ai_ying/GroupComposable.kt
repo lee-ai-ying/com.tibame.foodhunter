@@ -23,20 +23,25 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.RangeSliderState
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
@@ -55,8 +60,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import java.time.Year
 import kotlin.math.roundToInt
 
@@ -93,7 +100,14 @@ fun GroupPriceSlider(onValueChangeFinished: (String) -> Unit) {
         )
         RangeSlider(
             state = rangeSliderState,
-            enabled = true
+            enabled = true,
+            colors = SliderDefaults.colors(
+                thumbColor = FColor.Orange_2nd,
+                activeTrackColor = FColor.Orange_2nd,
+                activeTickColor = FColor.Orange_2nd,
+                inactiveTrackColor = FColor.Orange_4th,
+                inactiveTickColor = FColor.Orange_4th
+            )
         )
     }
 }
@@ -103,7 +117,7 @@ fun GroupSelectMember(
     onValueChange: (Int) -> Unit
 ) {
     val input by remember { mutableIntStateOf(1) }
-    OutlinedTextField(
+    TextField(
         value = "參加人數:${input}",
         onValueChange = {
             onValueChange(input)
@@ -118,7 +132,13 @@ fun GroupSelectMember(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-            }
+            },
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = FColor.Orange_4th,
+            unfocusedContainerColor = FColor.Orange_4th,
+        )
     )
 }
 
@@ -159,14 +179,17 @@ fun GroupDropDownMenu(
             trailingIcon = { TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = FColor.Orange_4th,
+                unfocusedContainerColor = FColor.Orange_4th
             )
         )
         ExposedDropdownMenu(
             // 設定是否彈出下拉選單
             expanded = expanded,
             // 點擊下拉選單外部時
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(FColor.Orange_5th)
         ) {
             // 下拉選單內容由DropdownMenuItem選項元件組成
             options.forEach { option ->
@@ -193,7 +216,7 @@ fun GroupTitleText(text: String) {
         modifier = Modifier
             .height(56.dp)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(FColor.Orange_3rd)//MaterialTheme.colorScheme.primary)
             .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.Center
     ) {
@@ -215,15 +238,15 @@ fun GroupText(text: String) {
         Text(text = text)
     }
 }
+
 @Composable
 fun GroupTextWithBackground(text: String) {
     Column(
         modifier = Modifier
-            .heightIn(min=40.dp)
+            .heightIn(min = 40.dp)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(8.dp)
-        ,
+            .background(FColor.Orange_5th)//MaterialTheme.colorScheme.primaryContainer)
+            .padding(8.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = text)
@@ -343,7 +366,12 @@ fun GroupTextInputField(
         },
         singleLine = singleLine,
         maxLines = maxLines,
-        colors = colors
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = FColor.Orange_4th,//MaterialTheme.colorScheme.primaryContainer,
+            unfocusedContainerColor = FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
+        )
     )
 }
 
@@ -361,23 +389,49 @@ fun GroupCreateButton(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .wrapContentSize(Alignment.BottomEnd)
-            .offset((-20).dp, (-20).dp)
+            .offset((-20).dp, (-20).dp),
+        containerColor = FColor.Orange_1st,
+        contentColor = Color.White
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupTopTabs(selectedTabIndex: Int, onTabClick1: () -> Unit, onTabClick2: () -> Unit) {
-    PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
+    PrimaryTabRow(
+        selectedTabIndex = selectedTabIndex,
+        containerColor = FColor.Orange_4th,
+        indicator = {
+            TabRowDefaults.PrimaryIndicator(
+                modifier = Modifier
+                    .tabIndicatorOffset(
+                        selectedTabIndex,
+                        matchContentSize = true
+                    ),
+                width = Dp.Unspecified,
+                color = Color.Black
+            )
+        }
+    ) {
         Tab(
             selected = selectedTabIndex == 0,
             onClick = onTabClick1,
-            text = { Text(text = stringResource(R.string.str_my_group)) }
+            text = {
+                Text(
+                    text = stringResource(R.string.str_my_group),
+                    color = Color.Black
+                )
+            }
         )
         Tab(
             selected = selectedTabIndex == 1,
             onClick = onTabClick2,
-            text = { Text(text = stringResource(R.string.str_search_group)) }
+            text = {
+                Text(
+                    text = stringResource(R.string.str_search_group),
+                    color = Color.Black
+                )
+            }
         )
     }
 }
@@ -428,7 +482,9 @@ fun GroupSearchBar(onValueChange: (String) -> String, onClearClick: () -> Unit) 
         singleLine = true,
         colors = TextFieldDefaults.colors(
             focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = FColor.Orange_5th,
+            unfocusedContainerColor = FColor.Orange_5th,
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -522,12 +578,15 @@ fun MyDatePickerDialog(
 @Composable
 fun GroupSearchBarPreview() {
     MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        GroupSearchBar({ "" }, {})
+        //GroupCreateButton({})
+//        GroupTopTabs(0, {}, {})
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(16.dp),
+//            verticalArrangement = Arrangement.spacedBy(16.dp)
+//        ) {
 //            GroupTextInputField({Text(text="111")},{})
 //            GroupSingleInput()
 //            GroupSearchBar(
@@ -537,7 +596,7 @@ fun GroupSearchBarPreview() {
 //            GroupDropDownMenu(listOf("Large", "Medium", "Small"))
 //            GroupSelectMember()
 //            GroupPriceSlider()
-            GroupBigInput(5) {}
-        }
+//            GroupBigInput(5) {}
+
     }
 }

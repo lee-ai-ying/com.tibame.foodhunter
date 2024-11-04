@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -62,7 +63,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
+import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.data.noteList
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -379,11 +382,10 @@ fun SelectRestaurantBottomSheet(
 fun BottomSheetContent(
     onClose: () -> Unit, // 設定 Bottom Sheet 關閉的回調參數
     onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
-
 ) {
 
     val testVM: SearchScreenVM = viewModel()
-    val test_restaurant by testVM.preRestaurantList.collectAsState()
+    val test_restaurant by testVM.selectRestList.collectAsState()
     Log.d("test_restaurant", "${test_restaurant}")
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     // 頂部工具欄
@@ -446,20 +448,47 @@ fun BottomSheetContent(
 
     }
 
-    ShowGoogleMap(
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f).padding(8.dp),
-        restaurants = test_restaurant,
-        onLocationUpdate = {location -> currentLocation = location}
-    )
-    ShowRestaurantLists(
-        restaurants = test_restaurant,
-        state = false,
-        currentLocation = currentLocation,
-        searchTextVM = testVM,
-        cardClick = { choiceRest ->
-            onRestaurantPicked(choiceRest?.name.toString())
-            onClose()
+    val scope = rememberCoroutineScope()
+    var searchQuery by remember { mutableStateOf("") }
+    var isActive by remember { mutableStateOf(false) }
+
+    SearchBar(
+        query = searchQuery,
+        onQueryChange = { searchQuery = it },
+        placeholder = {
+            Text(
+                "搜尋",
+                color = FColor.Gary,
+                fontSize = 16.sp
+            )
+        },
+        active = isActive,
+        onActiveChange = { isActive = it },
+        modifier = Modifier.padding(horizontal = 16.dp),
+        onSearch = {
+            scope.launch{testVM.updateSearchRest(searchQuery)}
         }
     )
+
+    Column(modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween){
+        ShowGoogleMap(
+            modifier = Modifier.weight(0.7f).padding(16.dp),
+            restaurants = test_restaurant,
+            restaurantVM = testVM,
+            onLocationUpdate = {location -> currentLocation = location}
+        )
+        ShowRestaurantLists(
+            restaurants = test_restaurant,
+            state = false,
+            currentLocation = currentLocation,
+            searchTextVM = testVM,
+            cardClick = { choiceRest ->
+                onRestaurantPicked(choiceRest?.name.toString())
+                onClose()
+            }
+        )
+    }
+
 
 }
