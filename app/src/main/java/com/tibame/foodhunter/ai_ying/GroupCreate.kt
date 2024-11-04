@@ -138,7 +138,7 @@ fun GroupCreate(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
                             //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
 
                     }
