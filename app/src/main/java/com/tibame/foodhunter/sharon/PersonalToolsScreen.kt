@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -14,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -29,21 +29,23 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.components.TabBarComponent
+import com.tibame.foodhunter.sharon.viewmodel.TabRowToolsViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalToolsScreen(
     navController: NavHostController,
-    initTab: Int,
+    viewModel: TabRowToolsViewModel = viewModel()
 ) {
     // 獲取當前導航棧中的目的地，用於判斷是否顯示 TopBar 和返回按鈕
     val destination = navController.currentBackStackEntryAsState().value?.destination
     // 當前選到的Tab
-    var selectedTab by remember { mutableIntStateOf(initTab) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val uiState by viewModel.uiState.collectAsState()
 
 
     Scaffold(
@@ -52,18 +54,19 @@ fun PersonalToolsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .background(color = Color.White),
         floatingActionButton = {
-            when (initTab) {
+            when (uiState.selectedTabIndex) {
                 in TabConstants.CALENDAR..TabConstants.NOTE  ->
                     FloatingActionButton(
                         containerColor = colorResource(R.color.orange_1st),
                         contentColor = colorResource(R.color.white) ,
                         modifier = Modifier.padding(start =317.dp, bottom = 76.dp),
-                        onClick = { print("") },
+                        onClick = {
+                            navController.navigate("note/add")
+
+                        },
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = "Add")
                     }
-
-                TabConstants.FAVORITE -> {}
             }
         },
     ) { innerPadding -> // innerPadding 是 Scaffold 自動提供的內邊距，通常會包括 TopBar、BottomBar 的高度
@@ -79,20 +82,15 @@ fun PersonalToolsScreen(
         ) {
             // 頁籤切換
             TabBarComponent(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                tabList = listOf(
-                    stringResource(id = R.string.str_calendar),
-                    stringResource(id = R.string.str_note),
-                    stringResource(id = R.string.str_favorite)
-                )
+                selectedTab = uiState.selectedTabIndex,
+                onTabSelected = { viewModel.updateSelectedTab(it) },
+                tabList = uiState.tabList.map { stringResource(id = it) }
             )
 
             // 根據選中的 Tab 顯示對應的頁面
-            when (selectedTab) {
+            when (uiState.selectedTabIndex) {
                 TabConstants.CALENDAR -> CalendarScreen(navController)
                 TabConstants.NOTE -> NoteScreen(navController)
-                TabConstants.FAVORITE -> FavoriteScreen(navController)
             }
         }
     }
@@ -106,7 +104,7 @@ fun TabMainScreenPreview() {
     val mockNavController = rememberNavController()
     FoodHunterTheme {
         // 調用你要預覽的 UI 函數
-        PersonalToolsScreen(navController = mockNavController, 0)
+        PersonalToolsScreen(navController = mockNavController)
     }
 }
 
