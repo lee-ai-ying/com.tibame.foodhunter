@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PostViewModel : ViewModel() {
+    private val personalPostsCache = mutableMapOf<Int, StateFlow<List<Post>>>()
     private val repository = PostRepository.getInstance()
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
@@ -37,11 +38,39 @@ class PostViewModel : ViewModel() {
         _selectedFilters.value = filters
     }
 
-    fun getPersonalPosts(userId: Int): StateFlow<List<Post>> {
-        return repository.postList.map { posts ->
-            posts.filter { post -> post.publisher.id == userId }
-        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    // 刪除貼文的方法
+    suspend fun deletePost(postId: Int): Boolean {
+        return try {
+            val success = repository.deletePost(postId)
+            if (success) {
+                repository.loadPosts()
+            }
+            success
+        } catch (e: Exception) {
+            false
+        }
     }
+
+
+    fun getPersonalPosts(publisherId: Int): StateFlow<List<Post>> {
+        return personalPostsCache.getOrPut(publisherId) {
+            repository.postList
+                .map { posts ->
+                    posts.filter { post ->
+                        post.publisher.id == publisherId
+                    }.sortedByDescending {
+                        it.timestamp
+                    }
+                }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.Lazily,
+                    initialValue = emptyList()
+                )
+        }
+    }
+
 
     private val _postCreateData = MutableStateFlow(PostCreateData())
     val postCreateData: StateFlow<PostCreateData> = _postCreateData.asStateFlow()
@@ -62,6 +91,10 @@ class PostViewModel : ViewModel() {
     fun setPostId(postId: Int) {
         _selectedPostId.value = postId
     }
+
+
+
+
 
     fun getFilteredPosts(): StateFlow<List<Post>> {
         return combine(

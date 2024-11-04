@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,12 +39,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 enum class SheetContent {
     NONE,
@@ -70,7 +74,6 @@ fun PostDetailScreen(
 ) {
     // 獲取當前用戶 ID，這裡應該從你的用戶管理系統獲取
     val currentUserId = 1 // 替換為實際的用戶 ID 獲取方式
-
     // 根據 postId 從 ViewModel 中取得特定的貼文
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
 
@@ -79,7 +82,8 @@ fun PostDetailScreen(
         PostDetail(
             post = nonNullPost,
             viewModel = postViewModel,
-            currentUserId = currentUserId
+            currentUserId = currentUserId,
+            navController = navController
         )
     } ?: Column(
         modifier = Modifier
@@ -105,14 +109,13 @@ fun PostDetailScreen(
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetail(
     post: Post,
-    viewModel: PostViewModel,  // 添加 ViewModel
-    currentUserId: Int        // 添加當前用戶 ID
+    viewModel: PostViewModel,
+    currentUserId: Int,
+    navController: NavHostController
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var currentSheet by remember { mutableStateOf(SheetContent.NONE) }
@@ -126,6 +129,7 @@ fun PostDetail(
     ) {
         PostDetailItem(
             post = post,
+            currentUserId = currentUserId,  // 傳入當前用戶ID
             onEditClick = {
                 currentSheet = SheetContent.EDIT
                 showBottomSheet = true
@@ -153,6 +157,9 @@ fun PostDetail(
                     onConfirm = { showBottomSheet = false }
                 )
                 SheetContent.EDIT -> EditSheet(
+                    post = post,                      // 傳入必要參數
+                    viewModel = viewModel,
+                    navController = navController,
                     onConfirm = { showBottomSheet = false }
                 )
                 SheetContent.NONE -> { /* No content to display */ }
@@ -164,6 +171,7 @@ fun PostDetail(
 @Composable
 fun PostDetailItem(
     post: Post,
+    currentUserId: Int,  // 添加當前用戶ID參數
     onEditClick: () -> Unit,
     onMessageClick: () -> Unit
 ) {
@@ -193,8 +201,11 @@ fun PostDetailItem(
                 Text(text = post.location)
             }
 
-            IconButton(onClick = onEditClick) {
-                Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More options")
+            // 只有當前用戶是發布者時才顯示More options按鈕
+            if (currentUserId == post.publisher.id) {
+                IconButton(onClick = onEditClick) {
+                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More options")
+                }
             }
         }
 
@@ -228,12 +239,6 @@ fun PostDetailItem(
                     )
                 }
             }
-
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-                contentDescription = "Bookmark",
-                modifier = Modifier.size(22.dp)
-            )
         }
 
         Text(
@@ -336,10 +341,17 @@ fun MessageSheet(
         )
     }
 }
-
 @Composable
-fun EditSheet(onConfirm: () -> Unit) {
+fun EditSheet(
+    post: Post,
+    viewModel: PostViewModel,
+    navController: NavHostController,
+    onConfirm: () -> Unit
+) {
     var showDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -377,25 +389,48 @@ fun EditSheet(onConfirm: () -> Unit) {
             )
         }
     }
-    if (showDialog) {
 
+    if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = {
-
-                Text(text = "確定要刪除？", color = colorResource(id = R.color.black)) },
+                Text(
+                    text = "確定要刪除？",
+                    color = colorResource(id = R.color.black)
+                )
+            },
             confirmButton = {
-                TextButton(onClick = { showDialog = false /* Perform delete logic here */ }) {
-                    Text(text = "刪除", color = colorResource(id = R.color.orange_1st))
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            showDialog = false
+                            if (viewModel.deletePost(post.postId)) {
+                                Toast.makeText(context, "貼文已刪除", Toast.LENGTH_SHORT).show()
+                                onConfirm()  // 關閉 BottomSheet
+                                navController.popBackStack()
+                            } else {
+                                Toast.makeText(context, "刪除失敗", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "刪除",
+                        color = colorResource(id = R.color.orange_1st)
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text(text = "取消", color = colorResource(id = R.color.black))
+                TextButton(
+                    onClick = { showDialog = false }
+                ) {
+                    Text(
+                        text = "取消",
+                        color = colorResource(id = R.color.black)
+                    )
                 }
             },
             containerColor = Color.White
-
         )
     }
 }
@@ -406,6 +441,6 @@ fun EditSheet(onConfirm: () -> Unit) {
 fun GroupChatRoomPreview() {
     MaterialTheme {
 
-        PostDetailScreen(1, rememberNavController())
+        PostDetailScreen(3, rememberNavController())
     }
 }

@@ -1,6 +1,7 @@
 package com.tibame.foodhunter.zoe
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,7 +42,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
 import kotlinx.coroutines.launch
-
 @Composable
 fun RecommendedPosts(
     navController: NavHostController? = null,
@@ -64,16 +64,22 @@ fun RecommendedPosts(
         PostList(
             posts = filteredPosts,
             viewModel = postViewModel,
-            currentUserId = currentUserId
+            currentUserId = currentUserId,
+            onUserClick = { publisherId ->
+                navController?.navigate("person_homepage/$publisherId") {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
         )
     }
 }
-
 @Composable
 fun PostList(
     posts: List<Post>,
-    viewModel: PostViewModel,  // 添加 ViewModel
-    currentUserId: Int        // 添加當前用戶 ID
+    viewModel: PostViewModel,
+    currentUserId: Int,
+    onUserClick: (Int) -> Unit // 新增參數用於處理用戶點擊
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -83,18 +89,21 @@ fun PostList(
             PostItem(
                 post = post,
                 viewModel = viewModel,
-                currentUserId = currentUserId
+                currentUserId = currentUserId,
+                onUserClick = onUserClick // 傳遞點擊事件處理函數
             )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostItem(
     post: Post,
     viewModel: PostViewModel,  // 添加 ViewModel
-    currentUserId: Int        // 添加當前用戶 ID
+    currentUserId: Int,        // 添加當前用戶 ID
+    onUserClick: (Int) -> Unit
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -115,7 +124,10 @@ fun PostItem(
                 .fillMaxWidth()
                 .padding(16.dp),
         ) {
-            PostHeader(post = post)
+            PostHeader(
+                post = post,
+                onUserClick = onUserClick // 傳遞點擊事件
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -188,9 +200,11 @@ fun PostItem(
         }
     }
 }
-
 @Composable
-private fun PostHeader(post: Post) {
+private fun PostHeader(
+    post: Post,
+    onUserClick: (Int) -> Unit // 新增點擊事件回調
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -203,10 +217,13 @@ private fun PostHeader(post: Post) {
             modifier = Modifier
                 .size(30.dp)
                 .clip(CircleShape)
-
+                .clickable { onUserClick(post.publisher.id) }
         )
 
-        Column {
+        Column(
+            modifier = Modifier
+                .clickable { onUserClick(post.publisher.id) }
+        ) {
             Text(
                 text = post.publisher.name,
                 style = MaterialTheme.typography.titleMedium
@@ -216,49 +233,6 @@ private fun PostHeader(post: Post) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-        }
-    }
-
-    @Composable
-    fun PostActions(
-        onCommentClick: () -> Unit,
-        onFavoriteClick: () -> Unit,
-        onBookmarkClick: () -> Unit
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onFavoriteClick) {
-                    FavoriteIcon()
-                }
-
-                IconButton(onClick = onCommentClick) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            IconButton(onClick = onBookmarkClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
         }
     }
 }
-

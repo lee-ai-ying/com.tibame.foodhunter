@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,16 +37,16 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ai_ying.GroupViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
-
 @Composable
 fun PersonHomepage(
-    userId: Int,
-    publisher: Publisher,
+    currentUserId: Int,
+    publisherId: Int,
     postViewModel: PostViewModel = viewModel(),
     navController: NavHostController
 ) {
-    val personalPosts = postViewModel.getPersonalPosts(userId).collectAsState(initial = emptyList())
 
+    val personalPosts = postViewModel.getPersonalPosts(publisherId).collectAsState()
+    val currentUserId = 1
     Column(
         verticalArrangement = Arrangement.spacedBy(30.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -55,19 +56,21 @@ fun PersonHomepage(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 顯示 Publisher 的資訊
-        PostHeader(publisher = publisher)
+        // 如果有貼文，使用第一個貼文的發布者信息
+        personalPosts.value.firstOrNull()?.publisher?.let { publisher ->
+            PostHeader(publisher = publisher)
+        }
 
         ImageList(
             posts = personalPosts.value,
             onPostClick = { postId ->
-                // 點擊時導航至 postDetail 頁面，傳遞 postId 作為參數
                 navController.navigate("postDetail/$postId")
             },
-            navController = navController // 傳入 NavController
+            navController = navController
         )
     }
 }
+
 
 
 

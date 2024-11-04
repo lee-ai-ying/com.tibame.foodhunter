@@ -8,6 +8,7 @@ import com.tibame.foodhunter.global.CommonPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class PostRepository {
     private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
@@ -27,6 +28,18 @@ class PostRepository {
         }
     }
 
+//    private suspend fun fetchUserPosts(userId: Int): List<PostResponse> {
+//        val url = "${serverUrl}/post/byUser?userId=$userId"
+//        val result = CommonPost(url, "")
+//        val type = object : TypeToken<List<PostResponse>>() {}.type
+//        return try {
+//            gson.fromJson(result, type)
+//        } catch (e: Exception) {
+//            Log.e("PostRepository", "Error fetching user posts", e)
+//            emptyList()
+//        }
+//    }
+
     private suspend fun CommentResponse.toComment(): Comment {
         return Comment(
             id = this.messageId,  // 直接使用 Int
@@ -40,6 +53,23 @@ class PostRepository {
         )
     }
 
+    private suspend fun fetchPostById(postId: Int): PostResponse? {
+        val url = "${serverUrl}/post/get?postId=$postId"
+        val result = CommonPost(url, "")
+
+        return try {
+            val response = gson.fromJson(result, ApiResponse::class.java)
+            if (response.success) {
+                gson.fromJson(gson.toJson(response.data), PostResponse::class.java)
+            } else {
+                Log.e("PostRepository", "Error fetching post: ${response.message}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error fetching post", e)
+            null
+        }
+    }
 
 
     // 獲取貼文列表
@@ -72,6 +102,7 @@ class PostRepository {
         }
     }
 
+
     private suspend fun PostResponse.toPost(): Post {
         val restaurant = fetchRestaurant(this.restaurantId)
         val user = fetchUser(this.publisher)
@@ -83,7 +114,7 @@ class PostRepository {
                 id = this.publisher,  // 如果 Publisher 的 id 也需要改為 Int，請告訴我
                 name = this.publisherNickname ?: "Unknown User",
                 avatarImage = R.drawable.user1,
-                joinDate = user?.joinDate ?: ""
+
             ),
             content = this.content,
             location = this.restaurantName ?: "Unknown Location",
@@ -123,7 +154,8 @@ class PostRepository {
                     null
                 }
             }
-            _postList.value = posts
+            _postList.update { posts }
+
         } catch (e: Exception) {
             Log.e("PostRepository", "Error loading posts", e)
         }
@@ -159,6 +191,25 @@ class PostRepository {
             }
         }
     }
+
+    suspend fun deletePost(postId: Int): Boolean {
+        val url = "${serverUrl}/post/delete/$postId"
+        return try {
+            val result = CommonPost(url, "")
+            val response = gson.fromJson(result, DeleteResponse::class.java)
+            if (response.success) {
+                // 刪除成功後更新本地貼文列表
+                _postList.value = _postList.value.filter { it.postId != postId }
+                true
+            } else {
+                Log.e("PostRepository", "Delete failed: ${response.message}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error deleting post", e)
+            false
+        }
+    }
 }
 
 // 數據類別
@@ -175,6 +226,10 @@ data class PostResponse(
     val restaurantName: String? // 新增餐廳名稱欄位
 )
 
+data class DeleteResponse(
+    val success: Boolean,
+    val message: String
+)
 
 data class RestaurantResponse(
     val restaurantId: Int,
@@ -197,6 +252,11 @@ data class CreatePostRequest(
     val visibility: Int
 )
 
+data class ApiResponse<T>(
+    val success: Boolean,
+    val message: String,
+    val data: T
+)
 
 
 data class CommentResponse(
