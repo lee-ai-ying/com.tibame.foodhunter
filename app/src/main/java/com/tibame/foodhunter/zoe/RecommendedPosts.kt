@@ -168,11 +168,11 @@ fun PostItem(
                     }
                 }
 
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-                    contentDescription = "Bookmark",
-                    modifier = Modifier.size(24.dp)
-                )
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
+//                    contentDescription = "Bookmark",
+//                    modifier = Modifier.size(24.dp)
+//                )
             }
 
             Text(

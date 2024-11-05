@@ -1,6 +1,6 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.annotation.DrawableRes
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -14,13 +14,6 @@ data class Post(
     var carouselItems: List<CarouselItem>,
     var comments: List<Comment>,
     var isFavorited: Boolean = false
-
-)
-
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
 )
 
 

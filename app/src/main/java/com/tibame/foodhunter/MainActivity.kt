@@ -120,7 +120,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
         context.getString(R.string.restaurantDetail),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -140,7 +141,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 

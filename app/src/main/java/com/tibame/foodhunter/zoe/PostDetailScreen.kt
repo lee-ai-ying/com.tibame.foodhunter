@@ -73,7 +73,7 @@ fun PostDetailScreen(
     postViewModel: PostViewModel = viewModel()
 ) {
     // 獲取當前用戶 ID，這裡應該從你的用戶管理系統獲取
-    val currentUserId = 1 // 替換為實際的用戶 ID 獲取方式
+    val currentUserId = 7 // 替換為實際的用戶 ID 獲取方式
     // 根據 postId 從 ViewModel 中取得特定的貼文
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
 
@@ -404,14 +404,10 @@ fun EditSheet(
                     onClick = {
                         scope.launch {
                             showDialog = false
-                            if (viewModel.deletePost(post.postId)) {
-                                Toast.makeText(context, "貼文已刪除", Toast.LENGTH_SHORT).show()
-                                onConfirm()  // 關閉 BottomSheet
-                                navController.popBackStack()
-                            } else {
-                                Toast.makeText(context, "刪除失敗", Toast.LENGTH_SHORT).show()
-                            }
+                            viewModel.deletePost(context, post.postId)
                         }
+                        onConfirm()  // 關閉 BottomSheet
+                        navController.navigate(context.getString(R.string.str_Recommended_posts))
                     }
                 ) {
                     Text(

@@ -1,5 +1,7 @@
 package com.tibame.foodhunter.zoe
 
+import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,15 +42,17 @@ class PostViewModel : ViewModel() {
 
 
     // 刪除貼文的方法
-    suspend fun deletePost(postId: Int): Boolean {
-        return try {
-            val success = repository.deletePost(postId)
-            if (success) {
-                repository.loadPosts()
+    fun deletePost(context: Context, postId: Int) {
+        viewModelScope.launch {
+            try {
+                val success = repository.deletePost(postId)
+                if (success) {
+                    repository.loadPosts()
+                }
+                Toast.makeText(context, "貼文已刪除", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "刪除失敗", Toast.LENGTH_SHORT).show()
             }
-            success
-        } catch (e: Exception) {
-            false
         }
     }
 
@@ -124,14 +128,7 @@ class PostViewModel : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
 
-    fun createPost(postData: PostCreateData) {
-        viewModelScope.launch {
-            val success = repository.createPost(postData)
-            if (success) {
-                repository.loadPosts()
-            }
-        }
-    }
+
 
 
     fun createComment(postId: Int, userId: Int, content: String) {
@@ -149,9 +146,6 @@ class PostViewModel : ViewModel() {
         }
     }
 }
-
-
-
 
 
 

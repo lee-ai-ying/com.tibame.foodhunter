@@ -33,27 +33,25 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 
-
 @Composable
 fun SearchPost(
     navController: NavHostController,
-  postViewModel: PostViewModel = viewModel()
-
+    postViewModel: PostViewModel = viewModel()
 ) {
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
+    val searchQuery by postViewModel.searchQuery.collectAsState() // Use ViewModel's searchQuery
     var isActive by remember { mutableStateOf(false) }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
-
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         com.tibame.foodhunter.sharon.components.SearchBar(
             query = searchQuery,
-            onQueryChange = { searchQuery = it },
+            onQueryChange = { postViewModel.updateSearchQuery(it) }, // Update through ViewModel
             placeholder = {
                 Text(
                     "搜尋",
@@ -75,7 +73,7 @@ fun SearchPost(
         )
 
         ImageList(
-            posts = filteredPosts,  // 你的貼文數據
+            posts = filteredPosts,
             onPostClick = { postId ->
                 postViewModel.setPostId(postId)
                 navController.navigate("postDetail/$postId")

@@ -72,6 +72,7 @@ import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
 import com.tibame.foodhunter.zoe.PostCreateData
 import com.tibame.foodhunter.zoe.PostViewModel
+
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -82,19 +83,6 @@ enum class NewPostSheetContent {
     TAGS,
     LOCATION
 }
-//@Composable
-//fun InsertPostRoute(navController: NavHostController){
-//    val insertViewModel = ...
-//    NewPost(navController)
-//}
-//
-//@Composable
-//fun UpdatePostRoute(navController: NavHostController){
-//    val updateViewModel = ...
-//
-//
-//    NewPost(navController)
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,8 +129,8 @@ fun NewPost(
             },
             containerColor = Color.White,
 
-            sheetMaxWidth = Dp.Unspecified, // 确保宽度不被限制
-            windowInsets = WindowInsets(0), // 移除边距限制以全屏显示
+            sheetMaxWidth = Dp.Unspecified,
+            windowInsets = WindowInsets(0),
 
 
         ) {
@@ -347,19 +335,6 @@ fun LocationSelectionSheet(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-//        LazyColumn {
-//            items(listOf("台北市", "新北市", "桃園市", "台中市", "高雄市")) { city ->
-//                TextButton(
-//                    onClick = { onLocationSelected(city) },
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    Text(city)
-//                }
-//            }
-//        }
-
-
         val testRestaurant by testVM.selectRestList.collectAsState()
 
         var currentLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -422,6 +397,7 @@ fun TagSelectionSheet(
             .fillMaxHeight(0.5f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Text(text = stringResource(id = R.string.Select_tag))  // 標籤選擇標題
         Spacer(modifier = Modifier.height(16.dp))
 

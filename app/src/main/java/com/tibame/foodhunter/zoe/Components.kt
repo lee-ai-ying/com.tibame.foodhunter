@@ -94,7 +94,6 @@ private fun ImageCarouselUri(uris: List<Uri>, modifier: Modifier = Modifier) {
         )
     }
 }
-//拿貼文照片
 @Composable
 private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(pageCount = { items.size })
@@ -104,16 +103,29 @@ private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier 
         pagerState = pagerState,
         modifier = modifier
     ) { page ->
-        Image(
-            painter = painterResource(id = items[page].imageResId),
-            contentDescription = items[page].contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp))
-        )
+        items[page].imageData?.let { imageBitmap ->
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = "Post image ${page + 1}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        } ?: run {
+            // 如果圖片加載失敗，顯示佔位圖
+            Image(
+                painter = painterResource(id = R.drawable.steak_image), // 請確保有這個資源
+                contentDescription = "Placeholder image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
     }
 }
+
 //左右滑動的圖片顯示
 @Composable
 private fun ImageCarouselLayout(
@@ -159,11 +171,10 @@ private fun ImageCarouselLayout(
         }
         }
     }
-
 @Composable
 fun ImageList(
     posts: List<Post>,
-    onPostClick: (Int) -> Unit, // 回調函式，用於處理點擊事件
+    onPostClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
@@ -175,14 +186,35 @@ fun ImageList(
     ) {
         items(posts) { post ->
             if (post.carouselItems.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .clickable { onPostClick(post.postId) } // 點擊時觸發回調，傳遞 postId
-                ) {
-                    ImageItem(
-                        imageResId = post.carouselItems[0].imageResId,
-                        contentDescription = post.carouselItems[0].contentDescription
-                    )
+                post.carouselItems.firstOrNull()?.imageData?.let { imageBitmap ->
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)  // 保持正方形比例
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onPostClick(post.postId) }
+                    ) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = "Post image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                } ?: run {
+                    // 如果沒有圖片或圖片加載失敗，顯示佔位圖
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onPostClick(post.postId) }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sushi_image_1),
+                            contentDescription = "Placeholder image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }
