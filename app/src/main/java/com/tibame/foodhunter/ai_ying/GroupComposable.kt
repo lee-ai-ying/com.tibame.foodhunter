@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -64,21 +65,29 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.Year
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupPriceSlider(onValueChangeFinished: (String) -> Unit) {
-    var lowNumber by remember { mutableIntStateOf(1) }
-    var highNumber by remember { mutableIntStateOf(2000) }
+fun GroupPriceSlider(
+    defaultLow:Int = 1,
+    defaultHigh:Int = 2000,
+    onValueChangeFinished: (Int, Int) -> Unit
+) {
+    var lowNumber by remember { mutableIntStateOf(defaultLow) }
+    var highNumber by remember { mutableIntStateOf(defaultHigh) }
     val rangeSliderState = remember {
         RangeSliderState(
-            1f,
-            2000f,
+            activeRangeStart = lowNumber.toFloat(),
+            activeRangeEnd = highNumber.toFloat(),
             valueRange = 1f..2000f,
             onValueChangeFinished = {
-                onValueChangeFinished("$lowNumber-$highNumber")
+                onValueChangeFinished(lowNumber, highNumber)
             },
             steps = 9,
         )
@@ -146,7 +155,7 @@ fun GroupSelectMember(
 @Composable
 fun GroupDropDownMenu(
     options: List<String>,
-    onSelect: (String) -> Unit
+    onSelect: (Int) -> Unit
 ) {
 //    val options = listOf("Large", "Medium", "Small")
     var expanded by remember { mutableStateOf(false) }
@@ -202,7 +211,7 @@ fun GroupDropDownMenu(
                         inputText = option
                         // 將狀態設定為收回下拉選單
                         expanded = false
-                        onSelect(inputText)
+                        onSelect(options.indexOf(inputText))
                     }
                 )
             }
@@ -255,9 +264,11 @@ fun GroupTextWithBackground(text: String) {
 
 @Composable
 fun GroupSingleInput(
+    defaultInput:String = "",
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
+        defaultInput = defaultInput,
         modifier = Modifier.fillMaxWidth(),
         placeholder = {},
         trailingIcon = {},
@@ -269,12 +280,14 @@ fun GroupSingleInput(
 
 @Composable
 fun GroupSingleWithIcon(
+    defaultInput:String = "",
     trailingIcon: @Composable () -> Unit,
     placeholder: @Composable () -> Unit = {},
     modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
+        defaultInput = defaultInput,
         modifier = modifier,
         placeholder = placeholder,
         trailingIcon = trailingIcon,
@@ -287,18 +300,22 @@ fun GroupSingleWithIcon(
 
 @Composable
 fun GroupSingleInputWithIcon(
+    defaultInput:String = "",
     placeholder: @Composable () -> Unit,
     trailingIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier.fillMaxWidth(),
+    readOnly: Boolean = false,
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
+        defaultInput = defaultInput,
         modifier = modifier,
         placeholder = placeholder,
         trailingIcon = trailingIcon,
         singleLine = true,
         maxLines = 1,
-        onValueChange = onValueChange
+        onValueChange = onValueChange,
+        readOnly = readOnly
     )
 }
 
@@ -326,6 +343,7 @@ fun GroupBigInput(
 
 @Composable
 fun GroupTextInputField(
+    defaultInput:String = "",
     modifier: Modifier,
     placeholder: @Composable () -> Unit = {},
     trailingIcon: @Composable () -> Unit = {},
@@ -335,7 +353,7 @@ fun GroupTextInputField(
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     onValueChange: (String) -> Unit
 ) {
-    var input by remember { mutableStateOf("") }
+    var input by remember { mutableStateOf(defaultInput) }
     val focusManager = LocalFocusManager.current
     OutlinedTextField(
         readOnly = readOnly,
@@ -498,7 +516,7 @@ fun GroupSearchBar(onValueChange: (String) -> String, onClearClick: () -> Unit) 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDatePickerDialog(
-    showData: String,
+    //showData: (Long?)->String,
     onDismissRequest: () -> Unit,
     onConfirm: (Long?) -> Unit,
     onDismiss: () -> Unit
@@ -526,7 +544,10 @@ fun MyDatePickerDialog(
                 // 點擊確定按鈕時呼叫onConfirm(Long?)並將選取日期傳入以回饋給原畫面
                 onClick = {
                     onConfirm(datePickerState.selectedDateMillis)
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = FColor.Orange_1st
+                )
             ) {
                 Text("確認")
             }
@@ -536,40 +557,41 @@ fun MyDatePickerDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = FColor.Orange_5th
                 )
             ) {
-                Text("取消", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("取消", color = Color.Black)
             }
-        }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = FColor.Orange_6th
+        ),
     ) {
         DatePicker(
             title = {
                 Text(
                     text = "請選擇日期",
                     modifier = Modifier.padding(
-                        PaddingValues(
-                            start = 24.dp,
-                            end = 12.dp,
-                            top = 16.dp
-                        )
-                    )
+                        PaddingValues(start = 24.dp, end = 12.dp, top = 16.dp))
                 )
             },
             headline = {
                 Text(
-                    text = showData,
+                    text = datePickerState.selectedDateMillis?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                            .format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                    } ?: LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
                     modifier = Modifier.padding(
-                        PaddingValues(
-                            start = 24.dp,
-                            end = 12.dp,
-                            bottom = 12.dp
-                        )
+                        PaddingValues(start = 24.dp, end = 12.dp, bottom = 12.dp)
                     )
                 )
             },
             state = datePickerState,
-            showModeToggle = false
+            showModeToggle = false,
+            colors = DatePickerDefaults.colors(
+                containerColor = FColor.Orange_6th,
+                selectedDayContainerColor = FColor.Orange_1st
+            )
         )
     }
 }

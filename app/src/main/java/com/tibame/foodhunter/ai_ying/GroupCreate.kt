@@ -73,8 +73,9 @@ fun GroupCreate(
                 }
                 GroupText(text = stringResource(R.string.str_create_time))
                 GroupSingleInputWithIcon(
+                    readOnly = true,
                     placeholder = {
-                        Text(selectDate)
+                        Text(inputData.time)
                     },
                     trailingIcon = {
                         Icon(
@@ -89,8 +90,9 @@ fun GroupCreate(
                     inputData.time = it
                 }
                 GroupText(text = stringResource(R.string.str_create_price))
-                GroupPriceSlider {
-                    inputData.price = it
+                GroupPriceSlider { min,max->
+                    inputData.priceMin = min
+                    inputData.priceMax = max
                 }
                 GroupText(text = stringResource(R.string.str_create_member))
                 GroupSelectMember {
@@ -98,7 +100,7 @@ fun GroupCreate(
                 }
                 GroupText(text = stringResource(R.string.str_create_public))
                 GroupDropDownMenu(listOf("public", "invite", "private")) {
-                    inputData.public = it
+                    inputData.isPublic = it
                 }
                 GroupText(text = stringResource(R.string.str_create_describe))
                 GroupBigInput(5) {
@@ -112,8 +114,8 @@ fun GroupCreate(
                 ) {
                     Button(
                         onClick = {
-                            gChatVM.setGroupCreateData(inputData)
-                            navController.popBackStack()
+                            gChatVM.createGroup(inputData)
+                            //navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FColor.Orange_1st
@@ -130,7 +132,7 @@ fun GroupCreate(
     Box {
         if (showDatePickerDialog) {
             MyDatePickerDialog(
-                showData = selectDate,
+                //showData = { inputData.time },
                 onDismissRequest = {
                     showDatePickerDialog = false
                 },
@@ -140,8 +142,8 @@ fun GroupCreate(
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
                             .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
                             //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
-
                     }
+                    inputData.time=selectDate
                     showDatePickerDialog = false
                 },
                 // 設定取消時欲執行內容
