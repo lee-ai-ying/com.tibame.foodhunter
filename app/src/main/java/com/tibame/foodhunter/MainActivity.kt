@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -64,12 +66,11 @@ import com.tibame.foodhunter.zoe.Home
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditRoute
-import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
-import com.tibame.foodhunter.sharon.TabConstants
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
+import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -93,13 +94,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
-    return !listOf(
+
+    val noTopBarRoutes = listOf(
         "",
         context.getString(R.string.str_login),
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
         context.getString(R.string.str_login) + "/4",
-    ).contains(destination?.route)
+    )
+    return !(noTopBarRoutes.contains(destination?.route) ||
+            destination?.parent?.route == "personal_tools")
 }
 
 /** 將 **要顯示** BackButton的route寫進list裡 */
@@ -188,27 +192,6 @@ fun Main(
                     scrollBehavior
                 )
             }
-            if (destination?.parent?.route == "personal_tools") {
-                Log.d("Navigation", "Current route: ${destination.route}")
-                Log.d("Navigation", "Parent route: ${destination?.parent?.route}")
-                when {
-                    destination.route?.startsWith("note_edit") == true -> NoteEditTopBar(
-                        navController = navController,
-                        scrollBehavior=  scrollBehavior
-                    )
-                    destination.route == context.getString(R.string.str_calendar) -> CalendarTopBar(
-                        navController,
-                        scrollBehavior,
-                        CalendarViewModel()
-                    )
-                    destination.route == context.getString(R.string.str_note) -> NoteTopBar(
-                        navController,
-                        scrollBehavior,
-                        NoteViewModel()
-                    )
-
-                }
-            }
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
@@ -243,7 +226,14 @@ fun Main(
     ) { innerPadding ->
         NavHost(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(
+                    // 如果是 personal_tools 路由，則不需要 padding
+                    if (navController.currentDestination?.parent?.route == "personal_tools") {
+                        PaddingValues(0.dp)
+                    } else {
+                        innerPadding
+                    }
+                )
                 .fillMaxSize()
                 .background(Color.White),
             navController = navController,
@@ -422,9 +412,9 @@ fun Main(
                     PersonalToolsScreen(navController)
                 }
 
-                composable("note/add") {
-                    NoteEditRoute(navController, noteId = null)  // 新增模式
-                }
+//                composable("note/add") {
+//                    NoteEditRoute(navController, noteId = null)  // 新增模式
+//                }
 
 
                 composable(

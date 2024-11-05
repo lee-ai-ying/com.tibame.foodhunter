@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,15 +24,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,19 +54,14 @@ import androidx.compose.ui.unit.sp
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.andysearch.SearchScreenVM
-import com.tibame.foodhunter.zoe.Post
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.sharon.components.SearchBar
-import com.tibame.foodhunter.sharon.components.topbar.BaseTopBar
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 import com.tibame.foodhunter.zoe.FilterChips
-import com.tibame.foodhunter.zoe.PostCreateData
-import com.tibame.foodhunter.zoe.PostViewModel
 
 
 @Preview
@@ -584,7 +573,7 @@ fun CommentDialog(
 fun ReviewTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    noteViewModel: NoteViewModel
+    noteViewModel: NoteVM
 ) {
 //    BaseTopBar(
 //        navController = navController,
