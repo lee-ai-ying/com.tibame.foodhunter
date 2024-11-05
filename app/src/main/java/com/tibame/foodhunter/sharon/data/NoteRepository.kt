@@ -17,7 +17,7 @@ import java.util.Locale
 class NoteRepository private constructor() {
     companion object {
         // 伺服器URL，注意要改成您的URL
-        private const val SERVER_URL = "http://10.0.2.2:8080/foodhunter_server"
+        private const val SERVER_URL = "http://10.0.2.2:8080/foodhunter_server/api/note"
         // 單例模式實例
         val instance = NoteRepository()
     }
@@ -35,7 +35,7 @@ class NoteRepository private constructor() {
      */
     suspend fun getNotes() {
         try {
-            val url = "$SERVER_URL/SelectAllNotesController"
+            val url = "$SERVER_URL/getAllNotes"
             val result = httpGet(url)
 
             // 解析 API 回應
@@ -56,7 +56,7 @@ class NoteRepository private constructor() {
      * @return 筆記資料，若查無資料或發生錯誤則回傳null
      */
     suspend fun getNoteById(noteId: Int): Note? {
-        val url = "$SERVER_URL/SelectNoteController?note_id=$noteId"
+        val url = "$SERVER_URL/getNoteById?note_id=$noteId"
         Log.d("NoteRepository", "開始從 $url 獲取筆記")
 
         return try {
