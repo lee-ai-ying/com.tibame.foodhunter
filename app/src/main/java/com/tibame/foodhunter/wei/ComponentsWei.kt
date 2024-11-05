@@ -85,7 +85,8 @@ fun PreviewInfoDetail() {
 /**餐廳資訊*/
 @Composable
 fun RestaurantInfoDetail(
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    restaurantVM : SearchScreenVM
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -95,6 +96,7 @@ fun RestaurantInfoDetail(
     // 控制收藏狀態(icon圖示及snackbar文字)
     val navController = rememberNavController()
 
+    val restaurant by restaurantVM.choiceOneRest.collectAsState()
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -119,19 +121,19 @@ fun RestaurantInfoDetail(
             //星星
 
             Text(
-                text = "餐廳名稱",
+                text = restaurant?.name.toString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = "描述1(地址)",
+                text = restaurant?.address.toString(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
             Text(
-                text = "描述2(電話、營業狀態)",
+                text = restaurant?.opening_hours.toString(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
@@ -584,16 +586,16 @@ fun ReviewTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     noteViewModel: NoteViewModel
 ) {
-    BaseTopBar(
-        navController = navController,
-        scrollBehavior = scrollBehavior,
-        onSearch = {
-            noteViewModel.handleSearch("")
-        },
-        onFilter = {
-            noteViewModel.handleFilter(listOf())
-        },
-    )
+//    BaseTopBar(
+//        navController = navController,
+//        scrollBehavior = scrollBehavior,
+//        onSearchQueryChange = {
+//            noteViewModel.selectedFilters
+//        },
+//        onFilter = {
+//            noteViewModel.handleFilter(listOf())
+//        },
+//
 }
 
 @Composable

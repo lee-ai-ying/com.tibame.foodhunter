@@ -1,4 +1,4 @@
-package com.tibame.foodhunter.sharon
+package com.tibame.foodhunter.sharon.components.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,7 +64,7 @@ fun NoteEditTopBar(
                     Icon(
                         modifier = Modifier.background(colorResource(R.color.orange_1st)),
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.str_notice)
+                        contentDescription = stringResource(R.string.str_note_cancel_add)
                     )
                 }
             } else {
@@ -81,12 +78,12 @@ fun NoteEditTopBar(
                         contentDescription = stringResource(R.string.str_notice)
                     )
                 }
-                IconButton(onClick = {}) {
-                    Icon(
-                        Icons.Filled.Share,
-                        contentDescription = stringResource(R.string.str_chat)
-                    )
-                }
+//                IconButton(onClick = {}) {
+//                    Icon(
+//                        Icons.Filled.Share,
+//                        contentDescription = stringResource(R.string.str_chat)
+//                    )
+//                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

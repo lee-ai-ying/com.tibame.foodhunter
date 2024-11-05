@@ -30,6 +30,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,15 +45,32 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun MemberMainScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),userVM: UserViewModel
 ) {
     val context = LocalContext.current
+    val usernameState = remember { mutableStateOf("") }
+    val nicknameState = remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val user = userVM.getUserInfo(userVM.username.value) // 替換為實際用戶 ID
+            if (user != null) {
+                usernameState.value = user.username // 獲取用戶名
+                nicknameState.value = user.nickname
+            }
+        }
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         //color = ,
@@ -86,14 +108,15 @@ fun MemberMainScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     Text(
-                        text = "我的帳號",
+                        text =usernameState.value,
                         fontSize = 20.sp,
                         color = Color.Blue,
                     )
                     Spacer(modifier = Modifier.size(40.dp))
                     Text(
-                        text = "暱稱",
+                        text = nicknameState.value,
                         fontSize = 20.sp,
                         color = Color.Blue,
                     )
@@ -350,6 +373,6 @@ fun MemberMainScreen(
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MemberMainScreen()
+    MemberMainScreen(rememberNavController(),viewModel())
 
 }

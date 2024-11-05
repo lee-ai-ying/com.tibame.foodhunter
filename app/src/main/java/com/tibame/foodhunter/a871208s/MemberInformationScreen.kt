@@ -27,9 +27,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,9 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 @Composable
-fun MemberInformationScreen(navController: NavHostController = rememberNavController()) {
+fun MemberInformationScreen(navController: NavHostController = rememberNavController(),userVM: UserViewModel) {
     val context = LocalContext.current
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -57,6 +60,27 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
         }
     )
     var showDialog by remember { mutableStateOf(false) }
+    val usernameState = remember { mutableStateOf("") }
+    val nicknameState = remember { mutableStateOf("") }
+    val emailState = remember { mutableStateOf("") }
+    val phoneState = remember { mutableStateOf("") }
+    val birthdayState = remember { mutableStateOf("") }
+    val genderState = remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val user = userVM.getUserInfo(userVM.username.value) // 替換為實際用戶 ID
+            if (user != null) {
+                usernameState.value = user.username // 獲取用戶名
+                nicknameState.value = user.nickname
+                emailState.value = user.email
+                phoneState.value =user.phone
+                    birthdayState.value =user.birthday
+                    genderState.value =user.gender
+            }
+        }
+    }
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
@@ -155,7 +179,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "aaaaaaaaa",
+                text = usernameState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -173,7 +197,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "aaaaaaaaa",
+                text = nicknameState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -191,7 +215,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "zxc@abc",
+                text = emailState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -209,7 +233,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "0912345678",
+                text = phoneState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -227,7 +251,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "2014/10/18",
+                text = birthdayState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -245,7 +269,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "男",
+                text = genderState.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -290,11 +314,4 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MemberInformationScreenPreview() {
-    MaterialTheme {
-        MemberInformationScreen()
-    }
 
-}

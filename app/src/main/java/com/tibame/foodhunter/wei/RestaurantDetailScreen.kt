@@ -92,7 +92,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
+                            RestaurantInfoDetail(snackbarHostState = snackbarHostState, restaurantVM)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -107,7 +107,7 @@ fun RestaurantDetail(
 //                                text = "社群預覽  待修",
 //                                fontSize = 18.sp
 //                            )
-                            RelatedPosts("")
+                //            RelatedPosts("")
 
 
                             HorizontalDivider(

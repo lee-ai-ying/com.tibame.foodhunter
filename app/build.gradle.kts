@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.play.services.location)
     implementation(libs.cloudinary.android)
+    implementation(libs.androidx.benchmark.common)
+    implementation(libs.generativeai)
     implementation(libs.firebase.crashlytics.buildtools)
 
     testImplementation(libs.junit)
