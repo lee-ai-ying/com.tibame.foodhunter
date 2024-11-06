@@ -41,12 +41,12 @@ import com.tibame.foodhunter.ui.theme.FColor
 
 @Composable
 fun GroupChatList(
-    groupChats: List<GroupChat>,
+    //groupChats: List<GroupChat>,
     navController: NavHostController,
     gChatVM: GroupViewModel
 ) {
     var searchInput by remember { mutableStateOf("") }
-
+    val groupChats by gChatVM.groupChat.collectAsState()
     GroupSearchBar(
         onValueChange= {
             searchInput = it

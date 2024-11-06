@@ -1,8 +1,10 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.update
 
 object GroupRepository {
@@ -12,9 +14,13 @@ object GroupRepository {
     val groupSearchResult = _groupSearchResult.asStateFlow()
     private val _searchCache = MutableStateFlow(GroupSearchData())
     val searchCache = _searchCache.asStateFlow()
-    init {
-        //_groupChatList.update { setTestData() }
-        //_groupSearchResult.update { searchFakeData() }
+    private val _selectSearchResult = MutableStateFlow(GroupSearchResult())
+    val selectSearchResult = _selectSearchResult.asStateFlow()
+    fun updateSelectSearchResult(input: GroupSearchResult){
+        _selectSearchResult.update { input }
+    }
+    fun updateGroupChatList(input: List<GroupChat>){
+        _groupChatList.update { input }
     }
     fun updateGroupSearchCache(input: GroupSearchData){
         _searchCache.update { input }
