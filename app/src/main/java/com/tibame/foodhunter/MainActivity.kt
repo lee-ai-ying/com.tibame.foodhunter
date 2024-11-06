@@ -327,6 +327,8 @@ fun Main(
                 SearchPost(navController)
             }
 
+
+
             composable(context.getString(R.string.str_search)) {
                 SearchScreen(navController, searchVM)
             }

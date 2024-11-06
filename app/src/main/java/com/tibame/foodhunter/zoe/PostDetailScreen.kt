@@ -432,11 +432,3 @@ fun EditSheet(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun GroupChatRoomPreview() {
-    MaterialTheme {
-
-        PostDetailScreen(3, rememberNavController())
-    }
-}

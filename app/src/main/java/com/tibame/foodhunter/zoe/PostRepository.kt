@@ -2,7 +2,9 @@
 package com.tibame.foodhunter.zoe
 
 // 原有的導入
+import android.content.Context
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
@@ -11,6 +13,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +22,7 @@ import kotlinx.coroutines.flow.update
 
 
 class PostRepository {
-    private val serverUrl = "http://10.2.17.85:8080/com.tibame.foodhunter_server"
+
     private val _postList = MutableStateFlow<List<Post>>(emptyList())
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
     private val gson = Gson()
@@ -35,67 +39,12 @@ class PostRepository {
         }
     }
 
-
-    private suspend fun CommentResponse.toComment(): Comment {
-        return Comment(
-            id = this.messageId,  // 直接使用 Int
-            commenter = Commenter(
-                id = this.memberId,  // 直接使用 Int
-                name = this.memberNickname,
-                avatarImage = R.drawable.user1
-            ),
-            content = this.content,
-            timestamp = this.messageTime
-        )
-    }
-
-    private suspend fun fetchPostById(postId: Int): PostResponse? {
-        val url = "${serverUrl}/post/get?postId=$postId"
-        val result = CommonPost(url, "")
-
-        return try {
-            val response = gson.fromJson(result, ApiResponse::class.java)
-            if (response.success) {
-                gson.fromJson(gson.toJson(response.data), PostResponse::class.java)
-            } else {
-                Log.e("PostRepository", "Error fetching post: ${response.message}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("PostRepository", "Error fetching post", e)
-            null
-        }
-    }
-
-
     // 獲取貼文列表
     private suspend fun fetchPosts(): List<PostResponse> {
         val url = "${serverUrl}/post/preLoad"
         val result = CommonPost(url, "")
         val type = object : TypeToken<List<PostResponse>>() {}.type
         return gson.fromJson(result, type)
-    }
-
-    // 獲取餐廳資訊
-    private suspend fun fetchRestaurant(restaurantId: Int): RestaurantResponse? {
-        val url = "${serverUrl}/restaurant/$restaurantId"
-        val result = CommonPost(url, "")
-        return try {
-            gson.fromJson(result, RestaurantResponse::class.java)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    // 獲取用戶資訊
-    private suspend fun fetchUser(userId: Int): UserResponse? {
-        val url = "${serverUrl}/user/$userId"
-        val result = CommonPost(url, "")
-        return try {
-            gson.fromJson(result, UserResponse::class.java)
-        } catch (e: Exception) {
-            null
-        }
     }
 
     private fun processBase64Image(photoData: String?, photoId: Int): ImageBitmap? {
@@ -201,7 +150,34 @@ class PostRepository {
             isFavorited = false
         )
     }
+    fun Context.uriToBase64(uri: Uri): String {
+        val inputStream = contentResolver.openInputStream(uri)
+        val bytes = inputStream?.readBytes()
+        inputStream?.close()
+        return if (bytes != null) {
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } else {
+            ""
+        }
+    }
 
+
+
+
+    suspend fun createPost(postData: PostCreateData): Boolean {
+        val url = "${serverUrl}/post/create"
+
+        return try {
+            val json = gson.toJson(postData)
+            Log.d("setPostCreateData", "Data: $json")
+            val result = CommonPost(url, json)
+            loadPosts()
+            true
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating post", e)
+            false
+        }
+    }
     suspend fun createComment(postId: Int, userId: Int, content: String): Boolean {
         val url = "${serverUrl}/comment/create"
         val commentRequest = mapOf(
@@ -209,7 +185,6 @@ class PostRepository {
             "memberId" to userId,
             "content" to content
         )
-
         return try {
             val json = gson.toJson(commentRequest)
             val result = CommonPost(url, json)
@@ -236,27 +211,6 @@ class PostRepository {
 
         } catch (e: Exception) {
             Log.e("PostRepository", "Error loading posts", e)
-        }
-    }
-
-    // 創建新貼文
-    suspend fun createPost(postData: PostCreateData): Boolean {
-        val url = "${serverUrl}/post/create"
-        val postRequest = CreatePostRequest(
-            publisher = postData.publisher.toInt(),
-            content = postData.content,
-            postTag = postData.postTag,
-            restaurantId = 0,  // 需要從 location 獲取或由使用者選擇
-            visibility = 0
-        )
-
-        return try {
-            val json = gson.toJson(postRequest)
-            val result = CommonPost(url, json)
-            true
-        } catch (e: Exception) {
-            Log.e("PostRepository", "Error creating post", e)
-            false
         }
     }
 
