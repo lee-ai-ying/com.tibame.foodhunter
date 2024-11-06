@@ -5,19 +5,28 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tibame.foodhunter.sharon.data.CardContentType
-import com.tibame.foodhunter.sharon.data.Group
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
 
 
 class NoteVM : ViewModel() {
-    // Repository 實例 - 用於與後端通訊
+    companion object {
+        private const val TAG = "NoteVM"
+        private const val SEARCH_DEBOUNCE_TIME = 300L  // 搜尋延遲時間
+    }
+
+    // 用於與後端通訊
     private val repository = NoteRepository.instance
 
     // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
@@ -33,11 +42,9 @@ class NoteVM : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    /**
-     * 過濾條件狀態
-     * currentSearchQuery: 目前的搜尋文字
-     */
-    private var currentSearchQuery: String = ""
+
+    private val _searchQuery = MutableStateFlow("")
+
 
     // 預留篩選相關狀態，目前未實作
     // private val _selectedContentTypes = MutableStateFlow<Set<CardContentType>>(emptySet())
@@ -45,6 +52,7 @@ class NoteVM : ViewModel() {
 
     init {
         loadNotes()
+        setupSearchFlow()  // 搜尋資料流
     }
 
     /**
@@ -53,43 +61,99 @@ class NoteVM : ViewModel() {
     fun loadNotes() {
         viewModelScope.launch {
             try {
-                Log.d("NoteVM", "開始載入筆記")
+                Log.d(TAG, "開始載入筆記")
                 _isLoading.value = true
 
                 // 1. 觸發 Repository 發送 HTTP 請求
-                Log.d("NoteVM", "呼叫 repository.getNotes()")
+                Log.d(TAG, "呼叫 repository.getNotes()")
                 repository.getNotes()
 
                 // 2. 開始收集 Repository 的資料流
-                Log.d("NoteVM", "開始收集 repository.notes")
+                Log.d(TAG, "開始收集 repository.notes")
                 repository.notes.collect { notes ->
-                    Log.d("NoteVM", "收到筆記資料: ${notes.size}筆")
+                    Log.d(TAG, "收到筆記資料: ${notes.size}筆")
                     // 3. 更新 ViewModel 的兩個狀態
                     _allNotes.value = notes      // 保存完整列表
-                    Log.d("VM","設置到 _notes 的值: ${_allNotes.value}")
+                    Log.d(TAG,"設置到 _notes 的值: ${_allNotes.value}")
 
                     _filteredNotes.value = notes // 初始時顯示全部
 
                     _isLoading.value = false
-                    Log.d("NoteVM", "設置 isLoading = false")
+                    Log.d(TAG, "設置 isLoading = false")
                 }
             } catch (e: Exception) {
-                Log.e("NoteVM", "Error initializing notes", e)
+                Log.e(TAG, "Error initializing notes", e)
             } finally {
-                Log.d("NoteVM", "載入完成，設置 isLoading = false")
+                Log.d(TAG, "載入完成，設置 isLoading = false")
                 _isLoading.value = false
             }
         }
     }
 
     /**
-     * 處理搜尋邏輯
-     * 由 PersonalToolsViewModel 調用
+     * 設置搜尋流
+     * 使用 Flow 處理搜尋邏輯，包含：
+     * 1. 防抖（debounce）：避免過於頻繁的搜尋
+     * 2. 即時過濾：搜尋條件改變時自動更新結果
+     *  這裡使用 Flow 的特性自動處理狀態更新
      */
-    fun handleSearch(query: String) {
-        currentSearchQuery = query
-        filterNotes()
+    @OptIn(FlowPreview::class)
+    private fun setupSearchFlow() {
+        viewModelScope.launch {
+            _searchQuery
+                .debounce(SEARCH_DEBOUNCE_TIME)  // 防抖，避免頻繁搜尋
+                .collect { query ->
+                    Log.d(TAG, "[setupSearchFlow] 搜尋關鍵字更新: $query")
+                    updateSearchResults(query)
+                }
+        }
     }
+
+    /**
+     * 處理搜尋邏輯
+     */
+    fun searchNotes(query: String) {
+        Log.d(TAG, "[searchNotes] 接收搜尋請求: $query")
+        viewModelScope.launch {
+            _searchQuery.value = query
+            Log.d(TAG, "[searchNotes] 更新搜尋狀態")
+        }
+    }
+
+    /**
+     * 搜尋邏輯
+     */
+    private fun updateSearchResults(query: String) {
+        Log.d(TAG, "[updateSearchResults] 開始更新搜尋結果")
+
+        val allNotes = _allNotes.value
+
+        // 套用搜尋文字
+        val result = if (query.isEmpty()) {
+            allNotes
+        } else {
+            allNotes.filter { note ->
+                note.title.contains(query, ignoreCase = true)
+            }
+        }
+
+        Log.d(TAG, "[updateSearchResults] 過濾後結果數量: ${result.size}")
+        _filteredNotes.value = result
+        Log.d(TAG, "_filteredNotes value: ${_filteredNotes.value}")
+
+    }
+
+    /**
+     * 清空搜尋
+     */
+    fun resetSearch() {
+        Log.d(TAG, "[clearSearch] 重置搜尋狀態")
+        _searchQuery.value = ""
+    }
+
+    val hasSearchQuery: Boolean
+        get() = _searchQuery.value.isNotEmpty()
+
 
     /**
      * 預留篩選方法，目前未實作
@@ -105,31 +169,8 @@ class NoteVM : ViewModel() {
         // 預留給未來實作篩選功能
     }
 
-    /**
-     * 重置搜尋和篩選狀態
-     * 由 PersonalToolsViewModel 調用
-     */
-    fun resetSearch() {
-        currentSearchQuery = ""
-        _filteredNotes.value = _allNotes.value
-    }
 
-    /**
-     * 筆記過濾邏輯
-     * 目前只實作搜尋功能
-     */
-    private fun filterNotes() {
-        var result = _allNotes.value
 
-        // 套用搜尋文字
-        if (currentSearchQuery.isNotEmpty()) {
-            result = result.filter { note ->
-                note.title.contains(currentSearchQuery, ignoreCase = true)
-            }
-        }
-
-        _filteredNotes.value = result
-    }
 
 
     // 當用戶點選某個筆記時
@@ -167,7 +208,6 @@ class NoteVM : ViewModel() {
                 val currentList = _allNotes.value.toMutableList()
                 currentList.add(0, newNote)
                 _allNotes.value = currentList
-                filterNotes()
             } catch (e: Exception) {
                 Log.e("NoteVM", "Error adding note", e)
             }
@@ -199,7 +239,6 @@ class NoteVM : ViewModel() {
                     )
                     currentList[index] = updatedNote
                     _allNotes.value = currentList
-                    filterNotes()
                 }
             } catch (e: Exception) {
                 Log.e("NoteVM", "Error updating note", e)
@@ -216,7 +255,6 @@ class NoteVM : ViewModel() {
                 val currentList = _allNotes.value.toMutableList()
                 currentList.removeAll { it.noteId == noteId }
                 _allNotes.value = currentList
-                filterNotes()
             } catch (e: Exception) {
                 Log.e("NoteVM", "Error deleting note", e)
             }

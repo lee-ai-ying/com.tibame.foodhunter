@@ -39,7 +39,7 @@
 //    }
 //
 //    // 更新搜尋關鍵字
-//    open fun updateSearchQuery(newQuery: String) {
+//    open fun onSearchQueryChange(newQuery: String) {
 //        _searchQuery.value = newQuery
 //    }
 //

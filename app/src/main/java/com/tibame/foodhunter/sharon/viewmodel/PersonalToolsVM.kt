@@ -1,13 +1,14 @@
 package com.tibame.foodhunter.sharon.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.TabConstants
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Personal Tools 的 UI 狀態
@@ -25,11 +26,16 @@ data class PersonalToolsUiState(
  */
 data class TopBarState(
     val isSearchVisible: Boolean = false,    // 搜尋框是否顯示
-    val searchQuery: String = "",            // 搜尋文字
+    val searchQuery: String = "",            // 保存ui上的搜尋文字
     val isFilterChipVisible: Boolean = false // 篩選chips是否顯示
 )
 
-class PersonalToolsVM : ViewModel() {
+class PersonalToolsVM: ViewModel() {
+
+    companion object {
+        private const val TAG = "PersonalToolsVM"
+    }
+
     // UI 狀態
     private val _uiState = MutableStateFlow(PersonalToolsUiState())
     val uiState = _uiState.asStateFlow()
@@ -39,11 +45,10 @@ class PersonalToolsVM : ViewModel() {
     val topBarState = _topBarState.asStateFlow()
 
     private val calendarVM = CalendarVM()
-    val calendarState = calendarVM.uiState
+    val calendarState = this.calendarVM.uiState
 
     // Note ViewModel
     private val noteVM = NoteVM()
-//    val noteState = noteVM.uiState
 
     /**
      * Tab 切換
@@ -55,36 +60,70 @@ class PersonalToolsVM : ViewModel() {
     }
 
     /**
-     * 搜尋框顯示切換
+     * 重置TopBar狀態
      */
-    fun toggleSearchVisibility() {
-        _topBarState.update { currentState ->
-            currentState.copy(
-                isSearchVisible = !currentState.isSearchVisible,
-                // 關閉搜尋時重置所有狀態
-                searchQuery = if (!currentState.isSearchVisible) "" else currentState.searchQuery,
-            )
-        }
+    private fun resetTopBarState() {
+        _topBarState.value = TopBarState()
+        _noteSearchQuery.value = ""
+        _calendarSearchQuery.value = ""
+    }
 
-        // 如果是關閉搜尋，通知當前頁面重置
-        if (!_topBarState.value.isSearchVisible) {
-            when (_uiState.value.selectedTabIndex) {
-                TabConstants.CALENDAR -> calendarVM.resetSearch()
-                TabConstants.NOTE -> noteVM.resetSearch()
+    fun toggleSearchVisibility() {
+        viewModelScope.launch {
+            val willClose = _topBarState.value.isSearchVisible
+            Log.d(TAG, "切換搜尋框顯示狀態，當前是否顯示: $willClose")
+
+            if (willClose) {
+                // 1. 先發送搜尋事件
+                when (_uiState.value.selectedTabIndex) {
+                    TabConstants.NOTE -> {
+                        _noteSearchQuery.value = ""
+                        Log.d(TAG, "已發送清空事件到 Note")
+                    }
+                    TabConstants.CALENDAR -> {
+                        _calendarSearchQuery.value = ""
+                        Log.d(TAG, "已發送清空事件到 Calendar")
+                    }
+                }
             }
+
+            // 2. 再更新 UI 狀態
+            _topBarState.update { currentState ->
+                currentState.copy(
+                    isSearchVisible = !currentState.isSearchVisible,
+                    searchQuery = if (willClose) "" else currentState.searchQuery
+                )
+            }
+            Log.d(TAG, "搜尋框狀態已更新: ${if (!willClose) "顯示" else "隱藏"}")
         }
     }
 
-    /**
-     * 更新搜尋文字
-     */
-    fun updateSearchQuery(query: String) {
-        _topBarState.update { it.copy(searchQuery = query) }
 
-        // 轉發搜尋請求給當前頁面
-        when (_uiState.value.selectedTabIndex) {
-            TabConstants.CALENDAR -> calendarVM.handleSearch(query)
-            TabConstants.NOTE -> noteVM.handleSearch(query)
+    // 搜尋事件流 - 分別給不同的 Tab
+    private val _calendarSearchQuery = MutableStateFlow("")
+    val calendarSearchQuery = _calendarSearchQuery.asStateFlow()
+
+    private val _noteSearchQuery = MutableStateFlow("")
+    val noteSearchQuery = _noteSearchQuery.asStateFlow()
+
+    fun onSearchQueryChange(query: String) {
+        viewModelScope.launch {
+            Log.d(TAG, "[onSearchQueryChange] 搜尋文字更新: $query")
+
+            // 1. 更新 UI 狀態
+            _topBarState.update { it.copy(searchQuery = query) }
+
+            // 2. 根據當前 Tab 發送事件
+            when (_uiState.value.selectedTabIndex) {
+                TabConstants.CALENDAR -> {
+                    _calendarSearchQuery.emit(query)
+                    Log.d(TAG, "發送搜尋事件到 Calendar: $query")
+                }
+                TabConstants.NOTE -> {
+                    _noteSearchQuery.emit(query)
+                    Log.d(TAG, "發送搜尋事件到 Note: $query")
+                }
+            }
         }
     }
 
@@ -95,7 +134,7 @@ class PersonalToolsVM : ViewModel() {
         _topBarState.update { currentState ->
             currentState.copy(
                 isFilterChipVisible = !currentState.isFilterChipVisible,
-                isSearchVisible = true  // 顯示篩選時確保搜尋欄也顯示
+//                isSearchVisible = true  // 顯示篩選時確保搜尋欄也顯示
             )
         }
 
@@ -103,15 +142,9 @@ class PersonalToolsVM : ViewModel() {
         if (!_topBarState.value.isFilterChipVisible) {
             when (_uiState.value.selectedTabIndex) {
                 TabConstants.CALENDAR -> calendarVM.resetFilters()
-                TabConstants.NOTE -> noteVM.resetFilters()
             }
         }
     }
 
-    /**
-     * 重置TopBar狀態
-     */
-    private fun resetTopBarState() {
-        _topBarState.value = TopBarState()
-    }
+
 }

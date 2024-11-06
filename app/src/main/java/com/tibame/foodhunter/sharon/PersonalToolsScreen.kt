@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +14,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,7 +26,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.TabBarComponent
@@ -33,24 +35,46 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalToolsScreen(
     navController: NavHostController,
-    viewModel: PersonalToolsVM = viewModel()
 ) {
-    // 獲取當前導航棧中的目的地，用於判斷是否顯示 TopBar 和返回按鈕
-    val destination = navController.currentBackStackEntryAsState().value?.destination
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val uiState by viewModel.uiState.collectAsState()
+
+    // 創建共享的 ViewModel 實例
+    val noteVM: NoteVM = viewModel()
+    val calendarVM: CalendarVM = viewModel()
+
+    val personalToolsVM: PersonalToolsVM = viewModel()
+    val uiState by personalToolsVM.uiState.collectAsState()
+
+
+
+    // 監聽 Note 搜尋事件
+    LaunchedEffect(Unit) {
+        personalToolsVM.noteSearchQuery.collect { query ->
+            Log.d("PersonalToolsScreen", "收到 Note 搜尋事件: $query")
+            noteVM.searchNotes(query)
+        }
+    }
+
+    // 監聽 Calendar 搜尋事件
+    LaunchedEffect(Unit) {
+        personalToolsVM.calendarSearchQuery.collect { query ->
+            Log.d("PersonalToolsScreen", "收到 Calendar 搜尋事件: $query")
+            calendarVM.handleSearch(query)
+        }
+    }
 
 
 
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()  // 確保填滿
+            .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .background(color = Color.White),
         topBar = {
@@ -58,13 +82,13 @@ fun PersonalToolsScreen(
                 TabConstants.CALENDAR -> CalendarTopBar(
                     navController = navController,
                     scrollBehavior = scrollBehavior,
-                    personalToolsVM = viewModel,
-                    calendarVM = CalendarVM()
+                    personalToolsVM = personalToolsVM,
+                    calendarVM = calendarVM
                 )
                 TabConstants.NOTE -> NoteTopBar(
                     navController = navController,
                     scrollBehavior = scrollBehavior,
-                    personalToolsVM = viewModel
+                    personalToolsVM = personalToolsVM
                 )
             }
         },
@@ -94,7 +118,7 @@ fun PersonalToolsScreen(
             // 頁籤切換
             TabBarComponent(
                 selectedTab = uiState.selectedTabIndex,
-                onTabSelected = { viewModel.updateSelectedTab(it) },
+                onTabSelected = { personalToolsVM.updateSelectedTab(it) },
                 tabList = uiState.tabList.map { stringResource(id = it) }
             )
 
@@ -104,14 +128,15 @@ fun PersonalToolsScreen(
 
                     CalendarScreen(
                         navController = navController,
-                        viewModel = viewModel()
+                        calendarVM = calendarVM
                     )
                 }
                 TabConstants.NOTE -> {
 
                     NoteScreen(
                         navController = navController,
-                        noteVM = viewModel()
+                        noteVM = noteVM,
+//                        personalToolsVM = viewModel()
                     )
                 }
             }

@@ -25,31 +25,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.cloudinary.android.ui.BuildConfig
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(
     navController: NavHostController,
-    noteVM: NoteVM = viewModel()
+    noteVM: NoteVM,
+
 ) {
-    // 在畫面開啟時載入資料
-    LaunchedEffect(Unit) {
-        Log.d("NoteScreen", "LaunchedEffect 觸發載入資料")
-        noteVM.loadNotes()
-    }
-
-    val notes by noteVM.filteredNotes.collectAsStateWithLifecycle(
-        initialValue = emptyList()
-    ).also {
-        Log.d("NoteScreen", "收到筆記資料更新，數量: ${it.value.size}")
-    }
-
-    val isLoading by noteVM.isLoading.collectAsStateWithLifecycle(initialValue = false)
-        .also {
-            Log.d("NoteScreen", "載入狀態更新: ${it.value}")
-        }
+    val notes by noteVM.filteredNotes.collectAsStateWithLifecycle()
+    val isLoading by noteVM.isLoading.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -62,19 +51,6 @@ fun NoteScreen(
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
-                // 你要的型別傳遞 Log 加在這裡
-                notes.forEach { note ->
-                    Log.d("NoteScreen", """
-            筆記資料檢查:
-            - id: ${note.noteId}
-            - type: ${note.type} (${note.type.javaClass})
-            - date: ${note.date} (${note.date.javaClass})
-            - day: ${note.day} (${note.day.javaClass})
-            - title: ${note.title} (${note.title.javaClass})
-            - noteContent: ${note.noteContent} (${note.noteContent.javaClass})
-            - imageResId: ${note.imageResId} (${note.imageResId?.javaClass})
-        """.trimIndent())
-                }
             }
             notes.isEmpty() -> {
                 Log.d("NoteScreen", "顯示空資料狀態")
@@ -85,7 +61,12 @@ fun NoteScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("目前沒有筆記")
+                    val message = if (noteVM.hasSearchQuery) {
+                        "找不到符合的筆記"
+                    } else {
+                        "目前沒有筆記"
+                    }
+                    Text(message)
                 }
             }
             else -> {
@@ -93,8 +74,7 @@ fun NoteScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                        .padding(top = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(
@@ -116,7 +96,7 @@ fun NoteScreen(
                             imageResId = currentNote.imageResId,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
+                                .padding(horizontal = 10.dp)
                         )
                     }
                 }
@@ -129,7 +109,7 @@ fun NoteScreen(
 @Composable
 fun NoteScreenPreview() {
     val mockNavController = rememberNavController()
-    NoteScreen(navController = mockNavController)
+    NoteScreen(navController = mockNavController, noteVM = NoteVM())
 }
 
 

@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon.components.topbar
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -38,7 +38,6 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
-import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.ui.theme.FColor
 
@@ -51,7 +50,7 @@ fun TopBarPreview(){
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
 //    BaseTopBar(mockNavController,scrollBehavior)
-    CalendarTopBar(mockNavController,scrollBehavior, PersonalToolsVM(), CalendarVM())
+//    CalendarTopBar(mockNavController,scrollBehavior, PersonalToolsVM(noteVM, calendarVM), CalendarVM())
 //    NoteTopBar(mockNavController,scrollBehavior, PersonalToolsVM())
 
 }
@@ -156,7 +155,7 @@ fun CalendarTopBar(
             searchQuery = topBarState.searchQuery,
             onSearchQueryChange = { newQuery ->
                 // 當搜尋文字改變時更新 ViewModel
-                personalToolsVM.updateSearchQuery(newQuery)
+                personalToolsVM.onSearchQueryChange(newQuery)
             },
             onToggleSearchVisibility = {
                 // 切換搜尋框顯示狀態
@@ -227,9 +226,8 @@ fun FilterChipSection(
 fun NoteTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    personalToolsVM: PersonalToolsVM
+    personalToolsVM: PersonalToolsVM,
 ) {
-    // 使用 by 委派來收集狀態
     val topBarState by personalToolsVM.topBarState.collectAsState()
 
     Column {
@@ -239,15 +237,16 @@ fun NoteTopBar(
             isSearchVisible = topBarState.isSearchVisible,
             searchQuery = topBarState.searchQuery,
             onSearchQueryChange = { newQuery ->
-                personalToolsVM.updateSearchQuery(newQuery)
+                Log.d("NoteTopBar", "搜尋輸入: $newQuery")
+                personalToolsVM.onSearchQueryChange(newQuery)
+
             },
             onToggleSearchVisibility = {
+                Log.d("NoteTopBar", "切換搜尋欄位顯示")
                 personalToolsVM.toggleSearchVisibility()
             },
             showFilter = false,
-            onFilter = {
-                personalToolsVM.toggleFilterChipVisibility()
-            }
+
         )
 
 //        if (isFilterChipVisible) {
