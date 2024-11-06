@@ -77,7 +77,7 @@ fun GroupSearchResult(
                             .fillMaxWidth()
                             .clickable {
                                 showGroupChatDetail = true
-                                groupVM.getGroupChatDetailFromId(it.id)
+                                groupVM.getGroupChatDetailFromId(it.groupId)
                             },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -97,7 +97,7 @@ fun GroupSearchResult(
                                     contentScale = ContentScale.Crop
                                 )
                                 Text(
-                                    text = it.id.toString()
+                                    text = it.groupName
                                 )
                             }
                         }
@@ -107,15 +107,21 @@ fun GroupSearchResult(
                         )
                     }
                 }
-
-            }
-            Button(
-                onClick = onBackClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FColor.Orange_5th
-                )
-            ) {
-                Text("返回")
+                items(1){
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Button(
+                            onClick = onBackClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = FColor.Orange_1st
+                            )
+                        ) {
+                            Text("返回")
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.size(8.dp))
         }

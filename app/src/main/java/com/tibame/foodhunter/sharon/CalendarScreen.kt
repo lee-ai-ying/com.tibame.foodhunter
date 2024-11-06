@@ -1,48 +1,35 @@
 package com.tibame.foodhunter.sharon
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.sharon.components.card.CardContentType
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
+import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.data.Book
-import com.tibame.foodhunter.sharon.data.CalendarUiState
+import com.tibame.foodhunter.sharon.util.CalendarUiState
+import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.util.DateUtil
-import com.tibame.foodhunter.sharon.util.getDisplayName
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarViewMode1
 import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
-import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import java.time.LocalDate
-import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: CalendarViewModel = viewModel(),
+    viewModel: CalendarViewMode1 = viewModel(),
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
@@ -50,7 +37,7 @@ fun CalendarScreen(
     val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
 
 
-    // 初始化當天的選中日期
+    // 初始化當天為選中日期
     var selectedDate by remember {
         mutableStateOf<CalendarUiState.Date?>(null)  // 初始化為 null
     }
@@ -85,7 +72,7 @@ fun CalendarScreen(
     Column(
         modifier = Modifier
 //            .fillMaxSize()
-            .padding(5.dp)
+//            .padding(5.dp)
     ) {
         // 更新日期列表，使得用戶選中的日期顯示選中狀態
         val updatedDates = uiState.dates.map { date ->
@@ -130,7 +117,15 @@ fun CalendarScreen(
             }
         )
 
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier
+                .background(Color.White)
+                .fillMaxSize()
+                .padding(top = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        {
             item {
                 NoteOrGroupCard(
                     type = CardContentType.GROUP,
@@ -177,8 +172,27 @@ fun CalendarScreen(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CalendarScreenPreview() {
-    CalendarScreen()
+    val navController = rememberNavController()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+//    val calendarViewModel: CalendarViewModel = viewModel() // 取得 ViewModel
+
+    Scaffold(
+        topBar = {
+            CalendarTopBar(
+                navController = navController,
+                scrollBehavior = scrollBehavior,
+                CalendarViewModel()
+            )
+        },
+        content = { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues)) {
+                CalendarScreen()
+            }
+        }
+    )
 }
+

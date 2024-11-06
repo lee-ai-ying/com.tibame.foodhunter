@@ -1,6 +1,5 @@
-package com.tibame.foodhunter.sharon.data
+package com.tibame.foodhunter.sharon.util
 
-import com.tibame.foodhunter.sharon.util.getDayOfMonthStartingFromMonday
 import java.time.LocalDate
 import java.time.YearMonth
 

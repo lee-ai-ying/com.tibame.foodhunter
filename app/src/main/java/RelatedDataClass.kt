@@ -1,4 +1,4 @@
-package com.tibame.foodhunter.wei
+/*package com.tibame.foodhunter.wei
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -79,6 +79,28 @@ data class RelatedPost(
 //    }
 //}
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { navController.navigate("發文")
+             },
+            colors = ButtonDefaults.buttonColors(
+                colorResource(id = R.color.orange_2nd)
+            ),
+        ) {
+            Text("建立第一篇貼文")
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun RelatedPostsPreview() {
+    MaterialTheme {
+
+        RelatedPosts("台北市信義區" )
+    }
+}*/
 //
 //@Preview(showBackground = true)
 //@Composable

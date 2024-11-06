@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,30 +46,47 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter.ofLocalizedDate
 import java.time.format.FormatStyle
-
-
-
-
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavHostController = rememberNavController()) {
+fun RegisterScreen(
+    navController: NavHostController = rememberNavController(),
+    userVM: UserViewModel
+) {
     val context = LocalContext.current
-    var uid by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var nickname by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("123456") }
+    var password by remember { mutableStateOf("123456") }
+    var nickname by remember { mutableStateOf("測試2") }
+    var email by remember { mutableStateOf("abc") }
+    var phone by remember { mutableStateOf("0911122233") }
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
+    var birthday by remember { mutableStateOf("2024年11月5日") }
     val options = listOf("男", "女")
-    var gender by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("男") }
     var expanded by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var showDialog by remember { mutableStateOf(false) }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "註冊失敗") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定")
+                }
+            }
+        )
+    }
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
@@ -82,7 +101,7 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
             color = Color.Blue
         )
         HorizontalDivider(
-            modifier = Modifier.size(500.dp,1.dp),
+            modifier = Modifier.size(500.dp, 1.dp),
             color = Color.Blue
         )
         Spacer(modifier = Modifier.padding(4.dp))
@@ -97,8 +116,8 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
                 color = Color.Blue
             )
             OutlinedTextField(
-                value = uid,
-                onValueChange = { uid = it },
+                value = username,
+                onValueChange = { username = it },
                 placeholder = { Text(text = "請輸入帳號", fontSize = 18.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(32.dp),
@@ -196,8 +215,8 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
                 color = Color.Blue
             )
             OutlinedTextField(
-                value = message,
-                onValueChange = { message = it },
+                value = birthday,
+                onValueChange = { birthday = it },
                 placeholder = { Text(text = "請輸入生日", fontSize = 18.sp) },
                 trailingIcon = {
                     Icon(
@@ -211,11 +230,11 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
                     if (showDatePickerDialog) {
                         MyDatePickerDialog(
                             onDismissRequest = {
-                                message = ""
+                                birthday = ""
                                 showDatePickerDialog = false
                             },
                             onConfirm = { utcTimeMillis ->
-                                message = "${
+                                birthday = "${
                                     utcTimeMillis?.let {
                                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
                                             .toLocalDate()
@@ -225,7 +244,7 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
                                 showDatePickerDialog = false
                             },
                             onDismiss = {
-                                message = ""
+                                birthday = ""
                                 showDatePickerDialog = false
                             }
                         )
@@ -294,11 +313,39 @@ fun RegisterScreen(navController: NavHostController = rememberNavController()) {
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_login)) }
+                onClick = {
+                    coroutineScope.launch {
+                        val register = userVM.register(
+                            username,
+                            password,
+                            nickname,
+                            email,
+                            phone,
+                            gender,
+                            convertDateFormat(birthday)
+                        )
+                        if (register) {
+                            navController.navigate(context.getString(R.string.str_login))
+                        } else {
+                            showDialog = true
+                        }
+                    }
+                }
             ) {
                 Text(text = "建立")
             }
-
+            Button(
+                modifier = Modifier
+                    .size(120.dp, 60.dp)
+                    .padding(8.dp),
+                onClick = {
+                    coroutineScope.launch {
+                            navController.navigate(context.getString(R.string.str_login))
+                    }
+                }
+            ) {
+                Text(text = "返回")
+            }
         }
 
     }
@@ -341,6 +388,21 @@ fun MyDatePickerDialog(
     }
 }
 
+fun convertDateFormat(input: String): String {
+    // 定義輸入和輸出的日期格式
+    val inputFormat = SimpleDateFormat("yyyy年MM月dd日", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+    return try {
+        // 解析輸入字串
+        val date = inputFormat.parse(input)
+        // 將日期轉換為所需的格式並返回
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        // 處理可能的解析異常
+        input
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
