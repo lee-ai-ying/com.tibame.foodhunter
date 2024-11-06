@@ -17,19 +17,21 @@ import java.util.Locale
 
 
 class NoteVM : ViewModel() {
-    /**
-     * Note 核心狀態
-     */
+    // Repository 實例 - 用於與後端通訊
     private val repository = NoteRepository.instance
+
+    // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
     private val _note = MutableStateFlow<Note?>(null)
     val note: StateFlow<Note?> = _note.asStateFlow()
 
-    /**
-     * 筆記項目狀態
-     */
+    // 1. 所有筆記的完整列表
     private val _allNotes = MutableStateFlow<List<Note>>(emptyList())
+    // 2. 經過過濾後的筆記列表（這個會顯示給用戶看）
     private val _filteredNotes = MutableStateFlow<List<Note>>(emptyList())
     val filteredNotes: StateFlow<List<Note>> = _filteredNotes.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
      * 過濾條件狀態
@@ -42,22 +44,40 @@ class NoteVM : ViewModel() {
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
     init {
-        initializeNotes()
+        loadNotes()
     }
 
     /**
      * 初始化筆記列表
      */
-    private fun initializeNotes() {
+    fun loadNotes() {
         viewModelScope.launch {
             try {
+                Log.d("NoteVM", "開始載入筆記")
+                _isLoading.value = true
+
+                // 1. 觸發 Repository 發送 HTTP 請求
+                Log.d("NoteVM", "呼叫 repository.getNotes()")
                 repository.getNotes()
+
+                // 2. 開始收集 Repository 的資料流
+                Log.d("NoteVM", "開始收集 repository.notes")
                 repository.notes.collect { notes ->
-                    _allNotes.value = notes
-                    _filteredNotes.value = notes
+                    Log.d("NoteVM", "收到筆記資料: ${notes.size}筆")
+                    // 3. 更新 ViewModel 的兩個狀態
+                    _allNotes.value = notes      // 保存完整列表
+                    Log.d("VM","設置到 _notes 的值: ${_allNotes.value}")
+
+                    _filteredNotes.value = notes // 初始時顯示全部
+
+                    _isLoading.value = false
+                    Log.d("NoteVM", "設置 isLoading = false")
                 }
             } catch (e: Exception) {
                 Log.e("NoteVM", "Error initializing notes", e)
+            } finally {
+                Log.d("NoteVM", "載入完成，設置 isLoading = false")
+                _isLoading.value = false
             }
         }
     }
@@ -112,13 +132,12 @@ class NoteVM : ViewModel() {
     }
 
 
-    /**
-     * 筆記核心功能
-     */
+    // 當用戶點選某個筆記時
     fun getNoteById(noteId: Int) {
         viewModelScope.launch {
             try {
                 val result = repository.getNoteById(noteId)
+                // 更新選中的筆記
                 _note.value = result
                 Log.d("NoteVM", "Note received: $result")
             } catch (e: Exception) {
@@ -126,6 +145,7 @@ class NoteVM : ViewModel() {
             }
         }
     }
+
 
     /**
      * 新增筆記

@@ -21,15 +21,15 @@ import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewMode1
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: CalendarViewMode1 = viewModel(),
+    viewModel: CalendarVM = viewModel(),
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
@@ -89,7 +89,6 @@ fun CalendarScreen(
             days = DateUtil.daysOfWeek,
             yearMonth = uiState.yearMonth,
             dates = updatedDates,  // 傳遞更新後的 dates 列表
-            selectedBooks = selectedBooks, // 傳入選中的書籍列表
             // 切換到上一個月份
             onPreviousMonthButtonClicked = { prevMonth ->
                 viewModel.toPreviousMonth(prevMonth)
@@ -103,25 +102,12 @@ fun CalendarScreen(
                 selectedDate = date
             },
 
-            onItemClick = { book ->
-                // 處理書籍項目點擊邏輯
-                println("Book clicked: ${book.name}")
-            },
-            onEditClick = { book ->
-                // 編輯書籍的邏輯
-                println("Edit book: ${book.name}")
-            },
-            onDeleteClick = { book ->
-                // 刪除書籍的邏輯
-                bookViewModel.removeItem(book)
-            }
         )
 
         LazyColumn(
             modifier = Modifier
                 .background(Color.White)
-                .fillMaxSize()
-                .padding(top = 16.dp),
+                .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         )
@@ -178,21 +164,9 @@ fun CalendarScreen(
 fun CalendarScreenPreview() {
     val navController = rememberNavController()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-//    val calendarViewModel: CalendarViewModel = viewModel() // 取得 ViewModel
+//    val calendarVM: CalendarVM = viewModel() // 取得 ViewModel
 
-    Scaffold(
-        topBar = {
-            CalendarTopBar(
-                navController = navController,
-                scrollBehavior = scrollBehavior,
-                CalendarViewModel()
-            )
-        },
-        content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
-                CalendarScreen()
-            }
-        }
-    )
+    CalendarScreen()
+
 }
 

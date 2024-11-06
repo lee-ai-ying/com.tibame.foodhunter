@@ -76,7 +76,7 @@ import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -87,7 +87,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-    NoteScreen(navController = mockNavController)
+//    NoteScreen(navController = mockNavController)
 
     NoteEdit(
         navController = mockNavController,
@@ -108,7 +108,7 @@ fun AddNotePreview() {
 fun NoteEditRoute(
     navController: NavHostController = rememberNavController(),
     noteId: Int?,  // 1. noteId 是從導航參數傳入的筆記識別碼
-    noteViewModel: NoteViewModel = viewModel(),  // 2. 獲取或創建 ViewModel
+    noteViewModel: NoteVM = viewModel(),  // 2. 獲取或創建 ViewModel
 ) {
     // 1. 先檢查 noteId
     if (noteId == null) {

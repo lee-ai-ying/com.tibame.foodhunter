@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.tibame.foodhunter.global.CommonPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,81 +17,122 @@ import java.util.Locale
  */
 class NoteRepository private constructor() {
     companion object {
-        // 伺服器URL，注意要改成您的URL
-        private const val SERVER_URL = "http://10.0.2.2:8080/foodhunter_server/api/note"
-        // 單例模式實例
+        private const val TAG = "NoteRepository"
+        // 使用團隊統一的 serverUrl
+        private const val BASE_URL = "http://192.168.2.97:8080/com.tibame.foodhunter_server"
+        private const val API_PATH = "/api/note"
         val instance = NoteRepository()
     }
 
-    // 用於存放API回傳的筆記列表
+    // StateFlow 用於觀察筆記列表的變化
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
     private val gson = Gson()
 
     /**
-     * 從後端獲取所有筆記
-     * 成功時更新 _notes 狀態流
-     * 失敗時設置空列表
+     * 取得所有筆記
+     * 使用團隊統一的 CommonPost 方法
      */
     suspend fun getNotes() {
         try {
-            val url = "$SERVER_URL/getAllNotes"
-            val result = httpGet(url)
+            // 組合完整 URL
+            val url = "$BASE_URL$API_PATH/getAllNotes"
 
-            // 解析 API 回應
-            val type = object : TypeToken<List<NoteApiResponse>>() {}.type
-            val noteResponses: List<NoteApiResponse> = gson.fromJson(result, type)
+            // 呼叫共用的 POST 方法
+            // 因為 getAllNotes 不需要參數，傳空的 JsonObject
+            val response = CommonPost(url, JsonObject().toString())
+            Log.d("NoteRepo", "收到回應: $response")
 
-            // 轉換並更新 StateFlow
-            _notes.value = noteResponses.map { it.toNote() }
+            // 檢查是否有回應
+            if (response.isNotEmpty()) {
+                // 解析回應
+                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
+
+                // 檢查是否有錯誤
+                if (jsonResponse.has("error")) {
+                    Log.e(TAG, "API返回錯誤: ${jsonResponse.get("error").asString}")
+                    _notes.value = emptyList()
+                    return
+                }
+
+                // 取得筆記陣列
+                val notesArray = jsonResponse.getAsJsonArray("notes")
+                val notesList = notesArray.map { noteJson ->
+                    val noteObj = noteJson.asJsonObject
+                    NoteApiResponse(
+                        note_id = noteObj.get("note_id").asInt,
+                        title = noteObj.get("title").asString,
+                        content = noteObj.get("content").asString,
+                        restaurant_id = noteObj.get("restaurant_id").asInt,
+                        member_id = noteObj.get("member_id").asInt,
+                        selected_date = noteObj.get("selected_date").asString
+                    ).toNote()
+                }
+
+
+                // 更新 StateFlow
+                _notes.value = notesList
+                Log.d("NoteRepo", "轉換後的資料: $notesList")
+
+
+                // 記錄總筆數
+                val total = jsonResponse.get("total").asInt
+                Log.d(TAG, "成功取得筆記列表，總筆數: $total")
+            } else {
+                Log.e(TAG, "API 無回應")
+                _notes.value = emptyList()
+            }
         } catch (e: Exception) {
-            Log.e("NoteRepository", "Error getting notes: ${e.message}")
+            Log.e(TAG, "獲取筆記列表時發生錯誤", e)
             _notes.value = emptyList()
         }
     }
 
     /**
      * 根據ID取得單一筆記
-     * @param noteId 筆記ID
-     * @return 筆記資料，若查無資料或發生錯誤則回傳null
      */
     suspend fun getNoteById(noteId: Int): Note? {
-        val url = "$SERVER_URL/getNoteById?note_id=$noteId"
-        Log.d("NoteRepository", "開始從 $url 獲取筆記")
+        val url = "$BASE_URL$API_PATH/getNoteById"
 
-        return try {
-            // 發送GET請求取得回應
-            val result = httpGet(url)
-            Log.d("NoteRepository", "API回應: $result")
+        try {
+            // 準備請求參數
+            val requestBody = JsonObject().apply {
+                addProperty("note_id", noteId)
+            }
 
-            // 使用JsonObject解析回應，因為可能包含錯誤訊息
-            val response = gson.fromJson(result, JsonObject::class.java)
+            // 發送請求
+            val response = CommonPost(url, requestBody.toString())
+            Log.d(TAG, "API回應: $response")
 
-            // 檢查回應是否包含錯誤訊息
-            if (response.has("error") || response.has("NotFind")) {
-                Log.d("NoteRepository", "回應含錯誤: $response")
-                null
-            } else {
+            if (response.isNotEmpty()) {
+                // 解析回應
+                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
+
+                // 檢查是否有錯誤
+                if (jsonResponse.has("error") || jsonResponse.has("NotFind")) {
+                    Log.d(TAG, "回應含錯誤: $jsonResponse")
+                    return null
+                }
+
                 // 轉換成Note物件
-                Note(
-                    noteId = response.get("note_id").asInt,
-                    title = response.get("title").asString,
-                    noteContent = response.get("content").asString,
-                    type = CardContentType.NOTE,  // 目前固定為NOTE類型
-                    date = formatDate(response.get("selected_date").asString),
-                    day = formatDay(response.get("selected_date").asString),
-                    restaurantName = null,  // 未來可能需要額外API獲取餐廳資訊
+                return Note(
+                    noteId = jsonResponse.get("note_id").asInt,
+                    title = jsonResponse.get("title").asString,
+                    noteContent = jsonResponse.get("content").asString,
+                    type = CardContentType.NOTE,
+                    date = formatDate(jsonResponse.get("selected_date").asString),
+                    day = formatDay(jsonResponse.get("selected_date").asString),
+                    restaurantName = null,
                     imageResId = null
                 ).also {
-                    Log.d("NoteRepository", "成功建立Note物件: $it")
+                    Log.d(TAG, "成功建立Note物件: $it")
                 }
             }
+            return null
         } catch (e: Exception) {
-            // 紀錄錯誤並返回null
-            Log.e("NoteRepository", "獲取筆記時發生錯誤: ${e.message}")
-            e.printStackTrace()
-            null
+            Log.e(TAG, "獲取筆記時發生錯誤", e)
+            return null
         }
     }
 
@@ -128,12 +170,13 @@ class NoteRepository private constructor() {
     private fun formatDate(dateString: String): String {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
         val outputFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
-        return try {
+        try {
             val date = inputFormat.parse(dateString)
-            outputFormat.format(date)
+                ?: throw IllegalArgumentException("無法解析日期: $dateString")
+            return outputFormat.format(date)
         } catch (e: Exception) {
-            Log.e("NoteRepository", "Error formatting date: ${e.message}")
-            ""
+            Log.e(TAG, "日期格式化錯誤: $dateString", e)
+            throw IllegalArgumentException("日期格式錯誤: $dateString", e)
         }
     }
 
@@ -143,12 +186,14 @@ class NoteRepository private constructor() {
     private fun formatDay(dateString: String): String {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
         val outputFormat = SimpleDateFormat("EEEE", Locale.CHINESE)
-        return try {
+         try {
             val date = inputFormat.parse(dateString)
-            "星期" + outputFormat.format(date).substring(2, 3)
+                ?: throw IllegalArgumentException("無法解析日期: $dateString")
+
+             return "星期" + outputFormat.format(date).substring(2, 3)
         } catch (e: Exception) {
-            Log.e("NoteRepository", "Error formatting day: ${e.message}")
-            ""
+             Log.e(TAG, "日期格式化錯誤: $dateString", e)
+             throw IllegalArgumentException("日期格式錯誤: $dateString", e)
         }
     }
 }
