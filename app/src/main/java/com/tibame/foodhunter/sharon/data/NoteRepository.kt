@@ -21,7 +21,7 @@ class NoteRepository private constructor() {
     companion object {
         private const val TAG = "NoteRepository"
         // 使用團隊統一的 serverUrl
-        private const val BASE_URL = "http://192.168.2.97:8080/com.tibame.foodhunter_server"
+        private const val BASE_URL = "http://10.2.12.212:8080/com.tibame.foodhunter_server"
         private const val API_PATH = "/api/note"
         val instance = NoteRepository()
     }
