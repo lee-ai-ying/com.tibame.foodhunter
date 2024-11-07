@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon.components.topbar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,17 +45,22 @@ fun NoteEditTopBar(
         rememberTopAppBarState()
     ),
     noteEditVM: NoteEditVM,
-//    hasTitleInput: () -> Unit,
 ){
     var showDeleteDialog by remember { mutableStateOf(false) }
     val uiState by noteEditVM.uiState.collectAsState()
+
+    Log.d("NoteEditTopBar", "TopBar UI狀態: $uiState")
+
 
     TopAppBar(
         title = {},
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            if (canback) {
-                IconButton(onClick = { navController.popBackStack() }) {
+            if (uiState.hasTitle) {
+                IconButton(onClick = {
+                    noteEditVM.saveAndNavigateBack(navController)
+//                    navController.popBackStack()
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                         contentDescription = stringResource(R.string.str_back)
@@ -64,8 +70,7 @@ fun NoteEditTopBar(
         },
         actions = {
             when {
-                // 是首次進入、也不是既有筆記
-                uiState.isFirstEntry && !uiState.isExistingNote ->
+                uiState.isFirstEntry && !uiState.hasTitle  ->
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             modifier = Modifier
@@ -76,7 +81,7 @@ fun NoteEditTopBar(
                         )
                     }
                 // 不是首次進入、有既有筆記
-                !uiState.isFirstEntry && uiState.isExistingNote ->
+                uiState.hasTitle ->
                     IconButton(
                         onClick = {
                             showDeleteDialog = true

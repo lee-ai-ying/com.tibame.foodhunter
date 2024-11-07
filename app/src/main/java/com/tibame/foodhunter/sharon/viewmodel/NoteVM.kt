@@ -9,12 +9,9 @@ import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
@@ -51,7 +48,13 @@ class NoteVM : ViewModel() {
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
     init {
-        loadNotes()
+        // 直接訂閱 repository 的 notes StateFlow
+        viewModelScope.launch {
+            repository.notes.collect { notes ->
+                _allNotes.value = notes
+                _filteredNotes.value = notes
+            }
+        }
         setupSearchFlow()  // 搜尋資料流
     }
 
@@ -200,7 +203,7 @@ class NoteVM : ViewModel() {
                     date = getCurrentDate(),
                     day = getCurrentDay(),
                     title = title,
-                    noteContent = content,
+                    content = content,
                     imageResId = null,
                     restaurantName = null
                 )
@@ -233,7 +236,7 @@ class NoteVM : ViewModel() {
                     val oldNote = currentList[index]
                     val updatedNote = oldNote.copy(
                         title = title,
-                        noteContent = content,
+                        content = content,
                         type = type,
                         restaurantName = restaurantName
                     )

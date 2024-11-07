@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -33,7 +34,13 @@ data class NoteEditUiState(
  * 定義筆記編輯頁面可能發生的所有事件
  */
 sealed class NoteEditEvent {
-    // 輸入相關事件
+    /**
+     * 更新標題事件
+     * @param title 新的標題內容
+     * 使用時機：
+     * 1. 使用者輸入/修改標題時
+     * 2. 清空標題時
+     */
     data class UpdateTitle(val title: String) : NoteEditEvent()
     data class UpdateContent(val content: String) : NoteEditEvent()
     data class UpdateRestaurant(val name: String?) : NoteEditEvent()
@@ -65,6 +72,10 @@ class NoteEditVM : ViewModel() {
     // 初始化 repository
     private val repository = NoteRepository.instance
 
+    // 新增保存成功的事件
+    private val _saveSuccess = MutableStateFlow(false)
+    val saveSuccess = _saveSuccess.asStateFlow()
+
     /**
      * 載入指定 ID 的筆記
      */
@@ -81,12 +92,22 @@ class NoteEditVM : ViewModel() {
                 noteData?.let { note ->
                     _uiState.update { state ->
                         state.copy(
+                            isFirstEntry = false,      // 設為非首次進入
+                            isExistingNote = true,     // 設為既有筆記
+                            hasTitle = note.title.isNotEmpty(),
                             title = note.title,
-                            content = note.noteContent,
+                            content = note.content,
                             restaurantName = note.restaurantName,
                             type = note.type,
                             date = note.date
                         )
+                    }
+                    Log.d(TAG, "筆記載入成功: ${note.title}")
+
+                } ?: run {
+                    Log.e(TAG, "找不到指定筆記")
+                    _uiState.update {
+                        it.copy(errorMessage = "找不到指定筆記")
                     }
                 }
             } catch (e: Exception) {
@@ -105,13 +126,7 @@ class NoteEditVM : ViewModel() {
      */
     fun onEvent(event: NoteEditEvent) {
         when (event) {
-            is NoteEditEvent.UpdateTitle -> {
-                _uiState.update { it.copy(title = event.title) }
-                // 自動保存機制
-                if (event.title.isNotEmpty()) {
-                    saveNote()
-                }
-            }
+            is NoteEditEvent.UpdateTitle -> handleTitleUpdate(event.title)
 
             is NoteEditEvent.UpdateContent -> {
                 _uiState.update { it.copy(content = event.content) }
@@ -136,47 +151,91 @@ class NoteEditVM : ViewModel() {
         }
     }
 
+    private fun handleTitleUpdate(newTitle: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                title = newTitle,
+                hasTitle = newTitle.isNotEmpty(),
+                isFirstEntry =
+                if (currentState.isFirstEntry && newTitle.isEmpty()) true
+                else currentState.isFirstEntry
+
+            )
+        }
+        // 2. 根據不同情境處理自動保存
+        when {
+            // 情境1: 首次輸入且有標題
+            uiState.value.isFirstEntry && newTitle.isNotEmpty() -> {
+//                saveNote()  // 自動保存
+                Log.d(TAG, "首次輸入標題，自動創建筆記")
+            }
+
+            // 情境2: 非首次輸入且標題被清空
+            !uiState.value.isFirstEntry && newTitle.isEmpty() -> {
+                _uiState.update {
+                    it.copy(errorMessage = "請輸入標題")
+                }
+                Log.d(TAG, "既有筆記標題被清空，顯示警告")
+            }
+
+            // 情境3: 既有筆記修改 - 自動更新
+            !uiState.value.isFirstEntry && newTitle.isNotEmpty() -> {
+//                saveNote()  // 自動保存更新
+                Log.d(TAG, "既有筆記標題修改，自動更新")
+            }
+        }
+    }
     /**
-     * 保存筆記
+     * 返回按鈕處理
+     */
+    fun saveAndNavigateBack(navController: NavHostController) {
+        viewModelScope.launch {
+            // 有標題才保存
+            if (uiState.value.hasTitle) {
+                saveNote()
+            }
+            // 保存成功或沒有內容需要保存時，返回
+            navController.popBackStack()
+        }
+    }
+
+    /**
+     * 筆記保存邏輯
+     * 功能：
+     * 1. 處理新增/更新筆記
+     * 2. 更新筆記狀態
+     * 3. 錯誤處理
      */
     private fun saveNote() {
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true) }
-
                 val currentState = _uiState.value
 
-                // 檢查必填欄位
-                if (currentState.title.isBlank()) {
-                    _uiState.update {
-                        it.copy(errorMessage = "請輸入標題")
-                    }
-                    return@launch
-                }
-
-                if (note.value == null) {
-                    // 新增筆記
-                    repository.addNote(
+                _uiState.update { it.copy(isLoading = true) }
+                    // 執行新增操作
+                    val newNoteId = repository.addNote(
                         title = currentState.title,
                         content = currentState.content,
                         type = currentState.type,
                         restaurantName = currentState.restaurantName
                     )
-//                } else {
-//                    // 更新筆記
-//                    repository.updateNote(
-//                        noteId = note.value!!.noteId,
-//                        title = currentState.title,
-//                        content = currentState.content,
-//                        type = currentState.type,
-//                        restaurantName = currentState.restaurantName
-//                    )
-                }
-                // 保存成功的處理會在 UI 層進行
+                        // 更新狀態：不再是首次輸入
+                        _saveSuccess.value = true
+
+                        _uiState.update {
+                            it.copy(
+                                isFirstEntry = false,
+                                isExistingNote = true,
+                                hasTitle = true
+                            )
+                        }
+
+                    Log.d(TAG, "新筆記創建成功，ID: $newNoteId")
+
             } catch (e: Exception) {
-                Log.e(TAG, "保存筆記失敗", e)
                 _uiState.update {
-                    it.copy(errorMessage = "保存失敗：${e.message}")
+                    it.copy(errorMessage = "儲存失敗：${e.message}")
                 }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
@@ -184,16 +243,9 @@ class NoteEditVM : ViewModel() {
         }
     }
 
-    // 新增一個方法處理保存後的導航
-    fun saveAndNavigateBack(navController: NavHostController) {
-        viewModelScope.launch {
-            try {
-                onEvent(NoteEditEvent.SaveNote)
-                // 保存成功後返回
-                navController.popBackStack()
-            } catch (e: Exception) {
-                // 錯誤處理
-            }
-        }
-    }
+
 }
+
+
+
+
