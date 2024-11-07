@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon.data
 
+import android.icu.util.LocaleData
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Locale
 
 /**
@@ -136,6 +138,53 @@ class NoteRepository private constructor() {
         }
     }
 
+    /**
+     * 新增筆記
+     * @return 新增成功返回筆記ID，失敗返回null
+     */
+    suspend fun addNote(title: String, content: String, type: CardContentType, restaurantName: String? = null): Int? {
+        val url = "$BASE_URL$API_PATH/addNote"
+
+        try {
+            // 準備請求參數
+            val requestBody = JsonObject().apply {
+                addProperty("title", title)
+                addProperty("content", content)
+                addProperty("type", type.name)  // 轉換為字串
+                // 暫時固定傳入的值，之後可以改為從登入狀態獲取
+                addProperty("member_id", 1)
+                addProperty("restaurant_id", restaurantName)  // 暫時不處理餐廳關聯
+                // 使用當前日期
+                addProperty("selected_date", LocalDate.now().toString())
+            }
+
+            // 發送請求
+            val response = CommonPost(url, requestBody.toString())
+            Log.d(TAG, "新增筆記API回應: $response")
+
+            if (response.isNotEmpty()) {
+                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
+
+                // 檢查是否成功
+                if (jsonResponse.has("error")) {
+                    Log.e(TAG, "新增筆記失敗: ${jsonResponse.get("error").asString}")
+                    return null
+                }
+
+                // 取得新增的筆記ID
+                val newNoteId = jsonResponse.get("note_id").asInt
+
+                // 重新取得筆記列表
+                getNotes()
+
+                return newNoteId
+            }
+            return null
+        } catch (e: Exception) {
+            Log.e(TAG, "新增筆記時發生錯誤", e)
+            return null
+        }
+    }
 
     /**
      * API回應的資料結構，用於匹配後端回傳的JSON格式
