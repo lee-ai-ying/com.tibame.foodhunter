@@ -13,11 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 
 
 class GroupViewModel : ViewModel() {
@@ -36,19 +33,18 @@ class GroupViewModel : ViewModel() {
                     ?: emptyList()
             val incList = emptyList<GroupChat>().toMutableList()
             val endList = emptyList<GroupChat>().toMutableList()
-            list.forEach{
+            list.forEach {
                 val date = LocalDate.parse(it.time, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                 val today = LocalDate.now()
                 if (today > date) {
                     it.state = 0
                     endList.add(it)
-                }
-                else{
+                } else {
                     incList.add(it)
                 }
             }
             incList.add(0, GroupChat(name = "進行中", state = 99))
-            endList.add(0,GroupChat(name = "已結束", state = 99))
+            endList.add(0, GroupChat(name = "已結束", state = 99))
             repository.updateGroupChatList(incList.plus(endList))
         }
     }
@@ -144,7 +140,7 @@ class GroupViewModel : ViewModel() {
     fun createGroup(input: GroupCreateData) {
         viewModelScope.launch {
             val gson = Gson()
-            var jsonObject = JsonObject()
+            val jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
             jsonObject.addProperty("location", "KFC")//input.location)
             jsonObject.addProperty("time", input.time)
@@ -162,16 +158,47 @@ class GroupViewModel : ViewModel() {
 
     fun joinGroup(groupId: String, memberId: String) {
         viewModelScope.launch {
-            var jsonObject = JsonObject()
+            val jsonObject = JsonObject()
             jsonObject.addProperty("groupId", groupId)
             jsonObject.addProperty("memberId", memberId)
-            val result = CommonPost("$serverUrl/group/join", jsonObject.toString())
+            CommonPost("$serverUrl/group/join", jsonObject.toString())
             getGroupChatList(memberId)
         }
     }
+
     val selectSearchResult = repository.selectSearchResult
-    fun updateSelectSearchResult(input: GroupSearchResult){
+    fun updateSelectSearchResult(input: GroupSearchResult) {
         repository.updateSelectSearchResult(input)
+    }
+
+    val groupChatHistory = repository.groupChatHistory
+    fun getGroupChatHistory(groupRoomId: Int) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("id", "$groupRoomId")
+            val result = CommonPost("$serverUrl/group/chat/get", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupChatHistory>>() {}.type
+            val list = gson.fromJson<List<GroupChatHistory>>(
+                jsonObject.get("result").asString,
+                collectionType
+            )?: emptyList()
+            repository.updateGroupChatHistory(list)
+        }
+    }
+
+    fun sendMessage(chatInput: String) {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("groupId", "${_nowChatRoomId.value}")
+            jsonObject.addProperty("memberId", "1")//TODO:memberId
+            jsonObject.addProperty("message", chatInput)
+            val result = CommonPost("$serverUrl/group/chat/send", jsonObject.toString())
+            Log.d("qq",result)
+            //TODO: getGroupChatHistory
+            getGroupChatHistory(_nowChatRoomId.value)
+        }
     }
 //    init {
 //        viewModelScope.launch {

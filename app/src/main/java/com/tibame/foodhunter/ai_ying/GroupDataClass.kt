@@ -46,3 +46,10 @@ data class GroupSearchResult(
     @SerializedName("priceMax") var priceMax: Int = 2000,
     @SerializedName("describe") var describe: String = ""
 )
+
+data class GroupChatHistory(
+    @SerializedName("memberId") var senderId: Int = 0,
+    @SerializedName("memberName") var senderName: String = "",
+    @SerializedName("message") var message: String = "",
+    @SerializedName("sendTime") var sendTime: String = ""
+)
