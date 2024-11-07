@@ -99,7 +99,7 @@ fun GroupCreate(
                     inputData.joinMember = it.toString()
                 }
                 GroupText(text = stringResource(R.string.str_create_public))
-                GroupDropDownMenu(listOf("public", "invite", "private")) {
+                GroupDropDownMenu(listOf("公開", "邀請", "私人")) {
                     inputData.isPublic = it
                 }
                 GroupText(text = stringResource(R.string.str_create_describe))
@@ -115,7 +115,7 @@ fun GroupCreate(
                     Button(
                         onClick = {
                             gChatVM.createGroup(inputData)
-                            //navController.popBackStack()
+                            navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FColor.Orange_1st

@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -8,20 +7,28 @@ import kotlinx.coroutines.flow.update
 object GroupRepository {
     private val _groupChatList = MutableStateFlow(emptyList<GroupChat>())
     val groupChatList = _groupChatList.asStateFlow()
-    private val _groupSearchResult = MutableStateFlow(emptyList<GroupSearchResult>())
-    val groupSearchResult = _groupSearchResult.asStateFlow()
+    fun updateGroupChatList(input: List<GroupChat>){
+        _groupChatList.update { input }
+    }
+    private val _selectSearchResult = MutableStateFlow(GroupSearchResult())
+    val selectSearchResult = _selectSearchResult.asStateFlow()
+    fun updateSelectSearchResult(input: GroupSearchResult){
+        _selectSearchResult.update { input }
+    }
     private val _searchCache = MutableStateFlow(GroupSearchData())
     val searchCache = _searchCache.asStateFlow()
-    init {
-        //_groupChatList.update { setTestData() }
-        //_groupSearchResult.update { searchFakeData() }
-    }
     fun updateGroupSearchCache(input: GroupSearchData){
         _searchCache.update { input }
     }
-
+    private val _groupSearchResult = MutableStateFlow(emptyList<GroupSearchResult>())
+    val groupSearchResult = _groupSearchResult.asStateFlow()
     fun updateSearchGroupResult(result: List<GroupSearchResult>) {
         _groupSearchResult.update { result }
+    }
+    private val _groupChatHistory = MutableStateFlow(emptyList<GroupChatHistory>())
+    val groupChatHistory = _groupChatHistory.asStateFlow()
+    fun updateGroupChatHistory(result: List<GroupChatHistory>){
+        _groupChatHistory.update { result }
     }
 
     private fun searchFakeData(): List<GroupSearchResult> {

@@ -78,7 +78,7 @@ fun GroupSearch(
         )
     }
 
-    var inputData = gChatVM.groupSearchCache.collectAsState().value
+    val inputData by gChatVM.groupSearchCache.collectAsState()
     //var inputData by remember { mutableStateOf(input) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
