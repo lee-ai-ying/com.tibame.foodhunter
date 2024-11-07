@@ -39,13 +39,12 @@ import com.tibame.foodhunter.ai_ying.GroupViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 @Composable
 fun PersonHomepage(
-    currentUserId: Int,
     publisherId: Int,
     postViewModel: PostViewModel = viewModel(),
     navController: NavHostController
 ) {
     val personalPosts = postViewModel.getPersonalPosts(publisherId).collectAsState()
-
+    val currentUserId = 7 // 替換為實際的用戶ID獲取方式
     Column(
         verticalArrangement = Arrangement.spacedBy(30.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -83,13 +82,9 @@ fun PostHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = publisher.avatarImage),
-                contentDescription = "Publisher avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
+            Avatar(
+                imageData = publisher.avatarBitmap,
+                defaultImage = publisher.avatarImage
             )
 
             Text(

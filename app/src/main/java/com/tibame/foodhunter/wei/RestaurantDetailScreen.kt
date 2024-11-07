@@ -92,7 +92,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
+//                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
 
                             HorizontalDivider(
                                 modifier = Modifier,

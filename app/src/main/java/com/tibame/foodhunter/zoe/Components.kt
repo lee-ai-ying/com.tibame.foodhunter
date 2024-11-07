@@ -45,10 +45,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
@@ -341,6 +343,45 @@ private fun RestaurantItem(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Select",
                 tint = FColor.Dark_80
+            )
+        }
+    }
+}
+
+@Composable
+fun Avatar(
+    imageData: ImageBitmap?, // 自定義圖片
+    defaultImage: Int = R.drawable.user1, // 預設圖片資源
+    size: Dp = 40.dp,
+    onClick: (() -> Unit)? = null, // 可選的點擊事件
+    contentDescription: String? = null
+) {
+    val modifier = Modifier
+        .size(size)
+        .clip(CircleShape)
+        .then(
+            if (onClick != null) {
+                Modifier.clickable(onClick = onClick)
+            } else {
+                Modifier
+            }
+        )
+
+    when {
+        imageData != null -> {
+            Image(
+                bitmap = imageData,
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
+            )
+        }
+        else -> {
+            Image(
+                painter = painterResource(id = defaultImage),
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
             )
         }
     }

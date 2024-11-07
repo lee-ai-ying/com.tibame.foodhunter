@@ -3,6 +3,7 @@ package com.tibame.foodhunter.zoe
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,14 +19,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 class PostViewModel : ViewModel() {
     private val repository = PostRepository.getInstance()
- // 現有的狀態
- private val _inputData = MutableStateFlow(PostCreateData(
-     publisher = 0,
-     content = "",
-     postTag = "",
-     restaurantId = 0,
-     photos = emptyList()
- ))
+    // 現有的狀態
+    private val _inputData = MutableStateFlow(PostCreateData(
+        publisher = 0,
+        content = "",
+        postTag = "",
+        restaurantId = 0,
+        photos = emptyList()
+    ))
     val inputData: StateFlow<PostCreateData> = _inputData.asStateFlow()
 
     // 輔助狀態
@@ -162,25 +163,41 @@ class PostViewModel : ViewModel() {
     }
 
     fun getPostById(postId: Int): StateFlow<Post?> {
-        return repository.postList.map { posts ->
-            posts.find { it.postId == postId }
+        return combine(
+            repository.postList.map { posts -> posts.find { it.postId == postId } },
+            _tempComments
+        ) { post, tempComments ->
+            post?.let {
+                // 如果有暫存的評論，合併到貼文中
+                if (tempComments.containsKey(postId)) {
+                    post.copy(comments = tempComments[postId] ?: post.comments)
+                } else {
+                    post
+                }
+            }
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
     fun setPostId(postId: Int) {
         _selectedPostId.value = postId
     }
-
-
+    private val _tempComments = MutableStateFlow<Map<Int, List<Comment>>>(emptyMap())
+    private val _currentComments = MutableStateFlow<List<Comment>>(emptyList())
+    val currentComments = _currentComments.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
     fun createComment(postId: Int, userId: Int, content: String) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 val success = repository.createComment(postId, userId, content)
-                if (success) {
-                    repository.loadPosts()
+                if (!success) {
+                    Log.e("PostViewModel", "Failed to create comment")
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "Error creating comment", e)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -213,7 +230,3 @@ class PostViewModel : ViewModel() {
         _selectedFilters.value = filters
     }
 }
-
-
-
-

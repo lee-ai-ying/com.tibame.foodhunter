@@ -104,66 +104,108 @@ class PostRepository {
             return null
         }
     }
-
     private suspend fun PostResponse.toPost(): Post {
         // 圖片處理
         val carouselItems = photos?.mapNotNull { photo ->
+            Log.d("PostRepository", "處理貼文照片 ID: ${photo.postPhotoId}")
             val imageBitmap = processBase64Image(photo.photoFile, photo.postPhotoId)
-            if (imageBitmap != null) {
+            imageBitmap?.let {
+                Log.d("PostRepository", "成功處理貼文照片 ID: ${photo.postPhotoId}")
                 CarouselItem(
                     id = photo.postPhotoId,
-                    imageData = imageBitmap,
+                    imageData = it,
                     order = 0
                 )
-            } else {
+            } ?: run {
+                Log.e("PostRepository", "無法處理貼文照片 ID: ${photo.postPhotoId}")
                 null
             }
         } ?: emptyList()
 
+        Log.d("PostRepository", "成功處理 ${carouselItems.size} 張貼文照片")
+
         // 評論處理
+        Log.d("PostRepository", "開始處理貼文 $postId 的評論")
         val comments = fetchComments(this.postId).map { commentResponse ->
+            Log.d("PostRepository", """
+            處理評論:
+            Comment ID: ${commentResponse.messageId}
+            Commenter ID: ${commentResponse.memberId}
+            Commenter Name: ${commentResponse.memberNickname}
+            Profile Image 是否存在: ${!commentResponse.profileImage.isNullOrEmpty()}
+        """.trimIndent())
+
+            val commentProfileImage = if (!commentResponse.profileImage.isNullOrEmpty()) {
+                try {
+                    val bitmap = processBase64Image(commentResponse.profileImage, commentResponse.memberId)
+                    Log.d("PostRepository", "評論者 ${commentResponse.memberId} 的頭像處理${if (bitmap != null) "成功" else "失敗"}")
+                    bitmap
+                } catch (e: Exception) {
+                    Log.e("PostRepository", "處理評論者頭像時發生錯誤", e)
+                    null
+                }
+            } else {
+                Log.d("PostRepository", "評論者 ${commentResponse.memberId} 沒有頭像數據")
+                null
+            }
+
             Comment(
                 id = commentResponse.messageId,
                 commenter = Commenter(
                     id = commentResponse.memberId,
                     name = commentResponse.memberNickname,
-                    avatarImage = R.drawable.user1
+                    avatarBitmap = commentProfileImage
                 ),
                 content = commentResponse.content,
                 timestamp = commentResponse.messageTime
             )
         }
 
-        return Post(
+        Log.d("PostRepository", "成功處理 ${comments.size} 條評論")
+
+        // 處理發布者頭像
+        Log.d("PostRepository", "開始處理發布者 $publisher 的頭像")
+        val publisherProfileBitmap = if (!publisherProfileImage.isNullOrEmpty()) {
+            try {
+                val bitmap = processBase64Image(publisherProfileImage, publisher)
+                Log.d("PostRepository", "發布者頭像處理${if (bitmap != null) "成功" else "失敗"}")
+                bitmap
+            } catch (e: Exception) {
+                Log.e("PostRepository", "處理發布者頭像時發生錯誤", e)
+                null
+            }
+        } else {
+            Log.d("PostRepository", "發布者沒有頭像數據")
+            null
+        }
+
+        val post = Post(
             postId = this.postId,
             publisher = Publisher(
                 id = this.publisher,
                 name = this.publisherNickname ?: "Unknown User",
-                avatarImage = R.drawable.user1
+                avatarBitmap = publisherProfileBitmap
             ),
             content = this.content,
             location = this.restaurantName ?: "Unknown Location",
             timestamp = this.postTime,
             postTag = this.postTag,
             carouselItems = carouselItems,
-            comments = comments,  // 加入評論列表
+            comments = comments,
             isFavorited = false
         )
+
+        Log.d("PostRepository", """
+        貼文處理完成:
+        Post ID: ${post.postId}
+        Publisher: ${post.publisher.name} (ID: ${post.publisher.id})
+        Has Publisher Avatar: ${post.publisher.avatarBitmap != null}
+        Photos Count: ${post.carouselItems.size}
+        Comments Count: ${post.comments.size}
+    """.trimIndent())
+
+        return post
     }
-    fun Context.uriToBase64(uri: Uri): String {
-        val inputStream = contentResolver.openInputStream(uri)
-        val bytes = inputStream?.readBytes()
-        inputStream?.close()
-        return if (bytes != null) {
-            Base64.encodeToString(bytes, Base64.NO_WRAP)
-        } else {
-            ""
-        }
-    }
-
-
-
-
     suspend fun createPost(postData: PostCreateData): Boolean {
         val url = "${serverUrl}/post/create"
 
@@ -249,75 +291,50 @@ class PostRepository {
 }
 
 
-    // 數據類別
-    data class PostResponse(
-        val postId: Int,
-        val postTag: String,
-        val publisher: Int,
-        val content: String,
-        val postTime: String,
-        val visibility: Int,
-        val restaurantId: Int,
-        val likeCount: Int,
-        val publisherNickname: String?,
-        val restaurantName: String?,
-        val photos: List<PhotoResponse>? = null  // 修改這裡來匹配後端返回的格式
-    )
+// 數據類別
+data class PostResponse(
+    val postId: Int,
+    val postTag: String,
+    val publisher: Int,
+    val content: String,
+    val postTime: String,
+    val visibility: Int,
+    val restaurantId: Int,
+    val likeCount: Int,
+    val publisherNickname: String?,
+    val restaurantName: String?,
+    val photos: List<PhotoResponse>? = null,
+    val publisherProfileImage: String? = null
+)
 
 
-    data class PhotoResponse(
-        val postPhotoId: Int,
-        val postId: Int,
-        val photoFile: String? // 用於Base64圖片數據
-    )
+data class PhotoResponse(
+    val postPhotoId: Int,
+    val postId: Int,
+    val photoFile: String? // 用於Base64圖片數據
+)
 
-    // 圖片數據類別
-    data class CarouselItem(
-        val id: Int,
-        val imageData: ImageBitmap?, // 改為可為空的 ImageBitmap
-        val order: Int,
-        val contentDescription: String = "" // 可選的內容描述
-    )
-
-
+// 圖片數據類別
+data class CarouselItem(
+    val id: Int,
+    val imageData: ImageBitmap?, // 改為可為空的 ImageBitmap
+    val order: Int,
+    val contentDescription: String = "" // 可選的內容描述
+)
 
 
-    data class RestaurantResponse(
-        val restaurantId: Int,
-        val name: String,
-        val address: String
-    )
 
-    data class UserResponse(
-        val userId: Int,
-        val name: String,
-        val avatar: String?,
-        val joinDate: String
-    )
+data class DeleteResponse(
+    val success: Boolean,
+    val message: String
+)
 
-    data class CreatePostRequest(
-        val publisher: Int,
-        val content: String,
-        val postTag: String,
-        val restaurantId: Int,
-        val visibility: Int
-    )
-
-    data class ApiResponse<T>(
-        val success: Boolean,
-        val message: String,
-        val data: T
-    )
-    data class DeleteResponse(
-        val success: Boolean,
-        val message: String
-    )
-
-    data class CommentResponse(
-        val messageId: Int,
-        val postId: Int,
-        val memberId: Int,
-        val content: String,
-        val messageTime: String,
-        val memberNickname: String
-    )
+data class CommentResponse(
+    val messageId: Int,
+    val postId: Int,
+    val memberId: Int,
+    val content: String,
+    val messageTime: String,
+    val memberNickname: String,
+    val profileImage: String? = null
+)

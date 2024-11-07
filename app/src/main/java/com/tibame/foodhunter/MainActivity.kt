@@ -289,7 +289,6 @@ fun Main(
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
                 val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
                 PersonHomepage(
-                    currentUserId = currentUserId,
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController

@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import androidx.compose.ui.graphics.ImageBitmap
 
 
 data class Post(
@@ -13,6 +14,7 @@ data class Post(
     var comments: List<Comment>,
     var isFavorited: Boolean = false
 )
+
 
 
 data class PostCreateData(
