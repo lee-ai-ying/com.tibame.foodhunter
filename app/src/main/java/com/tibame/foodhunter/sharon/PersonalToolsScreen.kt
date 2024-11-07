@@ -53,7 +53,6 @@ fun PersonalToolsScreen(
     val uiState by personalToolsVM.uiState.collectAsState()
 
 
-
     // 監聽 Note 搜尋事件
     LaunchedEffect(Unit) {
         personalToolsVM.noteSearchQuery.collect { query ->
@@ -85,6 +84,7 @@ fun PersonalToolsScreen(
                     personalToolsVM = personalToolsVM,
                     calendarVM = calendarVM
                 )
+
                 TabConstants.NOTE -> NoteTopBar(
                     navController = navController,
                     scrollBehavior = scrollBehavior,
@@ -94,18 +94,13 @@ fun PersonalToolsScreen(
         },
         floatingActionButton = {
             when (uiState.selectedTabIndex) {
-                in TabConstants.CALENDAR..TabConstants.NOTE  ->
+                in TabConstants.CALENDAR..TabConstants.NOTE ->
                     FloatingActionButton(
                         containerColor = colorResource(R.color.orange_1st),
-                        contentColor = colorResource(R.color.white) ,
-                        modifier = Modifier.padding(start =317.dp, bottom = 76.dp),
-                        onClick = {
-                            navController.navigate("note/add")
-
-                        },
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Add")
-                    }
+                        contentColor = colorResource(R.color.white),
+                        modifier = Modifier.padding(start = 317.dp, bottom = 76.dp),
+                        onClick = { navController.navigate("note/add") },
+                    ) { Icon(Icons.Default.Edit, contentDescription = "Add") }
             }
         },
     ) { innerPadding ->
@@ -125,14 +120,13 @@ fun PersonalToolsScreen(
             // 根據選中的 Tab 顯示對應的頁面
             when (uiState.selectedTabIndex) {
                 TabConstants.CALENDAR -> {
-
                     CalendarScreen(
                         navController = navController,
                         calendarVM = calendarVM
                     )
                 }
-                TabConstants.NOTE -> {
 
+                TabConstants.NOTE -> {
                     NoteScreen(
                         navController = navController,
                         noteVM = noteVM,

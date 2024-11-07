@@ -15,27 +15,24 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
-import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.data.Book
 import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
-import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: CalendarVM = viewModel(),
+    calendarVM: CalendarVM,
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by calendarVM.uiState.collectAsState()
     val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
-
 
     // 初始化當天為選中日期
     var selectedDate by remember {
@@ -91,11 +88,11 @@ fun CalendarScreen(
             dates = updatedDates,  // 傳遞更新後的 dates 列表
             // 切換到上一個月份
             onPreviousMonthButtonClicked = { prevMonth ->
-                viewModel.toPreviousMonth(prevMonth)
+                calendarVM.toPreviousMonth(prevMonth)
             },
             // 切換到下一個月份
             onNextMonthButtonClicked = { nextMonth ->
-                viewModel.toNextMonth(nextMonth)
+                calendarVM.toNextMonth(nextMonth)
             },
             // 點擊日期時更新選擇的日期和顯示的書籍
             onDateClickListener = { date ->
@@ -108,7 +105,6 @@ fun CalendarScreen(
             modifier = Modifier
                 .background(Color.White)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
@@ -166,7 +162,7 @@ fun CalendarScreenPreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 //    val calendarVM: CalendarVM = viewModel() // 取得 ViewModel
 
-    CalendarScreen()
+//    CalendarScreen()
 
 }
 
