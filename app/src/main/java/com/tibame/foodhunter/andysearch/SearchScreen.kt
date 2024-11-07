@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -60,6 +61,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -72,39 +74,56 @@ fun SearchScreen(
     val preRestaurants by searchTextVM.preRestaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    var delayScreen by remember { mutableStateOf(true) }
     val isInitialized = remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top
-    ) {
-        if (!isInitialized.value) {
-            LaunchedEffect(Unit) {
-                searchTextVM.preloadRestaurants()
-                isInitialized.value = true
+
+    // 使用 LaunchedEffect 做延遲控制
+    LaunchedEffect(Unit) {
+        delay(1500) // 延遲 2 秒鐘
+        delayScreen = false // 2 秒後切換到主頁面顯示
+    }
+
+    if (delayScreen) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("載入中") },
+            text = { Text("正在準備您的餐廳資訊，請稍候...") },
+            confirmButton = {}
+        )
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top
+        ) {
+            if (!isInitialized.value) {
+                LaunchedEffect(Unit) {
+                    searchTextVM.preloadRestaurants()
+                    isInitialized.value = true
+                }
             }
+
+            Log.d("preload", "preRestaurants")
+            ShowSearchBar(
+                cities = cities,
+                searchTextVM = searchTextVM,
+                state = true, navController = navController
+            ) // state 如果true 導覽頁面到搜尋結果
+
+
+            ShowGoogleMap(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(.4f)
+                    .padding(16.dp),
+                preRestaurants,
+                restaurantVM = searchTextVM,
+                onLocationUpdate = { location -> currentLocation = location }
+            )
+            ShowRestaurantLists(
+                preRestaurants, true, navController,
+                currentLocation, searchTextVM
+            )
         }
-
-        Log.d("preload", "preRestaurants")
-        ShowSearchBar(
-            cities = cities,
-            searchTextVM = searchTextVM,
-            state = true, navController = navController
-        ) // state 如果true 導覽頁面到搜尋結果
-
-
-        ShowGoogleMap(
-            Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(.4f)
-                .padding(16.dp),
-            preRestaurants,
-            restaurantVM = searchTextVM,
-            onLocationUpdate = { location -> currentLocation = location }
-        )
-        ShowRestaurantLists(
-            preRestaurants, true, navController,
-            currentLocation, searchTextVM
-        )
     }
 
 }
