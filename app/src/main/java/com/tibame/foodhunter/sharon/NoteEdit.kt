@@ -580,7 +580,7 @@ fun BottomSheetContent(
         onActiveChange = { isActive = it },
         modifier = Modifier.padding(horizontal = 16.dp),
         onSearch = {
-            scope.launch { testVM.updateSearchRest(searchQuery) }
+            scope.launch{testVM.updateSearchRest(searchQuery)}
         }
     )
 

@@ -233,6 +233,7 @@ fun RandomFood(navController: NavHostController,
                         onClick = {
                             searchTextVM.updateSearchText(selectedOption)
                             randomScope.launch { searchTextVM.updateSearchRest(selectedOption) }
+                            searchTextVM.loadShowSearchText()
                             navController.navigate(context.getString(R.string.SearchToGoogleMap))
                         }  // 點擊確定按鈕，關閉對話框
                     ) {
@@ -303,7 +304,7 @@ fun foodLabel(selectLabel: String, randomFoodVM: RandomFoodVM){
     val foodLabel by randomFoodVM.foodLabel.collectAsState()
     val selectedItems = remember { mutableStateListOf<String>() }
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 100.dp),
+        columns = GridCells.Adaptive(minSize = 60.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
