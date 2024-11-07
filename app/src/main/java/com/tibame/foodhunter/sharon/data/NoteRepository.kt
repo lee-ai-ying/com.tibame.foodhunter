@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,7 @@ class NoteRepository private constructor() {
     companion object {
         private const val TAG = "NoteRepository"
         // 使用團隊統一的 serverUrl
-        private const val BASE_URL = "http://10.2.12.212:8080/com.tibame.foodhunter_server"
+        private const val BASE_URL = serverUrl
         private const val API_PATH = "/api/note"
         val instance = NoteRepository()
     }
