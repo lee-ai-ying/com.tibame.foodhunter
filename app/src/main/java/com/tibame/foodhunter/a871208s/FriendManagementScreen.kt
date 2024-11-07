@@ -63,6 +63,7 @@ import kotlinx.coroutines.launch
 fun FriendManagementScreen(
     navController: NavHostController = rememberNavController(),
     friendVM: FriendViewModel = viewModel()
+    ,userVM: UserViewModel
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -228,17 +229,6 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit) {
     )
 }
 
-/**
- * 載入測試需要資料
- * @return 多本書資訊
- */
 
 
-@Preview(showBackground = true)
-@Composable
-fun FriendManagementScreenPreview() {
-    MaterialTheme {
-        FriendManagementScreen(rememberNavController())
-    }
 
-}
