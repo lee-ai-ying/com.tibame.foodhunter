@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.map.serect)
+    alias(libs.plugins.google.gms.googleServices)
 }
 
 android {
@@ -77,6 +78,8 @@ dependencies {
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.benchmark.common)
     implementation(libs.generativeai)
+    implementation(libs.firebase.bom)
+    implementation(libs.firebase.messaging.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
