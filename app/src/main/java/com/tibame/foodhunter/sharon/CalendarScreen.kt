@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -129,7 +128,7 @@ fun CalendarScreen(
                     date = "10/17",
                     day = "星期四",
                     title = "小巷中的咖啡廳",
-                    noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
+                    content = "這裡有各種美味的咖啡和小吃、環境乾淨...",
                     imageResId = R.drawable.sushi_image_1
                 )
             }

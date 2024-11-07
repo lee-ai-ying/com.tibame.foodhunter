@@ -13,8 +13,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,13 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.cloudinary.android.ui.BuildConfig
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
-import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,17 +77,21 @@ fun NoteScreen(
                         key = { index -> notes[index].noteId }
                     ) { index ->
                         val currentNote = notes[index]
-                        Log.d("NoteScreen", "渲染筆記項目: index=$index, id=${currentNote.noteId}, title=${currentNote.title}")
+                        Log.d("NoteScreen",
+                            "渲染筆記項目: index=$index, " +
+                                    "id=${currentNote.noteId}, " +
+                                    "title=${currentNote.title}, " +
+                                    "content=${currentNote.content}")
                         NoteOrGroupCard(
                             onClick = {
                                 Log.d("NoteScreen", "點擊筆記: id=${currentNote.noteId}")
-                                navController.navigate("note_edit/${currentNote.noteId}")
+                                navController.navigate("note/edit/${currentNote.noteId}")
                             },
                             type = currentNote.type,
                             date = currentNote.date,
                             day = currentNote.day,
                             title = currentNote.title,
-                            noteContent = currentNote.noteContent,
+                            content = currentNote.content,
                             imageResId = currentNote.imageResId,
                             modifier = Modifier
                                 .fillMaxWidth()

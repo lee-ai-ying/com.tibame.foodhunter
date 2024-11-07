@@ -18,11 +18,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
@@ -55,10 +59,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -95,7 +103,7 @@ fun AddNotePreview() {
 //            date = "10/15",
 //            day = "星期二",
 //            title = "巷弄甜點店",
-//            noteContent = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
+//            content = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
 //            imageResId = R.drawable.sushi_image_1,
 //            restaurantName = "法式甜點工作室"
 //        )
@@ -151,14 +159,20 @@ fun NoteEditRoute(
             // 收集現有筆記數據
             val uiState by noteEditVM.uiState.collectAsState()
 
-            // 當 navigation.noteId 改變時，會重新執行內部的代碼
             LaunchedEffect(navigation.noteId) {
-                // 加載對應 ID 的筆記數據
+                Log.d("NoteEditRoute", "開始載入筆記 ID: ${navigation.noteId}")
                 noteEditVM.loadNote(navigation.noteId)
             }
 
-            // 當資料載入完成時顯示編輯頁面
             if (uiState.isLoading) {
+                // 顯示載入指示器
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                )
+            } else {
+                // 載入完成，顯示編輯頁面
                 NoteEdit(
                     navController = navController,
                     noteEditVM = noteEditVM,
@@ -168,6 +182,7 @@ fun NoteEditRoute(
         }
     }
 }
+
 
 
 
@@ -199,6 +214,18 @@ fun NoteEdit(
         fontWeight = FontWeight(400)
     )
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    Log.d("NoteEdit", "當前UI狀態: $uiState")  // 加入日誌
+
+// 2. 檢查是否有內容要顯示
+    if (!isNewNote && uiState.title.isEmpty()) {
+        Log.d("NoteEdit", "等待內容載入...")
+        // 可以顯示載入指示器
+        return
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -226,6 +253,7 @@ fun NoteEdit(
                 modifier = Modifier
                     .height(44.dp)
                     .padding(bottom = 2.dp), // 設置 Box 的最小高度
+
                 contentAlignment = Alignment.TopStart // 將所有內容左下對齊
             ) {
                 BasicTextField(
@@ -236,6 +264,16 @@ fun NoteEdit(
                         }
                     },
                     textStyle = editNoteTitleTextStyle,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            // 收起鍵盤
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
+                    )
                 )
                 if (uiState.title.isEmpty()) {
                     Text(
@@ -283,6 +321,14 @@ fun NoteEdit(
                     .heightIn(min = 24.dp)
             ) {
                 BasicTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            if (!focusState.isFocused) {
+                                // 失去焦點時才隱藏鍵盤
+                                keyboardController?.hide()
+                            }
+                        },
                     value = uiState.content,
                     onValueChange = { content ->
                         if (content.length <= 500) {
@@ -595,7 +641,7 @@ fun BottomSheetContent(
         onActiveChange = { isActive = it },
         modifier = Modifier.padding(horizontal = 16.dp),
         onSearch = {
-            scope.launch{testVM.updateSearchRest(searchQuery)}
+            scope.launch { testVM.updateSearchRest(searchQuery) }
         }
     )
 

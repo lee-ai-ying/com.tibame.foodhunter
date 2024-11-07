@@ -9,7 +9,7 @@ data class Note(
     val date: String,
     val day: String,
     val title: String,
-    val noteContent: String,
+    val content: String,
     val imageResId: Int? = null, // 可選欄位
     val restaurantName: String? = null  // 可選欄位
 )
