@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -28,8 +29,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,7 +38,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
@@ -82,7 +82,7 @@ fun LoginScreen(
             text = stringResource(R.string.app_name),
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Blue
+            color = colorResource(R.color.orange_1st)
         )
 
         OutlinedTextField(
@@ -146,7 +146,9 @@ fun LoginScreen(
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
+                colors = ButtonDefaults. buttonColors(colorResource(R.color.orange_2nd)),
                 onClick = {
+
                     coroutineScope.launch {
                         val logged = userVM.login(username, password)
                         if (logged) {
@@ -163,6 +165,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
+                colors = ButtonDefaults. buttonColors(colorResource(R.color.orange_2nd)),
                 onClick = { navController.navigate(context.getString(R.string.str_login) + "/2") }
 
             ) {

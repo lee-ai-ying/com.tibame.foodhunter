@@ -34,7 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.tibame.foodhunter.a871208s.AddFriendScreen
+import com.tibame.foodhunter.a871208s.FriendAddScreen
 import com.tibame.foodhunter.a871208s.DeleteMemberScreen
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
@@ -65,7 +65,6 @@ import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
-import com.tibame.foodhunter.sharon.TabConstants
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
 import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
@@ -392,7 +391,7 @@ fun Main(
                 MemberInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/3") {
-                ModifyInformationScreen(navController = navController)
+                ModifyInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/4") {
                 DeleteMemberScreen(navController = navController)
@@ -401,10 +400,10 @@ fun Main(
                 OtherSettingScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/6") {
-                FriendManagementScreen(navController = navController, friendVM)
+                FriendManagementScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/7") {
-                AddFriendScreen(navController = navController)
+                FriendAddScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/8") {
                 PrivateChatScreen(navController = navController,pChatVM)

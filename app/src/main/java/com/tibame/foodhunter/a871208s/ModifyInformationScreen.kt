@@ -18,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,24 +35,70 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 @Composable
-fun ModifyInformationScreen(navController: NavHostController = rememberNavController()) {
+fun ModifyInformationScreen(navController: NavHostController = rememberNavController(),userVM: UserViewModel) {
     val context = LocalContext.current
+
+    val passwordState = remember { mutableStateOf("") }
+    val nicknameState = remember { mutableStateOf("") }
+    val emailState = remember { mutableStateOf("") }
+    val phoneState = remember { mutableStateOf("") }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val user = userVM.getUserInfo(userVM.username.value) // 替換為實際用戶 ID
+            if (user != null) {
+                passwordState.value = user.password // 獲取用戶名
+                nicknameState.value = user.nickname
+                emailState.value = user.email
+                phoneState.value =user.phone
+
+            }
+        }
+    }
+
     var password by remember { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+
     var showDialog by remember { mutableStateOf(false) }
+    var showDialog2 by remember { mutableStateOf(false) }
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
             text = { Text(text = "確定要修改資料?") },
             confirmButton = {
                 Button(
+
                     onClick = {
-                        navController.navigate(context.getString(R.string.str_member) + "/2")
-                    }  // 點擊確定按鈕，關閉對話框
+                        coroutineScope.launch {
+                            if (password == "") {
+                                password = passwordState.value
+                            }
+                            if (nickname == "") {
+                                nickname = nicknameState.value
+                            }
+                            if (email == "") {
+                                email = emailState.value
+                            }
+                            if (phone == "") {
+                                phone = phoneState.value
+                            }
+                            val saved =
+                                userVM.save(userVM.username.value, password, nickname, email, phone)
+                            if (saved) {
+                                navController.navigate(context.getString(R.string.str_member) + "/2")
+                            } else {
+                                showDialog2 = true
+                                showDialog = false
+                            }
+                        }
+                        }  // 點擊確定按鈕，關閉對話框
                 ) {
                     Text("確定")
                 }
@@ -62,6 +110,22 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             }
         )
     }
+
+    if (showDialog2) {
+        AlertDialog(
+            onDismissRequest = { showDialog2 = false },  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "修改格式錯誤") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog2 = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定")
+                }
+            }
+        )
+    }
+
+
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
@@ -93,7 +157,7 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "aaaaaaaaa",
+                text = userVM.username.value,
                 fontSize = 14.sp,
                 color = Color.Black
             )
@@ -113,7 +177,7 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text(text = "請輸入密碼", fontSize = 18.sp) },
+                placeholder = { Text(text = passwordState.value, fontSize = 18.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -135,7 +199,7 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                placeholder = { Text(text = "請輸入暱稱", fontSize = 18.sp) },
+                placeholder = { Text(text = nicknameState.value, fontSize = 18.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -156,7 +220,7 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text(text = "請輸入信箱", fontSize = 18.sp) },
+                placeholder = { Text(text = emailState.value, fontSize = 18.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -177,7 +241,7 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                placeholder = { Text(text = "請輸入號碼", fontSize = 18.sp) },
+                placeholder = { Text(text = phoneState.value, fontSize = 18.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -208,13 +272,6 @@ fun ModifyInformationScreen(navController: NavHostController = rememberNavContro
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ModifyInformationScreenPreview() {
-    MaterialTheme {
-        ModifyInformationScreen()
-    }
 
-}
 
 
