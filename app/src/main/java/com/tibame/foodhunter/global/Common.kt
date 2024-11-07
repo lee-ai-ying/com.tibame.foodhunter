@@ -7,7 +7,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-const val serverUrl = "http://10.2.17.40:8080/com.tibame.foodhunter_server"
+const val serverUrl = "http://10.2.17.120:8080/com.tibame.foodhunter_server"
 suspend fun CommonPost(
     url:String,
     dataOut: String
@@ -27,7 +27,7 @@ suspend fun CommonPost(
             outputStream.bufferedWriter().use{ it.write(dataOut) }
             if(responseCode == 200){
                 respose = inputStream.bufferedReader().use { it.readText() }
-                Log.d("respose200", respose)
+                Log.d("respose", respose)
             } else {
                 println("false")
             }

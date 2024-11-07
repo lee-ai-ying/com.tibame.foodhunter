@@ -35,7 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.tibame.foodhunter.a871208s.AddFriendScreen
+import com.tibame.foodhunter.a871208s.FriendAddScreen
 import com.tibame.foodhunter.a871208s.DeleteMemberScreen
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
@@ -120,7 +120,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
         context.getString(R.string.restaurantDetail),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -140,7 +141,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -272,7 +274,6 @@ fun Main(
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
                 val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
                 PersonHomepage(
-                    currentUserId = currentUserId,
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController
@@ -349,7 +350,7 @@ fun Main(
                 MemberInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/3") {
-                ModifyInformationScreen(navController = navController)
+                ModifyInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/4") {
                 DeleteMemberScreen(navController = navController)
@@ -358,10 +359,10 @@ fun Main(
                 OtherSettingScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/6") {
-                FriendManagementScreen(navController = navController, friendVM)
+                FriendManagementScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/7") {
-                AddFriendScreen(navController = navController)
+                FriendAddScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/8") {
                 PrivateChatScreen(navController = navController,pChatVM)

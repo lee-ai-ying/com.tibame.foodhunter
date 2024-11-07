@@ -39,14 +39,12 @@ import com.tibame.foodhunter.ai_ying.GroupViewModel
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 @Composable
 fun PersonHomepage(
-    currentUserId: Int,
     publisherId: Int,
     postViewModel: PostViewModel = viewModel(),
     navController: NavHostController
 ) {
-
     val personalPosts = postViewModel.getPersonalPosts(publisherId).collectAsState()
-    val currentUserId = 1
+    val currentUserId = 7 // 替換為實際的用戶ID獲取方式
     Column(
         verticalArrangement = Arrangement.spacedBy(30.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -56,9 +54,11 @@ fun PersonHomepage(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 如果有貼文，使用第一個貼文的發布者信息
         personalPosts.value.firstOrNull()?.publisher?.let { publisher ->
-            PostHeader(publisher = publisher)
+            PostHeader(
+                publisher = publisher,
+                isCurrentUser = currentUserId == publisherId
+            )
         }
 
         ImageList(
@@ -71,80 +71,78 @@ fun PersonHomepage(
     }
 }
 
-
-
-
 @Composable
-
-fun PostHeader(publisher: Publisher) {
-    Column() {
+fun PostHeader(
+    publisher: Publisher,
+    isCurrentUser: Boolean
+) {
+    Column {
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = publisher.avatarImage),
-                contentDescription = "Publisher avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
-
+            Avatar(
+                imageData = publisher.avatarBitmap,
+                defaultImage = publisher.avatarImage
             )
 
-
-                Text(
-                    text = publisher.name,
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-
-            IconButton(onClick = {
-
-                /* 點擊私訊按鈕時的處理 */
-
-            }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                    contentDescription = "Chat Bubble",
-                    modifier = Modifier.size(25.dp)
-                )
-            }
-
-            Button(
-                onClick = { /* 點擊追蹤按鈕時的處理 */ },
-                colors = ButtonDefaults.buttonColors(
-                    colorResource(id = R.color.orange_1st)
+            Text(
+                text = publisher.name,
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
                 ),
-                modifier = Modifier.padding(end = 16.dp)
-            ) {
-                Text(
-                    text = "追蹤",
-                    color = Color.White,
-                    style = TextStyle(
-                        fontSize = 14.sp
+                modifier = Modifier.weight(1f)  // 讓文字佔據剩餘空間
+            )
+
+            // 只在非本人頁面顯示私訊和追蹤按鈕
+            if (!isCurrentUser) {
+                IconButton(
+                    onClick = { /* 點擊私訊按鈕時的處理 */ },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                        contentDescription = "Chat Bubble",
+                        modifier = Modifier.size(25.dp)
                     )
-                )
+                }
+
+                Button(
+                    onClick = { /* 點擊追蹤按鈕時的處理 */ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.orange_1st)
+                    ),
+                    modifier = Modifier.padding(end = 16.dp)
+                ) {
+                    Text(
+                        text = "追蹤",
+                        color = Color.White,
+                        style = TextStyle(
+                            fontSize = 14.sp
+                        )
+                    )
+                }
             }
         }
-    }
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = "追蹤者: ${publisher.followers.size} | 追蹤中: ${publisher.following.size}")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp)
+        ) {
+            Text(
+                text = "追蹤者: ${publisher.followers.size} | 追蹤中: ${publisher.following.size}",
+                style = TextStyle(fontSize = 14.sp)
+            )
+        }
     }
 }
-
-
-
-
-
-
 
 
 

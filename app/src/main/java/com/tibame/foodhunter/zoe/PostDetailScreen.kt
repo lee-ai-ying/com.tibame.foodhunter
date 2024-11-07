@@ -1,8 +1,6 @@
 package com.tibame.foodhunter.zoe
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,13 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,21 +41,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import kotlinx.coroutines.launch
 
@@ -73,7 +67,7 @@ fun PostDetailScreen(
     postViewModel: PostViewModel = viewModel()
 ) {
     // 獲取當前用戶 ID，這裡應該從你的用戶管理系統獲取
-    val currentUserId = 1 // 替換為實際的用戶 ID 獲取方式
+    val currentUserId = 7 // 替換為實際的用戶 ID 獲取方式
     // 根據 postId 從 ViewModel 中取得特定的貼文
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
 
@@ -137,6 +131,12 @@ fun PostDetail(
             onMessageClick = {
                 currentSheet = SheetContent.MESSAGE
                 showBottomSheet = true
+            },
+            onUserClick = { publisherId ->
+                navController?.navigate("person_homepage/$publisherId") {
+                    launchSingleTop = true
+                    restoreState = true
+                }
             }
         )
     }
@@ -173,7 +173,8 @@ fun PostDetailItem(
     post: Post,
     currentUserId: Int,  // 添加當前用戶ID參數
     onEditClick: () -> Unit,
-    onMessageClick: () -> Unit
+    onMessageClick: () -> Unit,
+    onUserClick: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -187,13 +188,11 @@ fun PostDetailItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = post.publisher.avatarImage),
-                contentDescription = "Publisher avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(CircleShape)
+            Avatar(
+                imageData = post.publisher.avatarBitmap,
+                defaultImage = post.publisher.avatarImage,
+                onClick = { onUserClick(post.publisher.id) },
+                contentDescription = "Avatar for ${post.publisher.name}"
             )
 
             Column(modifier = Modifier.weight(1f)) {
@@ -252,11 +251,18 @@ fun PostDetailItem(
 @Composable
 fun MessageSheet(
     post: Post,
-    viewModel: PostViewModel,  // 添加 ViewModel 參數
-    currentUserId: Int,       // 添加當前使用者 ID
-    onConfirm: () -> Unit
+    viewModel: PostViewModel,
+    currentUserId: Int,
+    onConfirm: () -> Unit,
 ) {
-    var commentText by remember { mutableStateOf("") }  // 儲存留言內容的狀態
+    var commentText by remember { mutableStateOf("") }
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // 使用 getPostById 來觀察貼文更新
+    val currentPost by viewModel.getPostById(post.postId).collectAsState()
+
+    // 使用當前貼文的評論，如果為空則使用傳入的貼文評論
+    val comments = currentPost?.comments ?: post.comments
 
     Column(
         modifier = Modifier
@@ -278,20 +284,17 @@ fun MessageSheet(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(post.comments) { comment ->
+            items(comments) { comment ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = comment.commenter.avatarImage),
-                        contentDescription = "Commenter avatar",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
+                    Avatar(
+                        imageData = comment.commenter.avatarBitmap,
+                        defaultImage = comment.commenter.avatarImage,
+                        contentDescription = "Avatar for ${post.publisher.name}"
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
@@ -303,8 +306,9 @@ fun MessageSheet(
         }
 
         OutlinedTextField(
-            value = commentText,  // 使用 state 來管理輸入值
-            onValueChange = { commentText = it },  // 更新輸入值
+            value = commentText,
+            onValueChange = { commentText = it },
+            enabled = !isLoading,
             placeholder = { Text(text = stringResource(id = R.string.Add_message)) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -319,22 +323,28 @@ fun MessageSheet(
                 IconButton(
                     onClick = {
                         if (commentText.isNotBlank()) {
-                            // 發送留言
                             viewModel.createComment(
                                 postId = post.postId,
                                 userId = currentUserId,
                                 content = commentText
                             )
-                            // 清空輸入框
                             commentText = ""
                         }
-                    }
+                    },
+                    enabled = !isLoading && commentText.isNotBlank()
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_send_24),
-                        contentDescription = "Send Comment",
-                        modifier = Modifier.size(22.dp)
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_send_24),
+                            contentDescription = "Send Comment",
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             },
             shape = RoundedCornerShape(16.dp)
@@ -404,14 +414,10 @@ fun EditSheet(
                     onClick = {
                         scope.launch {
                             showDialog = false
-                            if (viewModel.deletePost(post.postId)) {
-                                Toast.makeText(context, "貼文已刪除", Toast.LENGTH_SHORT).show()
-                                onConfirm()  // 關閉 BottomSheet
-                                navController.popBackStack()
-                            } else {
-                                Toast.makeText(context, "刪除失敗", Toast.LENGTH_SHORT).show()
-                            }
+                            viewModel.deletePost(context, post.postId)
                         }
+                        onConfirm()  // 關閉 BottomSheet
+                        navController.navigate(context.getString(R.string.str_Recommended_posts))
                     }
                 ) {
                     Text(
@@ -436,11 +442,3 @@ fun EditSheet(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun GroupChatRoomPreview() {
-    MaterialTheme {
-
-        PostDetailScreen(3, rememberNavController())
-    }
-}

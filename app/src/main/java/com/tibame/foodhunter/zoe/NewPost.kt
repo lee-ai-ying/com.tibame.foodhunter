@@ -1,12 +1,10 @@
 import android.annotation.SuppressLint
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Button
@@ -33,10 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,26 +50,23 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
-import com.tibame.foodhunter.andysearch.ShowGoogleMap
-import com.tibame.foodhunter.andysearch.ShowRestaurantLists
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
-import com.tibame.foodhunter.zoe.PostCreateData
 import com.tibame.foodhunter.zoe.PostViewModel
+import com.tibame.foodhunter.zoe.RestaurantList
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
+
 
 
 enum class NewPostSheetContent {
@@ -82,19 +74,6 @@ enum class NewPostSheetContent {
     TAGS,
     LOCATION
 }
-//@Composable
-//fun InsertPostRoute(navController: NavHostController){
-//    val insertViewModel = ...
-//    NewPost(navController)
-//}
-//
-//@Composable
-//fun UpdatePostRoute(navController: NavHostController){
-//    val updateViewModel = ...
-//
-//
-//    NewPost(navController)
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,48 +82,42 @@ fun NewPost(
     postViewModel: PostViewModel = viewModel(),
     testVM: SearchScreenVM = viewModel()
 ) {
+    val currentUserId = 7
     val choiceRest by testVM.choiceOneRest.collectAsState()
-    val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    var selectedLocation by remember { mutableStateOf("") }
+    val selectedLocation by postViewModel.selectedLocation.collectAsState()
     var text by remember { mutableStateOf(TextFieldValue("")) }
     var currentSheet by remember { mutableStateOf(NewPostSheetContent.NONE) }
     var showBottomSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+
+    // 更新圖片選擇器
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
         onResult = { uris: List<Uri> ->
             selectedImageUris = uris
+            postViewModel.updatePhotos(context, uris)
         }
     )
-    var inputData by remember { mutableStateOf(PostCreateData()) }
 
+    // 標籤列表
     val availableTags = remember {
         listOf(
-            "早午餐",
-            "午餐",
-            "晚餐",
-            "下午茶",
-            "宵夜",
-            "甜點",
-            "飲料"
+            "早午餐", "午餐", "晚餐", "下午茶",
+            "宵夜", "甜點", "飲料"
         )
     }
 
     if (showBottomSheet) {
-
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet = false
                 currentSheet = NewPostSheetContent.NONE
             },
             containerColor = Color.White,
-
-            sheetMaxWidth = Dp.Unspecified, // 确保宽度不被限制
-            windowInsets = WindowInsets(0), // 移除边距限制以全屏显示
-
-
+            sheetMaxWidth = Dp.Unspecified,
+            windowInsets = WindowInsets(0),
         ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(
@@ -152,18 +125,17 @@ fun NewPost(
                     selectedTags = selectedTags,
                     onFilterChange = { newTags ->
                         selectedTags = newTags
-                        inputData = inputData.copy(postTag = newTags.joinToString(","))
+                        postViewModel.updateTags(newTags)
                     },
                     onConfirm = {
-                        showBottomSheet = false // 按下確定後收起 BottomSheet
+                        showBottomSheet = false
                     }
                 )
-
                 NewPostSheetContent.LOCATION -> LocationSelectionSheet(
-                    onLocationSelected = { location ->
-                        Log.d("location3", "NewPost: $location")
-                        selectedLocation = location
-                        inputData = inputData.copy(location = location)
+                    onLocationSelected = { restaurantId ->
+                        choiceRest?.let { restaurant ->
+                            postViewModel.updateLocation(restaurantId, restaurant.name)
+                        }
                         showBottomSheet = false
                     },
                     testVM = testVM
@@ -180,6 +152,7 @@ fun NewPost(
             .fillMaxSize()
             .padding(10.dp)
     ) {
+        // 圖片顯示區域
         item {
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -198,17 +171,19 @@ fun NewPost(
             }
         }
 
+        // 輸入區域
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
+                // 文字輸入框
                 TextField(
                     value = text,
                     onValueChange = { newText ->
                         text = newText
-                        inputData.content = newText.toString()
+                        postViewModel.updateInputData(content = newText.text)
                     },
                     label = { Text("貼文內容") },
                     modifier = Modifier
@@ -230,6 +205,7 @@ fun NewPost(
                     )
                 )
 
+                // 圖片選擇按鈕
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -258,6 +234,7 @@ fun NewPost(
                     }
                 }
 
+                // 位置選擇按鈕
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -278,14 +255,15 @@ fun NewPost(
                             contentDescription = "location"
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        if (selectedLocation.isEmpty()) {
-                            Text(text = stringResource(id = R.string.restaurant_location))
-                        } else {
-                            Text(text = selectedLocation)
-                        }
+                        Text(text = if (selectedLocation.isEmpty())
+                            stringResource(id = R.string.restaurant_location)
+                        else
+                            selectedLocation
+                        )
                     }
                 }
 
+                // 標籤選擇按鈕
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -307,17 +285,19 @@ fun NewPost(
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        if (selectedTags.isEmpty()) {
-                            Text(text = stringResource(id = R.string.Select_tag))
-                        } else {
-                            Text(text = selectedTags.joinToString(", "))
-                        }
+                        Text(text = if (selectedTags.isEmpty())
+                            stringResource(id = R.string.Select_tag)
+                        else
+                            selectedTags.joinToString(", ")
+                        )
                     }
                 }
 
+                // 發布按鈕
                 Button(
                     onClick = {
-                        postViewModel.setPostCreateData(inputData)
+                        postViewModel.updatePublisher(currentUserId)
+                        postViewModel.createPost(context)
                         navController.navigate(context.getString(R.string.str_Recommended_posts))
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -331,10 +311,9 @@ fun NewPost(
         }
     }
 }
-
 @Composable
 fun LocationSelectionSheet(
-    onLocationSelected: (String) -> Unit,
+    onLocationSelected: (Int) -> Unit,
     testVM: SearchScreenVM
 ) {
     Column(
@@ -348,24 +327,11 @@ fun LocationSelectionSheet(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-//        LazyColumn {
-//            items(listOf("台北市", "新北市", "桃園市", "台中市", "高雄市")) { city ->
-//                TextButton(
-//                    onClick = { onLocationSelected(city) },
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    Text(city)
-//                }
-//            }
-//        }
-
-
         val testRestaurant by testVM.selectRestList.collectAsState()
-
-        var currentLocation by remember { mutableStateOf<LatLng?>(null) }
         val scope = rememberCoroutineScope()
         var searchQuery by remember { mutableStateOf("") }
         var isActive by remember { mutableStateOf(false) }
+
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -380,30 +346,28 @@ fun LocationSelectionSheet(
             onActiveChange = { isActive = it },
             modifier = Modifier.padding(horizontal = 16.dp),
             onSearch = {
-                scope.launch{testVM.updateSearchRest(searchQuery)}
+                scope.launch { testVM.updateSearchRest(searchQuery) }
             }
         )
 
-        Column(modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween){
-            ShowGoogleMap(
-                modifier = Modifier
-                    .weight(0.7f)
-                    .padding(16.dp),
-                restaurants = testRestaurant,
-                restaurantVM = testVM,
-                onLocationUpdate = {location -> currentLocation = location}
-            )
-            ShowRestaurantLists(
-                restaurants = testRestaurant,
-                state = false,
-                currentLocation = currentLocation,
-                searchTextVM = testVM,
-                cardClick = {
-                    onLocationSelected(it?.name ?: "")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 使用現有的 RestaurantList
+        RestaurantList(
+            restaurants = testRestaurant,
+            onRestaurantSelected = { restaurantId ->
+                // 找到被選中的餐廳
+                testRestaurant.find { it.restaurant_id == restaurantId }?.let { restaurant ->
+                    // 更新 ViewModel 中選擇的餐廳
+                    scope.launch {
+                        testVM.updateChoiceOneRest(restaurant)
+                    }
                 }
-            )
-        }
+                // 呼叫回調函數
+                onLocationSelected(restaurantId)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 @OptIn( ExperimentalLayoutApi::class)
@@ -422,6 +386,7 @@ fun TagSelectionSheet(
             .fillMaxHeight(0.5f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Text(text = stringResource(id = R.string.Select_tag))  // 標籤選擇標題
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -492,4 +457,3 @@ fun PostPreview() {
         NewPost(rememberNavController())
     }
 }
-

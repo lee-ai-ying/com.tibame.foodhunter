@@ -8,25 +8,34 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,15 +45,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.Restaurant
+import com.tibame.foodhunter.ui.theme.FColor
 
 
 sealed class ImageSource {
@@ -94,7 +108,6 @@ private fun ImageCarouselUri(uris: List<Uri>, modifier: Modifier = Modifier) {
         )
     }
 }
-//拿貼文照片
 @Composable
 private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(pageCount = { items.size })
@@ -104,16 +117,29 @@ private fun ImageCarouselResource(items: List<CarouselItem>, modifier: Modifier 
         pagerState = pagerState,
         modifier = modifier
     ) { page ->
-        Image(
-            painter = painterResource(id = items[page].imageResId),
-            contentDescription = items[page].contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp))
-        )
+        items[page].imageData?.let { imageBitmap ->
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = "Post image ${page + 1}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        } ?: run {
+            // 如果圖片加載失敗，顯示佔位圖
+            Image(
+                painter = painterResource(id = R.drawable.steak_image), // 請確保有這個資源
+                contentDescription = "Placeholder image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
     }
 }
+
 //左右滑動的圖片顯示
 @Composable
 private fun ImageCarouselLayout(
@@ -159,11 +185,10 @@ private fun ImageCarouselLayout(
         }
         }
     }
-
 @Composable
 fun ImageList(
     posts: List<Post>,
-    onPostClick: (Int) -> Unit, // 回調函式，用於處理點擊事件
+    onPostClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
@@ -175,14 +200,35 @@ fun ImageList(
     ) {
         items(posts) { post ->
             if (post.carouselItems.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .clickable { onPostClick(post.postId) } // 點擊時觸發回調，傳遞 postId
-                ) {
-                    ImageItem(
-                        imageResId = post.carouselItems[0].imageResId,
-                        contentDescription = post.carouselItems[0].contentDescription
-                    )
+                post.carouselItems.firstOrNull()?.imageData?.let { imageBitmap ->
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)  // 保持正方形比例
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onPostClick(post.postId) }
+                    ) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = "Post image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                } ?: run {
+                    // 如果沒有圖片或圖片加載失敗，顯示佔位圖
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onPostClick(post.postId) }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sushi_image_1),
+                            contentDescription = "Placeholder image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }
@@ -230,6 +276,113 @@ fun FavoriteIcon() {
     }
 }
 
+@Composable
+fun RestaurantList(
+    restaurants: List<Restaurant>,
+    onRestaurantSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        items(restaurants) { restaurant ->
+            RestaurantItem(
+                restaurant = restaurant,
+                onClick = { onRestaurantSelected(restaurant.restaurant_id) }  // 轉換成字串
+            )
+        }
+    }
+}
 
 
+@Composable
+private fun RestaurantItem(
+    restaurant: Restaurant,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = FColor.Orange_4th,  // 卡片背景顏色
+            contentColor = FColor.Dark_80  // 卡片內容顏色
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = restaurant.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = restaurant.address,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Select",
+                tint = FColor.Dark_80
+            )
+        }
+    }
+}
+
+@Composable
+fun Avatar(
+    imageData: ImageBitmap?, // 自定義圖片
+    defaultImage: Int = R.drawable.user1, // 預設圖片資源
+    size: Dp = 40.dp,
+    onClick: (() -> Unit)? = null, // 可選的點擊事件
+    contentDescription: String? = null
+) {
+    val modifier = Modifier
+        .size(size)
+        .clip(CircleShape)
+        .then(
+            if (onClick != null) {
+                Modifier.clickable(onClick = onClick)
+            } else {
+                Modifier
+            }
+        )
+
+    when {
+        imageData != null -> {
+            Image(
+                bitmap = imageData,
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
+            )
+        }
+        else -> {
+            Image(
+                painter = painterResource(id = defaultImage),
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
+            )
+        }
+    }
+}

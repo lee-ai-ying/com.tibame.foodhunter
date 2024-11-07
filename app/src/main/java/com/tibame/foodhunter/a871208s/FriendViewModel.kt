@@ -1,8 +1,13 @@
 package com.tibame.foodhunter.a871208s
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ai_ying.GroupRepository
+import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,5 +67,33 @@ class FriendViewModel: ViewModel() {
             Friend("0015", "Sue3", R.drawable.account_circle),
             Friend("0016", "Sue3", R.drawable.account_circle),
         )
+    }
+
+
+    suspend fun friendAdd(
+        username: String,
+        friend: String,
+
+    ): Boolean {
+        try {
+            // server URL
+            val url = "$serverUrl/member/friendAdd"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+
+            // 將註冊資料轉成 JSON
+            jsonObject.addProperty("username", username)
+            jsonObject.addProperty("friend", friend)
+
+
+            // 發出 POST 請求，取得註冊結果
+            val result = CommonPost(url, jsonObject.toString())
+            val responseJson = gson.fromJson(result, JsonObject::class.java)
+            Log.e("Response", result) // 输出响应结果
+            // 根據響應中的 logged 屬性來判斷是否註冊成功
+            return  responseJson.get("Add").asBoolean
+        } catch (e: Exception) {
+            return false
+        }
     }
 }

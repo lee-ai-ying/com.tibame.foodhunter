@@ -25,7 +25,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,9 +32,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,16 +68,23 @@ fun SearchScreen(
     navController: NavHostController,
     searchTextVM: SearchScreenVM
 ) {
-    searchTextVM.preloadRestaurants()
     val context = LocalContext.current
     val preRestaurants by searchTextVM.preRestaurantList.collectAsState()
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-
+    val isInitialized = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top
     ) {
+        if (!isInitialized.value) {
+            LaunchedEffect(Unit) {
+                searchTextVM.preloadRestaurants()
+                isInitialized.value = true
+            }
+        }
+
+        Log.d("preload", "preRestaurants")
         ShowSearchBar(
             cities = cities,
             searchTextVM = searchTextVM,
@@ -104,44 +110,6 @@ fun SearchScreen(
 }
 
 
-@Composable
-fun CityLists(
-    cities: List<City>
-) {
-    var selectedCity by remember { mutableStateOf<String?>(null) }
-    LazyColumn(
-        modifier = Modifier
-            .padding(start = 36.dp)
-            .height(200.dp)
-    ) {
-        items(cities) { city ->
-            var districtExpand by remember { mutableStateOf(false) }
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier
-                    .clickable {
-                        districtExpand = !districtExpand
-                        selectedCity = if (selectedCity == city.name) null else city.name
-                    }
-                ) {
-                    val textColor = if (selectedCity == city.name) Color.Blue else Color.Black
-                    Text(text = city.name, color = textColor)
-                }
-                if (districtExpand) {
-                    Column(modifier = Modifier.clickable { }) {
-                        city.districts.forEach { district ->
-                            Text(
-                                text = district.name,
-                                modifier = Modifier.padding(start = 8.dp) // 添加一些缩进使区的显示层级更明显
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,18 +121,19 @@ fun ShowSearchBar(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    val searchText by searchTextVM.searchText.collectAsState()
     var isActive by remember { mutableStateOf(false) }
-    var citySearchText by remember { mutableStateOf("選擇區域") }
-    var cityExpand by remember { mutableStateOf(false) }
-    var priceExpand by remember { mutableStateOf(false) }
-    var foodLabelExpand by remember { mutableStateOf(false) }
-    var arrowIcon by remember { mutableStateOf(R.drawable.arrow_right) }
-    var arrowIcon2 by remember { mutableStateOf(R.drawable.arrow_right) }
-    var arrowIcon3 by remember { mutableStateOf(R.drawable.arrow_right) }
+
+    val choicePrice by searchTextVM.choicePrice.collectAsState()
+    val otherConditions by searchTextVM.otherConditions.collectAsState()
+    val cityText by searchTextVM.cityText.collectAsState()
+    val inputSearch by searchTextVM.searchText.collectAsState()
+
+    val showSearchText by searchTextVM.showSearchText.collectAsState()
+    val finalSearchText by searchTextVM.finalSearchText.collectAsState()
     SearchBar(
-        query = searchText,
-        onQueryChange = { searchTextVM.updateSearchText(it) },
+        query = showSearchText,
+        onQueryChange = { searchTextVM.updateSearchText(it)
+                        searchTextVM.loadShowSearchText()},
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
@@ -172,10 +141,13 @@ fun ShowSearchBar(
         windowInsets =  WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
         onSearch = {
             isActive = false
-            if (it.isNotBlank()) {
-                coroutineScope.launch { searchTextVM.updateSearchRest(it) }
+            searchTextVM.updateSearchText(it)
+            searchTextVM.buildSearch()
+            if (finalSearchText.isNotBlank()) {
+                coroutineScope.launch {
+                    searchTextVM.updateSearchRest(finalSearchText)
+                }
             }
-            searchTextVM.updateSearchText(it) // 更新找到餐廳
             searchTextVM.clearChoiceRest() // 清空選擇餐廳
             if (state) {
                 navController.navigate(context.getString(R.string.SearchToGoogleMap))
@@ -200,83 +172,21 @@ fun ShowSearchBar(
 
         },
         trailingIcon = {
-            if (searchText != "") {
+            if (inputSearch != "" || cityText != "" || choicePrice != "" || otherConditions != "") {
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = "clear",
                     modifier = Modifier.clickable {
-                        searchTextVM.updateSearchText("")
+                        searchTextVM.clearSearchText()
+                        searchTextVM.loadShowSearchText()
                     }
                 )
             }
         },
 
         ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-        ) {
-            Row(modifier = Modifier.clickable {
-                cityExpand = !cityExpand
-                arrowIcon = if (arrowIcon == R.drawable.arrow_right) {
-                    R.drawable.arrow_drop_down
-                } else {
-                    R.drawable.arrow_right
-                }
-            }) {
-                Icon(
-                    painter = painterResource(arrowIcon),
-                    contentDescription = "Arrow Icon",
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-                Text(
-                    text = citySearchText,
-                )
-                if (cityExpand) {
-                    CityLists(cities)
-                }
-            }
-        }
+        SearchBerContent(cities, searchTextVM)
 
-        var maxPrice by remember { mutableStateOf(100.0f) }
-        var minPrice by remember { mutableStateOf(0.0f) }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-        ) {
-            Row(modifier = Modifier.clickable {
-                priceExpand = !priceExpand
-                arrowIcon2 = if (arrowIcon2 == R.drawable.arrow_right) {
-                    R.drawable.arrow_drop_down
-                } else {
-                    R.drawable.arrow_right
-                }
-            }) {
-                Icon(
-                    painter = painterResource(arrowIcon2),
-                    contentDescription = "Arrow Icon",
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-                Text(
-                    text = "${minPrice.toInt()} ~ ${maxPrice.toInt()}",
-                )
-            }
-            if (priceExpand) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    RangeSlider(
-                        value = minPrice..maxPrice,
-                        steps = 9,
-                        valueRange = 0f..2000f,
-                        onValueChange = { rangeValues ->
-                            minPrice = rangeValues.start
-                            maxPrice = rangeValues.endInclusive
-                        }
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -303,10 +213,12 @@ fun ShowRestaurantLists(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
+
             Text(
-                text = "", style = TextStyle(
+                text = "美食", style = TextStyle(
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -423,7 +335,6 @@ fun RestCard(
         .fillMaxWidth()
         .padding(cardPadding)
         .shadow(elevation = 8.dp)
-        .background(colorResource(R.color.orange_d2))
         .clickable {
             searchTextVM.updateChoiceOneRest(restaurant)
             if (cardClick != null) {
@@ -436,9 +347,10 @@ fun RestCard(
             headlineContent = {
                 Text(
                     text = restaurant.name,
-                    modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
+                    modifier = Modifier.widthIn(min = 100.dp, max = 120.dp), // 限制宽度
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+
                 )
             },
             supportingContent = {
@@ -453,15 +365,38 @@ fun RestCard(
                         )
                     }
                     Text(
-                        text = restaurant.address,
-                        modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
+                        text = extractCityArea(restaurant.address)?:"",
+                        modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             },
             leadingContent = { ImageScreen() }, // 預計放的預覽圖片
-            trailingContent = { trailingIcon() },
+            trailingContent = {
+                Row {
+                    Image(
+                        painter = painterResource(R.drawable.googlemap),
+                        contentDescription = "open google map",
+                        modifier = Modifier.clickable{
+                            openNavigationMap(context = context,
+                                latitude = restaurant.latitude,
+                                longitude = restaurant.longitude)
+                        }
+                    )
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    if (IsOpenNow( restaurant.opening_hours)){
+                    Text(text = "營業中", style = TextStyle(
+                        color = colorResource(R.color.teal_700), fontSize = 16.sp
+                    ))
+                } else {
+                    Text(text = "休息中", style = TextStyle(
+                        color = Color.Gray, fontSize = 16.sp
+                    ))
+                }
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    trailingIcon()  }
+},
             modifier = Modifier.height(100.dp),
             colors = ListItemColors(
                 containerColor = colorResource(R.color.orange_5th),

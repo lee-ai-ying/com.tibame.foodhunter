@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.a871208s
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,21 +27,25 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,8 +54,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,13 +64,17 @@ fun MemberMainScreen(
     val usernameState = remember { mutableStateOf("") }
     val nicknameState = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
-
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val user = userVM.getUserInfo(userVM.username.value) // 替換為實際用戶 ID
+            val user1 = userVM.image(userVM.username.value)// 替換為實際用戶 ID
             if (user != null) {
                 usernameState.value = user.username // 獲取用戶名
                 nicknameState.value = user.nickname
+                user1?.profileImageBase64?.let { base64 ->
+                    profileBitmap = userVM.decodeBase64ToBitmap(base64)
+                }
             }
         }
     }
@@ -81,8 +88,9 @@ fun MemberMainScreen(
         Box(
             // 設定內容物對齊方式為置中對齊
             contentAlignment = Alignment.Center,
+
             modifier = Modifier.fillMaxWidth(0.9f)
-                .background(Color.LightGray)
+                .background(colorResource(R.color.orange_5th))
         ) {
             Row{
                 Column(
@@ -91,16 +99,28 @@ fun MemberMainScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
-                    Image(
-                        painter = painterResource(id = R.drawable.image),
-                        contentDescription = "image",
-                        modifier = Modifier
-                            .size(120.dp)
-                            // 建立圓形邊框
-                            .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (profileBitmap != null) {
+                        Image(
+                            bitmap = profileBitmap!!.asImageBitmap(),
+                            contentDescription = "Profile Image",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        // 顯示占位符圖片
+                        Image(
+                            painter = painterResource(id = R.drawable.image),
+                            contentDescription = "Default Image",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
 
                 Column(
