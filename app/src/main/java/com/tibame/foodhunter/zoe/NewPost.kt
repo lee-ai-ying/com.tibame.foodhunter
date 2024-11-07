@@ -380,6 +380,7 @@ fun LocationSelectionSheet(
             onActiveChange = { isActive = it },
             modifier = Modifier.padding(horizontal = 16.dp),
             onSearch = {
+                testVM.updateSearchText(searchQuery)
                 scope.launch{testVM.updateSearchRest(searchQuery)}
             }
         )

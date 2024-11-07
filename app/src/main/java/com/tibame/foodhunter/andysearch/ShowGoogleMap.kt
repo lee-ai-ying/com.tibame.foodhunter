@@ -1,6 +1,9 @@
 package com.tibame.foodhunter.andysearch
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -143,11 +146,18 @@ fun ShowGoogleMap(
                 }
             }
         }
+        LaunchedEffect(currentLocation){
+            currentLocation?.let {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(it, 17f)
+                )
+            }
+        }
 
         LaunchedEffect(newPosition) {
             newPosition?.let {
                 cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(it, 10f)
+                    CameraUpdateFactory.newLatLngZoom(it, 17f)
                 )
             }
         }
@@ -180,6 +190,24 @@ fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): String {
 }
 
 
+
+
+fun openNavigationMap(context: Context, latitude: Double, longitude: Double) {
+    // 使用 Google Maps URI 格式，指定導航的目的地
+    val uriStr = "google.navigation:q=$latitude,$longitude"
+    // ACTION_VIEW 代表呈現資料給使用者
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
+    // 指定 package name 以開啟內建 Google 地圖
+    intent.setPackage("com.google.android.apps.maps")
+    context.startActivity(intent)
+}
+
+fun extractCityArea(address: String): String? {
+    // 使用正則表達式匹配 "XX市XX區"
+    val regex = """\w+市\w+區""".toRegex()
+    val matchResult = regex.find(address)
+    return matchResult?.value
+}
 @Preview(showBackground = true)
 @Composable
 fun GoogleMapPreview() {
