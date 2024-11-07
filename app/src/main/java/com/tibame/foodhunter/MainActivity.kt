@@ -120,7 +120,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
         context.getString(R.string.restaurantDetail),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -140,7 +141,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -286,7 +288,6 @@ fun Main(
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
                 val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
                 PersonHomepage(
-                    currentUserId = currentUserId,
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController

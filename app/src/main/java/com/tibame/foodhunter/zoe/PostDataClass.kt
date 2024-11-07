@@ -1,8 +1,7 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.annotation.DrawableRes
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import androidx.compose.ui.graphics.ImageBitmap
+
 
 data class Post(
     var postId: Int,
@@ -14,22 +13,18 @@ data class Post(
     var carouselItems: List<CarouselItem>,
     var comments: List<Comment>,
     var isFavorited: Boolean = false
-
 )
 
-data class CarouselItem(
-    val id: Int,
-    @DrawableRes val imageResId: Int,
-    val contentDescription: String
-)
 
 
 data class PostCreateData(
-    var postId: Int = 0,
-    var publisher: String="",
+    val publisher: Int = 0,
     var content: String = "",
-    var location: String = "",
-    var timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
     var postTag: String = "",
-    var carouselItems: List<CarouselItem> = emptyList(),
+    var restaurantId: Int = 0,
+    val photos: List<PostPhoto> = emptyList()
+)
+
+data class PostPhoto(
+    val imgBase64Str: String
 )

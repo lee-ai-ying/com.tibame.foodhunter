@@ -50,7 +50,7 @@ fun RecommendedPosts(
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
     // 取得當前用戶ID
-    val currentUserId = 1 // 替換為實際的用戶ID獲取方式
+    val currentUserId = 7 // 替換為實際的用戶ID獲取方式
 
     Column {
         FilterChips(
@@ -168,11 +168,11 @@ fun PostItem(
                     }
                 }
 
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-                    contentDescription = "Bookmark",
-                    modifier = Modifier.size(24.dp)
-                )
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
+//                    contentDescription = "Bookmark",
+//                    modifier = Modifier.size(24.dp)
+//                )
             }
 
             Text(
@@ -210,14 +210,11 @@ private fun PostHeader(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = post.publisher.avatarImage),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(30.dp)
-                .clip(CircleShape)
-                .clickable { onUserClick(post.publisher.id) }
+        Avatar(
+            imageData = post.publisher.avatarBitmap,
+            defaultImage = post.publisher.avatarImage,
+            onClick = { onUserClick(post.publisher.id) },
+            contentDescription = "Avatar for ${post.publisher.name}"
         )
 
         Column(
