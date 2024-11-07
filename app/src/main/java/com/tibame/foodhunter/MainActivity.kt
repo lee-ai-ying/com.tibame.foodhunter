@@ -2,7 +2,6 @@ package com.tibame.foodhunter
 
 import NewPost
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -65,12 +64,8 @@ import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
-import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
-import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
-import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
-import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
-import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -288,30 +283,6 @@ fun Main(
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             composable(context.getString(R.string.str_post)) {
                 NewPost(navController = navController,  postViewModel)
             }
@@ -334,10 +305,6 @@ fun Main(
             composable(context.getString(R.string.restaurantDetail)){
                 RestaurantDetail(navController = navController, restaurantVM = searchVM)
             }
-
-
-
-
 
 
 
@@ -412,26 +379,24 @@ fun Main(
                     PersonalToolsScreen(navController)
                 }
 
-//                composable("note/add") {
-//                    NoteEditRoute(navController, noteId = null)  // 新增模式
-//                }
-
+                composable("note/add") {
+                    NoteEditRoute(navController = navController,
+                        navigation = NoteEditNavigation.Add)
+                }
 
                 composable(
                     route = "note/edit/{noteId}",
-                    arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("noteId") { type = NavType.IntType })
                 ) { backStackEntry ->
                     val noteId = backStackEntry.arguments?.getInt("noteId")
                         ?: return@composable  // 防止空值
 
-                    NoteEditRoute(navController = navController, noteId = noteId)
+                    NoteEditRoute(navController = navController,
+                        navigation = NoteEditNavigation.Edit(noteId))
                 }
             }
-
         }
     }
-
-
 }
 
 

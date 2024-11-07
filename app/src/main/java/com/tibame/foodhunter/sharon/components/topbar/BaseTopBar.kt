@@ -238,15 +238,11 @@ fun NoteTopBar(
             searchQuery = topBarState.searchQuery,
             onSearchQueryChange = { newQuery ->
                 Log.d("NoteTopBar", "搜尋輸入: $newQuery")
-                personalToolsVM.onSearchQueryChange(newQuery)
-
-            },
+                personalToolsVM.onSearchQueryChange(newQuery) },
             onToggleSearchVisibility = {
                 Log.d("NoteTopBar", "切換搜尋欄位顯示")
-                personalToolsVM.toggleSearchVisibility()
-            },
+                personalToolsVM.toggleSearchVisibility() },
             showFilter = false,
-
         )
 
 //        if (isFilterChipVisible) {
