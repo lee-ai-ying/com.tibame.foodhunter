@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
@@ -33,7 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.tibame.foodhunter.a871208s.AddFriendScreen
+import com.tibame.foodhunter.a871208s.FriendAddScreen
 import com.tibame.foodhunter.a871208s.DeleteMemberScreen
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
 import com.tibame.foodhunter.a871208s.ForgetPassword2Screen
@@ -61,14 +63,9 @@ import com.tibame.foodhunter.sharon.PersonalToolsScreen
 import com.tibame.foodhunter.zoe.Home
 
 import com.tibame.foodhunter.andysearch.SearchScreen
-import com.tibame.foodhunter.sharon.NoteEdit
 import com.tibame.foodhunter.andysearch.SearchScreenVM
-import com.tibame.foodhunter.sharon.NoteEditTopBar
-import com.tibame.foodhunter.sharon.TabConstants
-import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
-import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.NoteEditNavigation
+import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -92,13 +89,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun checkTopBarNoShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
-    return !listOf(
+
+    val noTopBarRoutes = listOf(
         "",
         context.getString(R.string.str_login),
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
         context.getString(R.string.str_login) + "/4",
-    ).contains(destination?.route)
+    )
+    return !(noTopBarRoutes.contains(destination?.route) ||
+            destination?.parent?.route == "personal_tools")
 }
 
 /** 將 **要顯示** BackButton的route寫進list裡 */
@@ -120,7 +120,8 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
         context.getString(R.string.restaurantDetail),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -140,7 +141,8 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
-        "postDetail/{postId}"
+        "postDetail/{postId}",
+        "person_homepage/{publisherId}"
     ).contains(destination?.route)
 }
 
@@ -187,24 +189,6 @@ fun Main(
                     scrollBehavior
                 )
             }
-            if (destination?.parent?.route == "personal_tools") {
-                when (destination.route) {
-                    "note_edit" -> NoteEditTopBar(
-
-                    )
-                    context.getString(R.string.str_calendar) -> CalendarTopBar(
-                        navController,
-                        scrollBehavior,
-                        CalendarViewModel()
-                    )
-                    context.getString(R.string.str_note) -> NoteTopBar(
-                        navController,
-                        scrollBehavior,
-                        NoteViewModel()
-                    )
-
-                }
-            }
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
@@ -239,7 +223,14 @@ fun Main(
     ) { innerPadding ->
         NavHost(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(
+                    // 如果是 personal_tools 路由，則不需要 padding
+                    if (navController.currentDestination?.parent?.route == "personal_tools") {
+                        PaddingValues(0.dp)
+                    } else {
+                        innerPadding
+                    }
+                )
                 .fillMaxSize()
                 .background(Color.White),
             navController = navController,
@@ -283,36 +274,11 @@ fun Main(
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
                 val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
                 PersonHomepage(
-                    currentUserId = currentUserId,
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController
                 )
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -340,10 +306,6 @@ fun Main(
             composable(context.getString(R.string.restaurantDetail)){
                 RestaurantDetail(navController = navController, restaurantVM = searchVM)
             }
-
-
-
-
 
 
 
@@ -388,7 +350,7 @@ fun Main(
                 MemberInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/3") {
-                ModifyInformationScreen(navController = navController)
+                ModifyInformationScreen(navController = navController,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/4") {
                 DeleteMemberScreen(navController = navController)
@@ -397,10 +359,10 @@ fun Main(
                 OtherSettingScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/6") {
-                FriendManagementScreen(navController = navController, friendVM)
+                FriendManagementScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/7") {
-                AddFriendScreen(navController = navController)
+                FriendAddScreen(navController = navController, friendVM,userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/8") {
                 PrivateChatScreen(navController = navController,pChatVM)
@@ -412,29 +374,30 @@ fun Main(
                 route = "personal_tools"
             ) {
                 composable(context.getString(R.string.str_calendar)) {
-                    PersonalToolsScreen(navController, TabConstants.CALENDAR)
+                    PersonalToolsScreen(navController)
                 }
                 composable(context.getString(R.string.str_note)) {
-                    PersonalToolsScreen(navController, TabConstants.NOTE)
+                    PersonalToolsScreen(navController)
                 }
-                composable(context.getString(R.string.str_favorite)) {
-                    PersonalToolsScreen(navController, TabConstants.FAVORITE)
+
+                composable("note/add") {
+                    NoteEditRoute(navController = navController,
+                        navigation = NoteEditNavigation.Add)
                 }
 
                 composable(
-                    route = "note_edit/{noteId}",
-                    arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                    route = "note/edit/{noteId}",
+                    arguments = listOf(navArgument("noteId") { type = NavType.IntType })
                 ) { backStackEntry ->
-                    val noteId = backStackEntry.arguments?.getString("noteId")
+                    val noteId = backStackEntry.arguments?.getInt("noteId")
                         ?: return@composable  // 防止空值
-                    NoteEdit(navController = navController, noteId = noteId)
+
+                    NoteEditRoute(navController = navController,
+                        navigation = NoteEditNavigation.Edit(noteId))
                 }
             }
-
         }
     }
-
-
 }
 
 

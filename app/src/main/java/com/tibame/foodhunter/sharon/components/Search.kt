@@ -71,7 +71,6 @@ fun SearchBar(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 搜索图标
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "搜索",
@@ -90,7 +89,6 @@ fun SearchBar(
                     innerTextField()
                 }
 
-                // 仅在有文字输入时显示清除按钮
                 if (query.isNotEmpty()) {
                     Box(
                         modifier = Modifier

@@ -13,7 +13,9 @@
     <string name="str_login">登入</string>
     <string name="str_calendar">日曆</string>
     <string name="str_note">手札</string>
-    <string name="str_note_edit">編輯頁面</string>
+    <string name="str_note_edit">編輯筆記</string>
+    <string name="str_note_cancel_add">取消新增筆記</string>
+    <string name="str_note_add">新增筆記</string>
     <string name="str_favorite">收藏</string>
     <string name="str_my_group">我的揪團</string>
     <string name="str_search_group">搜尋揪團</string>
@@ -59,4 +61,6 @@
     <string name="str_Recommended_posts">推薦貼文</string>
     <string name="postDetail">貼文詳情</string>
     <string name="PersonHomepage">個人貼文</string>
+    <string name="default_notification_channel_id">default_channel_id</string>
+    <string name="default_notification_channel_name">default_channel_name</string>
 </resources>

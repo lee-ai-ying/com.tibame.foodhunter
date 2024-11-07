@@ -1,6 +1,8 @@
 package com.tibame.foodhunter.sharon
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +23,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -32,12 +37,15 @@ import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,50 +72,115 @@ import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
 import com.tibame.foodhunter.sharon.components.SearchBar
-import com.tibame.foodhunter.sharon.data.noteList
+import com.tibame.foodhunter.sharon.components.topbar.NoteEditTopBar
+import com.tibame.foodhunter.sharon.viewmodel.NoteEditEvent
+import com.tibame.foodhunter.sharon.viewmodel.NoteEditVM
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-    NoteEdit(
-        navController = mockNavController,
-        noteId = "1",
-    )
+//    NoteScreen(navController = mockNavController)
+
+//    NoteEdit(
+//        navController = mockNavController,
+//        note = Note(
+//            noteId =1,
+//            type = CardContentType.NOTE,
+//            date = "10/15",
+//            day = "星期二",
+//            title = "巷弄甜點店",
+//            noteContent = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
+//            imageResId = R.drawable.sushi_image_1,
+//            restaurantName = "法式甜點工作室"
+//        )
+//    )
 }
+
+/**
+ * 定義筆記編輯頁面的導航類型
+ * sealed class 確保所有可能的導航類型都被明確定義，不會有其他意外的類型
+ */
+sealed class NoteEditNavigation {
+    /**
+     * 新增筆記的導航類型
+     * data object 用於不需要攜帶額外數據的類型，相當於一個單例對象
+     */
+    data object Add : NoteEditNavigation()
+
+    /**
+     * 編輯筆記的導航類型
+     * data class 用於需要攜帶數據(noteId)的類型
+     * @param noteId 要編輯的筆記ID
+     */
+    data class Edit(val noteId: Int) : NoteEditNavigation()
+}
+
+/**
+ * 筆記編輯頁面的路由組件
+ * 負責根據不同的導航類型顯示相應的UI
+ *
+ * @param navController 導航控制器，用於處理頁面導航
+ * @param navigation 導航類型，決定是新增還是編輯模式
+ * @param noteId 筆記ID，用於編輯模式
+ * @param noteEditVM 筆記編輯的ViewModel，使用 noteEditVM() 委託創建
+ */
+@Composable
+fun NoteEditRoute(
+    navController: NavHostController,
+    navigation: NoteEditNavigation,
+    noteEditVM: NoteEditVM = viewModel(),
+) {
+    // when 表達式用於處理不同的導航類型
+    when (navigation) {
+        // 新增模式，顯示空白頁面
+        is NoteEditNavigation.Add -> {
+            NoteEdit(
+                navController = navController,
+                noteEditVM = noteEditVM,
+                isNewNote = true  // 標記為新增模式
+            )
+        }
+        // 編輯模式，載入資料
+        is NoteEditNavigation.Edit -> {
+            // 收集現有筆記數據
+            val uiState by noteEditVM.uiState.collectAsState()
+
+            // 當 navigation.noteId 改變時，會重新執行內部的代碼
+            LaunchedEffect(navigation.noteId) {
+                // 加載對應 ID 的筆記數據
+                noteEditVM.loadNote(navigation.noteId)
+            }
+
+            // 當資料載入完成時顯示編輯頁面
+            if (uiState.isLoading) {
+                NoteEdit(
+                    navController = navController,
+                    noteEditVM = noteEditVM,
+                    isNewNote = false,
+                )
+            }
+        }
+    }
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEdit(
     navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
-    noteId: String? // 接收 noteId
-
-    ) {
-    // 初始化 scrollBehavior
-    val topAppBarState = rememberTopAppBarState()
+    noteEditVM: NoteEditVM,
+    isNewNote: Boolean,
+) {
+    val uiState by noteEditVM.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
-    // 找到對應的筆記
-    val note = remember(noteId) {
-        noteList.find { it.id == noteId }
-    }
-
-    // 使用筆記資料初始化狀態
-    var titleInputText by remember {
-        mutableStateOf(note?.title ?: "")
-    }
-    var bodyInputText by remember {
-        mutableStateOf(note?.noteContent ?: "")
-    }
-    var selectedRestaurantName by remember {
-        mutableStateOf(note?.restaurantName ?: "")
-    }
-
-
     var isBottomSheetVisible by remember { mutableStateOf(false) }
-//    var selectedRestaurantName by remember { mutableStateOf("") }
 
     // 定義樣式
     val editNoteBasicTextStyle = TextStyle(
@@ -126,7 +199,6 @@ fun NoteEdit(
         fontWeight = FontWeight(400)
     )
 
-// Scaffold 組件，包含 TopAppBar 和內容區
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -134,11 +206,10 @@ fun NoteEdit(
                 canback = true,
                 navController = navController,
                 scrollBehavior = scrollBehavior,
-                hasTitleInput = titleInputText.isNotEmpty()
+                noteEditVM = noteEditVM
             )
         }
     ) { innerPadding ->
-        // 使用 innerPadding 為內容設定邊距
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -148,8 +219,6 @@ fun NoteEdit(
                     top = innerPadding.calculateTopPadding() + 12.dp,
                     bottom = innerPadding.calculateBottomPadding() + 12.dp
                 ),
-//                .padding(horizontal = 34.dp, vertical = 12.dp,top),
-//                .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         )
         {
@@ -160,36 +229,53 @@ fun NoteEdit(
                 contentAlignment = Alignment.TopStart // 將所有內容左下對齊
             ) {
                 BasicTextField(
-                    value = titleInputText,
-                    onValueChange = {
-                        if (it.length <= 10) {
-                            titleInputText = it
+                    value = uiState.title,
+                    onValueChange = { title ->
+                        if (title.length <= 10) {
+                            noteEditVM.onEvent(NoteEditEvent.UpdateTitle(title))
                         }
                     },
                     textStyle = editNoteTitleTextStyle,
                 )
-                if (titleInputText.isEmpty()) {
+                if (uiState.title.isEmpty()) {
                     Text(
                         text = "請輸入標題",
                         style = editNoteTitleTextStyle,
                     )
                 }
             }
+            // 顯示餐廳、顯示日期
             Row(
-                // 顯示餐廳、顯示日期
-                modifier = Modifier
-                    .height(32.dp),
+                modifier = Modifier.height(32.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
             ) {
-                // 顯示餐廳名稱
-                DisplayRestaurantChip(
-                    label = selectedRestaurantName,
-                    onClear = { selectedRestaurantName = "" }
+                // 只在有選中餐廳時顯示 DisplayRestaurantChip
+                if (uiState.restaurantName?.isNotEmpty() == true) {
+                    DisplayRestaurantChip(
+                        label = uiState.restaurantName ?: "",
+                        onClear = {
+                            noteEditVM.onEvent(NoteEditEvent.UpdateRestaurant(null))
+                        }
+                    )
+                    VerticalLine()
+                }
+
+                // 只在沒有選中餐廳時顯示 SelectRestaurantChip
+                if (uiState.restaurantName == null) {
+                    SelectRestaurantChip(
+                        onClick = { isBottomSheetVisible = true },
+                        selectedRestaurant = true  // 因為只在需要選擇時顯示，所以直接設為 true
+                    )
+                    VerticalLine()
+                }
+
+                // 日期顯示保持不變
+                DisplayDateChip(
+                    onDateSelected = { localDate ->
+                        noteEditVM.onEvent(NoteEditEvent.UpdateDate(localDate.toString()))
+                    }
                 )
-                VerticalLine()
-                // 顯示日期
-                DisplayDateChip()
             }
 
             Box(  // 輸入內文
@@ -197,15 +283,15 @@ fun NoteEdit(
                     .heightIn(min = 24.dp)
             ) {
                 BasicTextField(
-                    value = bodyInputText,
-                    onValueChange = {
-                        if (it.length <= 500) {
-                            bodyInputText = it
+                    value = uiState.content,
+                    onValueChange = { content ->
+                        if (content.length <= 500) {
+                            noteEditVM.onEvent(NoteEditEvent.UpdateContent(content))
                         }
                     },
                     textStyle = editNoteBodyTextStyle,
                 )
-                if (bodyInputText.isEmpty()) {
+                if (uiState.content.isEmpty()) {
                     Text(
                         text = "請輸入內文",
                         style = editNoteBodyTextStyle,
@@ -213,19 +299,12 @@ fun NoteEdit(
                 }
             }
 
-            // 選擇 bottomSheet 的 chip
-            SelectRestaurantChip(
-                selectedRestaurant = true,
-                onClick = {
-                    isBottomSheetVisible = true
-                }
-            )
-// 控制 BottomSheet 顯示: 關閉 BottomSheet，控制內部onClose
+            // 選擇餐廳的 BottomSheet
             if (isBottomSheetVisible) {
                 SelectRestaurantBottomSheet(
                     onRestaurantPicked = { restaurant ->
-                        selectedRestaurantName = restaurant  // 更新選定的餐廳名稱
-                        isBottomSheetVisible = false // 統一關閉 BottomSheet
+                        noteEditVM.onEvent(NoteEditEvent.UpdateRestaurant(restaurant))
+                        isBottomSheetVisible = false // 當選到餐廳就關閉 BottomSheet
                     },
                     onClose = { isBottomSheetVisible = false } // 統一關閉 BottomSheet
                 )
@@ -241,38 +320,91 @@ fun VerticalLine() {
         modifier = Modifier
             .width(8.dp)
             .height(20.dp)
-//            .padding(start = 0.dp, end = 4.dp)
-
     ) {
         Box(
             modifier = Modifier
                 .width(2.dp)
-                .fillMaxHeight() // 讓 Box 的高度填滿可用空間（例如 Row 或 Column 的高度）
+                .fillMaxHeight()
                 .background(Color.Gray)
                 .align(Alignment.Center)
         )
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayDateChip(
-//    isVisible: Boolean,
+    initialDate: LocalDate = LocalDate.now(), // TODO()預設今天，之後可改為從資料庫獲取
+    onDateSelected: (LocalDate) -> Unit = {}, // 當日期改變時的回調
 ) {
-    var selected by remember { mutableStateOf(true) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var currentDate by remember { mutableStateOf(initialDate) }
+
+    // 日期格式化
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+
+    // 設置 DatePicker 的初始狀態
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = currentDate.atStartOfDay(ZoneId.systemDefault())
+            .toInstant().toEpochMilli(),
+        initialDisplayMode = DisplayMode.Picker
+    )
 
     FilterChip(
-        modifier = Modifier
-            .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp)
-            .height(32.dp),
-        // TODO(更改日期: 串接日曆、把參數帶入)
-        onClick = {},
+        modifier = Modifier.height(32.dp),
+        onClick = { showDatePicker = true },
         label = {
-            Text(
-                text = "2024-10-12", modifier = Modifier
-            )
+            Text(text = currentDate.format(dateFormatter))
         },
-        selected = selected,
+        selected = true,
     )
+
+    // 顯示日期選擇器對話框
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { milliseconds ->
+                            val newDate =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                    LocalDate.ofInstant(
+                                        java.time.Instant.ofEpochMilli(milliseconds),
+                                        ZoneId.systemDefault()
+                                    )
+                                } else {
+                                    TODO("VERSION.SDK_INT < UPSIDE_DOWN_CAKE")
+                                }
+                            currentDate = newDate
+
+                            // TODO: 更新資料庫中的日期
+                            // viewModel.updateNoteDate(noteId, newDate)
+
+                            onDateSelected(newDate)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("確認")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false // 設置為 true 可以切換between calendar/input modes
+            )
+        }
+    }
 }
 
 @Composable
@@ -300,7 +432,7 @@ fun SelectRestaurantChip(
 @Composable
 fun DisplayRestaurantChip(
     label: String,
-    onClear: () -> Unit
+    onClear: () -> Unit,
 ) {
     // 只有當 label 非空時才渲染 FilterChip
     if (label.isNotEmpty()) {
@@ -329,12 +461,11 @@ fun DisplayRestaurantChip(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectRestaurantBottomSheet(
     onRestaurantPicked: (String) -> Unit,
-    onClose: () -> Unit // 關閉 BottomSheet 的回調
+    onClose: () -> Unit, // 關閉 BottomSheet 的回調
 ) {
     // 開滿頁面或開一半
     val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -345,14 +476,14 @@ fun SelectRestaurantBottomSheet(
     val coroutineScope = rememberCoroutineScope()
 
 
-// chip 點選後 出現Bottom sheet
+    // chip 點選後 出現Bottom sheet
     ModalBottomSheet(
         modifier = Modifier.fillMaxHeight(),
         sheetState = modalSheetState,
         onDismissRequest = {
             coroutineScope.launch { modalSheetState.hide() }
             onClose() // 關閉 BottomSheet，在外部控制
-       },
+        },
         scrimColor = Color.Black.copy(alpha = 0.5f), // 半透明灰色背景
         properties = ModalBottomSheetProperties(
             isFocusable = true,  // 允許接收焦點，例如接收TextFiled輸入事件
@@ -365,7 +496,6 @@ fun SelectRestaurantBottomSheet(
                     onRestaurantPicked(restaurant) // 傳回選定餐廳
                     coroutineScope.launch { modalSheetState.hide() }
                     onClose() // 關閉 BottomSheet，在外部控制
-
                 },
                 onClose = {
                     coroutineScope.launch { modalSheetState.hide() }
@@ -374,18 +504,18 @@ fun SelectRestaurantBottomSheet(
             )
         }
     )
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetContent(
     onClose: () -> Unit, // 設定 Bottom Sheet 關閉的回調參數
-    onRestaurantPicked: (String) -> Unit // 餐廳資訊回調
+    onRestaurantPicked: (String) -> Unit, // 餐廳資訊回調
+
 ) {
 
     val testVM: SearchScreenVM = viewModel()
-    val test_restaurant by testVM.selectRestList.collectAsState()
+    val test_restaurant by testVM.preRestaurantList.collectAsState()
     Log.d("test_restaurant", "${test_restaurant}")
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     // 頂部工具欄
@@ -440,7 +570,7 @@ fun BottomSheetContent(
             Text("我是肯德基")
         }
 
-    // TODO(接入餐廳)
+        // TODO(接入餐廳)
 //        RestaurantSelectionScreen { selectedRestaurant ->
 //            onRestaurantPicked(selectedRestaurant)
 //            onClose()
@@ -451,7 +581,6 @@ fun BottomSheetContent(
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
-
     SearchBar(
         query = searchQuery,
         onQueryChange = { searchQuery = it },
@@ -466,18 +595,21 @@ fun BottomSheetContent(
         onActiveChange = { isActive = it },
         modifier = Modifier.padding(horizontal = 16.dp),
         onSearch = {
-            testVM.updateSearchText(searchQuery)
             scope.launch{testVM.updateSearchRest(searchQuery)}
         }
     )
 
-    Column(modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween){
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
         ShowGoogleMap(
-            modifier = Modifier.weight(0.7f).padding(16.dp),
+            modifier = Modifier
+                .weight(0.7f)
+                .padding(16.dp),
             restaurants = test_restaurant,
             restaurantVM = testVM,
-            onLocationUpdate = {location -> currentLocation = location}
+            onLocationUpdate = { location -> currentLocation = location }
         )
         ShowRestaurantLists(
             restaurants = test_restaurant,
@@ -490,6 +622,4 @@ fun BottomSheetContent(
             }
         )
     }
-
-
 }

@@ -3,73 +3,113 @@ package com.tibame.foodhunter.sharon
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
-import com.tibame.foodhunter.sharon.components.card.CardContentType
+import com.cloudinary.android.ui.BuildConfig
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
-import com.tibame.foodhunter.sharon.data.noteList
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NoteScreen(
+    navController: NavHostController,
+    noteVM: NoteVM,
+
+) {
+    val notes by noteVM.filteredNotes.collectAsStateWithLifecycle()
+    val isLoading by noteVM.isLoading.collectAsStateWithLifecycle()
+
+    Box(
+        modifier = Modifier
+            .background(Color.White)
+            .fillMaxSize()
+    ) {
+        when {
+            isLoading -> {
+                Log.d("NoteScreen", "顯示載入中狀態")
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            notes.isEmpty() -> {
+                Log.d("NoteScreen", "顯示空資料狀態")
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val message = if (noteVM.hasSearchQuery) {
+                        "找不到符合的筆記"
+                    } else {
+                        "目前沒有筆記"
+                    }
+                    Text(message)
+                }
+            }
+            else -> {
+                Log.d("NoteScreen", "開始顯示筆記列表，數量: ${notes.size}")
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(
+                        count = notes.size,
+                        key = { index -> notes[index].noteId }
+                    ) { index ->
+                        val currentNote = notes[index]
+                        Log.d("NoteScreen", "渲染筆記項目: index=$index, id=${currentNote.noteId}, title=${currentNote.title}")
+                        NoteOrGroupCard(
+                            onClick = {
+                                Log.d("NoteScreen", "點擊筆記: id=${currentNote.noteId}")
+                                navController.navigate("note_edit/${currentNote.noteId}")
+                            },
+                            type = currentNote.type,
+                            date = currentNote.date,
+                            day = currentNote.day,
+                            title = currentNote.title,
+                            noteContent = currentNote.noteContent,
+                            imageResId = currentNote.imageResId,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun NoteScreenPreview() {
     val mockNavController = rememberNavController()
-    NoteScreen(navController = mockNavController)
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NoteScreen(
-    navController: NavHostController, // 創建或接收 NavController，用於控制導航
-
-) {
-    val context = LocalContext.current
-
-    LazyColumn(
-        modifier = Modifier
-            .background(Color.White)
-            .fillMaxSize()
-            .padding(top = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            NoteOrGroupCard(
-                onClick = {},
-                type = CardContentType.NOTE,
-                date = "10/17",
-                day = "星期四",
-                title = "小巷中的咖啡廳",
-                noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
-                imageResId = R.drawable.sushi_image_1
-            )
-        }
-
-        item {
-            NoteOrGroupCard(
-                onClick = {},
-                type = CardContentType.NOTE,
-                date = "10/17",
-                day = "星期四",
-                title = "小巷中的咖啡廳",
-                noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
-                imageResId = R.drawable.sushi_image_1
-            )
-        }
-
-    }
+    NoteScreen(navController = mockNavController, noteVM = NoteVM())
 }
 
 

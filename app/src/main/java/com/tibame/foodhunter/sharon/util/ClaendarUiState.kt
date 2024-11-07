@@ -1,5 +1,6 @@
-package com.tibame.foodhunter.sharon.data
+package com.tibame.foodhunter.sharon.util
 
+import com.tibame.foodhunter.sharon.data.Note
 import java.time.YearMonth
 
 
@@ -60,7 +61,7 @@ data class CalendarUiState(
         val year: Int,              // 年份
         val isSelected: Boolean,    // 標記此日期是否在 UI 中為選中狀態
         val hasBook: Boolean = false,  // 若此日期有相關書籍則為 true
-        val books: List<NoteData> = emptyList()  // 該日期的書籍列表，若無則為空
+        val books: List<Note> = emptyList()  // 該日期的書籍列表，若無則為空
     ) {
         companion object {
             /**

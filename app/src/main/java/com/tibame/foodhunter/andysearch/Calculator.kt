@@ -6,7 +6,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-//
 fun IsOpenNow(openingHours: String): Boolean {
     val now = LocalDateTime.now()
     val currentDay = when(now.dayOfWeek.name.lowercase(Locale.getDefault())
@@ -56,3 +55,12 @@ fun IsOpenNow(openingHours: String): Boolean {
     }
     return false
 }
+
+
+
+
+
+
+
+
+

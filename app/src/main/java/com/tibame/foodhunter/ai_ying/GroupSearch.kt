@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.Group
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,23 +61,25 @@ fun GroupSearch(
     gChatVM: GroupViewModel,
     onSearchClick: () -> Unit = {}
 ) {
-    val tags = listOf(
-        "aaa",
-        "bbbb",
-        "cc",
-        "dddddd",
-        "eeeeeeee",
-        "fffff",
-        "gggg",
-        "h"
-    )
+//    val tags = listOf(
+//        "aaa",
+//        "bbbb",
+//        "cc",
+//        "dddddd",
+//        "eeeeeeee",
+//        "fffff",
+//        "gggg",
+//        "h"
+//    )
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var selectDate by remember {
         mutableStateOf(
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
         )
     }
-    val inputData by remember { mutableStateOf(GroupSearchData()) }
+
+    val inputData by gChatVM.groupSearchCache.collectAsState()
+    //var inputData by remember { mutableStateOf(input) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -86,11 +91,12 @@ fun GroupSearch(
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 GroupText(text = stringResource(R.string.str_create_name))
-                GroupSingleInput {
+                GroupSingleInput(defaultInput = inputData.name) {
                     inputData.name = it
                 }
                 GroupText(text = stringResource(R.string.str_create_location))
                 GroupSingleWithIcon(
+                    defaultInput = inputData.location,
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Place,
@@ -102,8 +108,9 @@ fun GroupSearch(
                 }
                 GroupText(text = stringResource(R.string.str_create_time))
                 GroupSingleInputWithIcon(
+                    readOnly = true,
                     placeholder = {
-                        Text(selectDate)
+                        Text(inputData.time)
                     },
                     trailingIcon = {
                         Icon(
@@ -118,26 +125,30 @@ fun GroupSearch(
                     inputData.time = it
                 }
                 GroupText(text = stringResource(R.string.str_create_price))
-                GroupPriceSlider {
-                    inputData.price = it
+                GroupPriceSlider(
+                    defaultLow = inputData.priceMin,
+                    defaultHigh = inputData.priceMax
+                ) { min, max ->
+                    inputData.priceMin = min
+                    inputData.priceMax = max
                 }
                 Spacer(modifier = Modifier.size(8.dp))
-                GroupText(text = stringResource(R.string.str_search_tags))
-                FlowRow(
-                    modifier = Modifier
-                        .border(1.dp, Color.LightGray)
-                        .background(Color.White)
-                        .fillMaxSize()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    tags.forEach {//.shuffled().forEach {
-                        FoodLabel(it) {
-                            inputData.tags.toMutableList().add(it)
-                        }
-                    }
-                }
+//                GroupText(text = stringResource(R.string.str_search_tags))
+//                FlowRow(
+//                    modifier = Modifier
+//                        .border(1.dp, Color.LightGray)
+//                        .background(Color.White)
+//                        .fillMaxSize()
+//                        .padding(8.dp),
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                    verticalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    tags.forEach {//.shuffled().forEach {
+//                        FoodLabel(it) {
+//                            inputData.tags.toMutableList().add(it)
+//                        }
+//                    }
+//                }
                 Spacer(modifier = Modifier.size(8.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -148,7 +159,7 @@ fun GroupSearch(
                     ) {
                         Button(
                             onClick = {
-                                gChatVM.setGroupSearchData(inputData)
+                                gChatVM.searchGroupByCondition(inputData)
                                 onSearchClick()
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -157,19 +168,18 @@ fun GroupSearch(
                         ) {
                             Text("搜尋")
                         }
-                        Button(
-                            onClick = {
-
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = FColor.Orange_5th
-                            )
-                        ) {
-                            Text(
-                                text = "清空",
-                                color = Color.Black
-                            )
-                        }
+//                        Button(
+//                            onClick = {
+//                            },
+//                            colors = ButtonDefaults.buttonColors(
+//                                containerColor = FColor.Orange_5th
+//                            )
+//                        ) {
+//                            Text(
+//                                text = "清空",
+//                                color = Color.Black
+//                            )
+//                        }
                     }
                 }
 
@@ -180,7 +190,7 @@ fun GroupSearch(
     Box {
         if (showDatePickerDialog) {
             MyDatePickerDialog(
-                showData = selectDate,
+                //showData = { selectDate },
                 onDismissRequest = {
                     showDatePickerDialog = false
                 },
@@ -188,10 +198,12 @@ fun GroupSearch(
                 onConfirm = { utcTimeMillis ->
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            ?: selectDate
 //                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
                     }
                     showDatePickerDialog = false
+                    inputData.time = selectDate
                 },
                 // 設定取消時欲執行內容
                 onDismiss = {

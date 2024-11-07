@@ -1,26 +1,17 @@
 package com.tibame.foodhunter.a871208s
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
-import com.tibame.foodhunter.andysearch.Restaurant
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 class UserViewModel: ViewModel() {
@@ -78,25 +69,7 @@ class UserViewModel: ViewModel() {
         }
     }
 
-    // 獲取用戶資料
-    suspend fun getUserInfo1(username: String): User? {
-        return try {
-            val url = "${serverUrl}/member/getInfo"
-            val gson = Gson()
-            val jsonObject = JsonObject()
-            jsonObject.addProperty("username", username)
 
-            val result = CommonPost(url, jsonObject.toString())
-            val userType = object : TypeToken<User>() {}.type
-            Log.e("aaa",result)
-            Log.e("aab",gson.fromJson(result, userType))
-            return gson.fromJson(result, userType)
-
-        } catch (e: Exception) {
-            Log.e("UserViewModel", "Error fetching user info: ${e.message}")
-            null
-        }
-    }
 
 
 
@@ -132,40 +105,184 @@ class UserViewModel: ViewModel() {
         val registrationdate: String,
         val profileimage: InputStream?,
         val gender: String,
-        val birthday: String
+        val birthday: String,
+        val profileImageBase64: String? = null
     )
+
+
 
     var username = mutableStateOf("")
 
+    suspend fun save(
+        username: String,
+        password: String,
+        nickname: String,
+        email: String,
+        phone:String,
+    ): Boolean {
+        try {
+            // server URL
+            val url = "${serverUrl}/member/save"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+
+            // 將註冊資料轉成 JSON
+            jsonObject.addProperty("username", username)
+            jsonObject.addProperty("password", password)
+            jsonObject.addProperty("nickname", nickname)
+            jsonObject.addProperty("email", email)
+            jsonObject.addProperty("phone", phone)
+
+            // 發出 POST 請求，取得註冊結果
+            val result = CommonPost(url, jsonObject.toString())
+            val responseJson = gson.fromJson(result, JsonObject::class.java)
+
+            // 根據響應中的 logged 屬性來判斷是否註冊成功
+            return  responseJson.get("save").asBoolean
+        } catch (e: Exception) {
+            return false
+        }
+    }
+
+
+    suspend fun imageSaved(username: String, profileImage: Bitmap?): Boolean {
+        try {
+            // 检查图片是否为空
+            if (profileImage == null) {
+                Log.e("UserViewModel", "没有提供图片")
+                return false
+            }
+
+            // 将 Bitmap 转换为 Base64 字符串
+            val base64Image = encodeBitmapToBase64(profileImage)
+
+            if (base64Image.isEmpty()) {
+                Log.e("UserViewModel", "Base64 图片为空")
+                return false
+            }
+
+            // 打印 Base64 字符串以调试
+            Log.e("UserViewModel", "Base64 image: $base64Image")
+
+            // 准备服务器 URL
+            val url = "${serverUrl}/member/imageSave"
+
+            // 创建包含用户名和 Base64 图片字符串的 JSON 对象
+            val jsonObject = JsonObject().apply {
+                addProperty("username", username)
+                addProperty("profileimage", base64Image)
+            }
+
+            // 发送 POST 请求
+            val result = CommonPost(url, jsonObject.toString())
+
+            // 打印原始响应用于调试
+            Log.e("UserViewModel", "Response: $result")
+
+            // 如果响应为空或无效，记录日志并返回 false
+            if (result.isEmpty()) {
+                Log.e("Response2", "服务器返回空响应")
+                return false
+            }
+
+            // 解析 JSON 响应
+            val gson = Gson()
+            val responseJson = gson.fromJson(result, JsonObject::class.java)
+
+            // 如果解析的 JSON 是 null，说明响应格式无效
+            if (responseJson == null) {
+                Log.e("Response3", "无效的 JSON 响应")
+                return false
+            }
+
+            // 打印解析后的响应，查看其中的字段
+            Log.e("Parsed Response", responseJson.toString())
+
+            // 检查响应中的 "imageSave" 是否为 true
+            return responseJson.get("imageSave")?.asBoolean ?: false
+        } catch (e: Exception) {
+            // 捕获异常并打印错误信息
+            Log.e("UserViewModel", "上传图片失败: ${e.message}")
+            return false
+        }
+    }
+
+    fun encodeBitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 10, byteArrayOutputStream)  // 80 表示壓縮品質，您可以根據需要調整
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
+    
+    
+    
+    
+    suspend fun image(username: String): User? {
+        return try {
+            val url = "${serverUrl}/member/image"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("username", username)
+
+            // 发送 POST 请求
+            val result = CommonPost(url, jsonObject.toString())
+            Log.e("Response", result) // 输出响应结果
+
+            // 使用 TypeToken 获取 User 的类型
+            val userType = object : TypeToken<User>() {}.type
+            val user = gson.fromJson<User>(result, userType) // 显式指定类型
+
+            // 处理图片：如果 profileImageBase64 不为空
+
+                user?.profileImageBase64?.let {
+                    Log.d("ProfileImage", "Profile image base64: $it")
+            }
+
+            user
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "获取用户信息时出错: ${e.message}")
+            null
+        }
+    }
+    fun decodeBase64ToBitmap(base64String: String): Bitmap? {
+        return try {
+            // 打印原始 Base64 字符串
+            Log.d("DecodeBase64", "Original Base64 String: $base64String")
+
+            // 去除 Base64 字符串的前缀（例如 data:image/png;base64,）
+            val cleanBase64String = if (base64String.startsWith("data:image/")) {
+                // 如果有前缀，去除前缀部分
+                val cleanedString = base64String.replaceFirst("^[A-Za-z0-9+/=]+(?:[ \t\r\n]*;[ \t\r\n]*charset=[A-Za-z0-9-]+)?(?:[ \t\r\n]*base64)?,?".toRegex(), "")
+                // 打印去除前缀后的 Base64 字符串
+                Log.d("DecodeBase64", "Cleaned Base64 String: $cleanedString")
+                cleanedString
+            } else {
+                // 如果没有前缀，直接使用原始字符串
+                base64String
+            }
+
+            // 解码 Base64 字符串
+            val decodedString = Base64.decode(cleanBase64String, Base64.DEFAULT)
+
+            // 打印解码后的字节数组大小（查看是否解码成功）
+            Log.d("DecodeBase64", "Decoded Byte Array Size: ${decodedString.size}")
+
+            // 将字节数组转换为 Bitmap
+            val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+
+            // 如果解码失败，记录 Bitmap 为 null
+            if (bitmap == null) {
+                Log.e("DecodeBase64", "Failed to decode Base64 to Bitmap")
+            }
+
+            bitmap
+        } catch (e: Exception) {
+            Log.e("DecodeBase64", "Base64 解码失败: ${e.message}")
+            null
+        }
+        
+    }
 }
 
 
 
-/** 上傳帳密與圖像 */
-/*suspend fun uploadImageWithUser(
-    uid: String,
-    password: String,
-    inputStream: InputStream?
-): Boolean {
-    var registered = false
-    val url = "${serverUrl}/RegisterServlet"
-    val client = HttpClient()
-    val byteArray = inputStream?.readBytes()
-        ?: throw IllegalStateException("Unable to read URI as ByteArray")
-
-    val httpResponse = client.submitFormWithBinaryData(url = url, formData = formData {
-        append("uid", uid) // Add user ID to the form data
-        append("password", password) // Add user password to the form data
-        // Add image as binary file part
-        append("image", byteArray, Headers.build {
-            append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
-            append(HttpHeaders.ContentDisposition, "filename=\"upload.jpg\"")
-        })
-    })
-    // response狀態成功代表註冊成功
-    if (httpResponse.status.isSuccess()) {
-        registered = true
-    }
-    Log.d("tag_UserVM", httpResponse.bodyAsText())
-    return registered
-}*/

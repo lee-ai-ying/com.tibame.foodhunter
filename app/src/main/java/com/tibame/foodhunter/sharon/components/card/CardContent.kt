@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.tibame.foodhunter.sharon.data.CardContentType
 
 @Composable
 fun CardContent(
@@ -64,8 +65,3 @@ fun CardContent(
     }
 }
 
-// 定義內容類型的枚舉
-enum class CardContentType {
-    GROUP,  // 揪團
-    NOTE    // 筆記
-}

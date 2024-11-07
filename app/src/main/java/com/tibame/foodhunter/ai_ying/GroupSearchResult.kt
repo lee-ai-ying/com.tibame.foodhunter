@@ -55,9 +55,10 @@ fun GroupSearchResult(
     onJoinClick: () -> Unit = {}
 ) {
     groupVM.getGroupSearchResult()
-    val result = groupVM.groupSearchResult.collectAsState()
+    val result by groupVM.groupSearchResult.collectAsState()
     var showGroupChatDetail by remember { mutableStateOf(false) }
-    val selectGroupChat = groupVM.chatRoom.collectAsState().value
+    val selectSearchResult by groupVM.selectSearchResult.collectAsState()
+    val groupChats by groupVM.groupChat.collectAsState()
     if (!showGroupChatDetail) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -66,10 +67,12 @@ fun GroupSearchResult(
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
-                items(1){
+                items(1) {
                     GroupTitleText(text = "搜尋結果")
                 }
-                items(result.value) {
+                items(result.filterNot { result ->
+                    groupChats.any { result.id == it.id }
+                }) {
                     Row(
                         modifier = Modifier
                             .height(56.dp)
@@ -77,7 +80,7 @@ fun GroupSearchResult(
                             .fillMaxWidth()
                             .clickable {
                                 showGroupChatDetail = true
-                                groupVM.getGroupChatDetailFromId(it.id)
+                                groupVM.updateSelectSearchResult(it)
                             },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -97,7 +100,7 @@ fun GroupSearchResult(
                                     contentScale = ContentScale.Crop
                                 )
                                 Text(
-                                    text = it.id.toString()
+                                    text = it.name
                                 )
                             }
                         }
@@ -107,15 +110,21 @@ fun GroupSearchResult(
                         )
                     }
                 }
-
-            }
-            Button(
-                onClick = onBackClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FColor.Orange_5th
-                )
-            ) {
-                Text("返回")
+                items(1) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Button(
+                            onClick = onBackClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = FColor.Orange_1st
+                            )
+                        ) {
+                            Text("返回")
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.size(8.dp))
         }
@@ -125,23 +134,25 @@ fun GroupSearchResult(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(1) {
-                GroupTitleText(text = selectGroupChat.name)
+                GroupTitleText(text = selectSearchResult.name)
                 GroupText(text = stringResource(R.string.str_create_location))
-                GroupTextWithBackground(text = "肯德基南京復興店")
+                GroupTextWithBackground(text = selectSearchResult.location)
                 GroupText(text = stringResource(R.string.str_create_time))
-                GroupTextWithBackground(text = "2024/12/25")
+                GroupTextWithBackground(text = selectSearchResult.time)
                 GroupText(text = stringResource(R.string.str_create_price))
-                GroupTextWithBackground(text = "1-200")
+                GroupTextWithBackground(text = "$${selectSearchResult.priceMin}-$${selectSearchResult.priceMax}")
                 GroupText(text = stringResource(R.string.str_create_member))
                 GroupTextWithBackground(text = "參加人數:1")
-                GroupText(text = stringResource(R.string.str_create_public))
-                GroupTextWithBackground(text = "公開")
                 GroupText(text = stringResource(R.string.str_create_describe))
-                GroupTextWithBackground(text = "肯德基\n南\n京\n復\n興店")
+                GroupTextWithBackground(text = selectSearchResult.describe)
                 Spacer(modifier = Modifier.size(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
-                        onClick = onJoinClick,
+                        onClick = {
+                            groupVM.joinGroup("${selectSearchResult.id}", "1")//TODO:memver_id
+                            onJoinClick()
+                            showGroupChatDetail = false
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FColor.Orange_1st
                         )

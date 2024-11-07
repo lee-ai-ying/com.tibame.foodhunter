@@ -11,14 +11,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,17 +55,18 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.data.Book
-import com.tibame.foodhunter.sharon.data.CalendarUiState
+import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.util.getDisplayName
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 
 
 /**
@@ -127,7 +128,7 @@ fun BookListComposable(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarApp(
-    viewModel: CalendarViewModel = viewModel(),
+    viewModel: CalendarVM = viewModel(),
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
@@ -152,20 +153,20 @@ fun CalendarApp(
         }
     }
 
-    var selectedBooks by remember {
-        mutableStateOf(emptyList<Book>())
-    }
-
-    // 當 selectedDate 改變時更新 selectedBooks
-    LaunchedEffect(selectedDate, books) {
-        selectedBooks = books.filter { book ->
-            selectedDate?.let { date ->
-                book.date.dayOfMonth.toString() == date.dayOfMonth &&
-                        book.date.monthValue == date.month &&
-                        book.date.year == date.year
-            } ?: false
-        }
-    }
+//    var selectedBooks by remember {
+//        mutableStateOf(emptyList<Book>())
+//    }
+//
+//    // 當 selectedDate 改變時更新 selectedBooks
+//    LaunchedEffect(selectedDate, books) {
+//        selectedBooks = books.filter { book ->
+//            selectedDate?.let { date ->
+//                book.date.dayOfMonth.toString() == date.dayOfMonth &&
+//                        book.date.monthValue == date.month &&
+//                        book.date.year == date.year
+//            } ?: false
+//        }
+//    }
 
 
     Scaffold(
@@ -177,11 +178,14 @@ fun CalendarApp(
                 )
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier
-//                .fillMaxSize()
-                .padding(padding)
+            modifier = Modifier.padding(
+                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = paddingValues.calculateBottomPadding(),
+                top = paddingValues.calculateTopPadding() - 12.dp
+            )
         ) {
             // 更新日期列表，使得用戶選中的日期顯示選中狀態
             val updatedDates = uiState.dates.map { date ->
@@ -199,7 +203,6 @@ fun CalendarApp(
                 yearMonth = uiState.yearMonth,
                 dates = updatedDates,  // 傳遞更新後的 dates 列表
 
-                selectedBooks = selectedBooks, // 傳入選中的書籍列表
 
                 // 切換到上一個月份
                 onPreviousMonthButtonClicked = { prevMonth ->
@@ -216,19 +219,6 @@ fun CalendarApp(
                     selectedDate = date
                 },
 
-                onItemClick = { book ->
-                    // 處理書籍項目點擊邏輯
-                    println("Book clicked: ${book.name}")
-                },
-                onEditClick = { book ->
-                    // 編輯書籍的邏輯
-                    println("Edit book: ${book.name}")
-                },
-                onDeleteClick = { book ->
-                    // 刪除書籍的邏輯
-                    bookViewModel.removeItem(book)
-                }
-
             )
         }
     }
@@ -243,10 +233,6 @@ fun CalendarWidget(
     onNextMonthButtonClicked: (YearMonth) -> Unit,
     onDateClickListener: (CalendarUiState.Date) -> Unit,
 
-    selectedBooks: List<Book>, // 傳入選中的書籍列表
-    onItemClick: (Book) -> Unit, // 點擊書籍項目時執行的動作
-    onEditClick: (Book) -> Unit, // 編輯書籍
-    onDeleteClick: (Book) -> Unit, // 刪除書籍
 
 ) {
 
@@ -274,16 +260,6 @@ fun CalendarWidget(
             dates = dates,
             onDateClickListener = onDateClickListener
         )
-
-        // 書籍列表，顯示選中日期的書籍
-        BookListComposable(
-            books = selectedBooks,
-            onItemClick = onItemClick,
-            onEditClick = onEditClick,
-            onDeleteClick = onDeleteClick,
-            showMore = true
-        )
-
     }
 }
 
@@ -372,43 +348,6 @@ fun Content(
         }
     }
 }
-
-//@Composable
-//fun ContentItem(
-//    date: CalendarUiState.Date,
-//    onClickListener: (CalendarUiState.Date) -> Unit,
-//    modifier: Modifier = Modifier
-////    var isSelected
-//) {
-//    Box( // 外層 Box，不需要保持正方形
-//        modifier = modifier
-//            .fillMaxWidth() // 外層可以使用 fillMaxWidth 或其他設計
-//            .clickable { onClickListener(date) }
-//            .padding(9.dp) // 外層的內間距
-//    ) {
-//        Box( // 內層 Box，保持正方形
-//            modifier = Modifier
-//                .aspectRatio(1f) // 確保內層 Box 為正方形
-//                .background(
-//                    color = if (date.isSelected) {
-//                        MaterialTheme.colorScheme.secondaryContainer
-//                    } else {
-//                        Color.Transparent
-//                    },
-//                    shape = CircleShape
-//                )
-//        ) {
-//            // 內層的日期文字
-//            Text(
-//                text = date.dayOfMonth,
-//                style = MaterialTheme.typography.bodyMedium,
-//                modifier = Modifier
-//                    .align(Alignment.Center)
-//                    .padding(8.dp) // 調整文字的內間距
-//            )
-//        }
-//    }
-//}
 
 @Composable
 fun ContentItem(
