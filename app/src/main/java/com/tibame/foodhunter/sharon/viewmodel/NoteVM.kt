@@ -48,13 +48,7 @@ class NoteVM : ViewModel() {
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
     init {
-        // 直接訂閱 repository 的 notes StateFlow
-        viewModelScope.launch {
-            repository.notes.collect { notes ->
-                _allNotes.value = notes
-                _filteredNotes.value = notes
-            }
-        }
+        loadNotes()
         setupSearchFlow()  // 搜尋資料流
     }
 

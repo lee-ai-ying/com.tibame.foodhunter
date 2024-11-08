@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
-import java.time.LocalDate
+import java.util.Date
 import java.util.Locale
 
 /**
@@ -34,17 +34,20 @@ class NoteRepository private constructor() {
 
     /**
      * 取得所有筆記
-     * 使用團隊統一的 CommonPost 方法
+     * @return 成功回傳正數，失敗回傳-1
      */
     suspend fun getNotes() {
         try {
             // 組合完整 URL
             val url = "$BASE_URL$API_PATH/getAllNotes"
 
-            // 呼叫共用的 POST 方法
-            // 因為 getAllNotes 不需要參數，傳空的 JsonObject
-            val response = CommonPost(url, JsonObject().toString())
+            // 因為 getAllNotes 不需要參數，傳空的""
+            val response = CommonPost(url, "")
             Log.d("NoteRepo", "收到回應: $response")
+
+            // 有空再研究簡化
+//            val type = object : TypeToken<List<NoteApiResponse>>() {}.type
+//            val notesList = gson.fromJson(response, type)
 
             // 檢查是否有回應
             if (response.isNotEmpty()) {
@@ -72,7 +75,7 @@ class NoteRepository private constructor() {
                     val apiResponse = NoteApiResponse(
                         note_id = noteObj.get("note_id").asInt,
                         title = noteObj.get("title").asString,
-                        content = noteObj.get("content").asString,  // 檢查 content
+                        content = noteObj.get("content").asString,
                         restaurant_id = noteObj.get("restaurant_id").asInt,
                         member_id = noteObj.get("member_id").asInt,
                         selected_date = noteObj.get("selected_date").asString
@@ -82,9 +85,12 @@ class NoteRepository private constructor() {
                     apiResponse.toNote()
 
                 }
+                // 按 note_id 排序 (升序)
+                val sortedNotesList = notesList.sortedByDescending { it.noteId }
+
                 // 更新 StateFlow
-                _notes.value = notesList
-                Log.d("NoteRepo", "轉換後的資料: $notesList")
+                _notes.value = sortedNotesList
+                Log.d(TAG, "排序後的資料: $sortedNotesList")
 
 
                 // 記錄總筆數
@@ -104,7 +110,7 @@ class NoteRepository private constructor() {
     /**
      * 根據ID取得單一筆記
      */
-    suspend fun getNoteById1(noteId: Int): Note? {
+    suspend fun getNoteById(noteId: Int): Note? {
         val url = "$BASE_URL$API_PATH/getNoteById"
 
         try {
@@ -127,12 +133,26 @@ class NoteRepository private constructor() {
                     return null
                 }
 
+                // 從 JSON 轉換日期字串到 Date
+                val dateString = jsonResponse.get("selected_date").asString
+                Log.e(TAG, "查看日期: $dateString")
+
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val selectedDate = try {
+                    dateFormat.parse(dateString) ?: Date()
+                } catch (e: Exception) {
+                    Log.e(TAG, "日期解析錯誤: $dateString", e)
+                    Date()  // 解析失敗時使用當前日期
+                }
+
                 // 轉換成Note物件
                 return Note(
                     noteId = jsonResponse.get("note_id").asInt,
                     title = jsonResponse.get("title").asString,
                     content = jsonResponse.get("content").asString,
                     type = CardContentType.NOTE,
+                    selectedDate = selectedDate,
                     date = formatDate(jsonResponse.get("selected_date").asString),
                     day = formatDay(jsonResponse.get("selected_date").asString),
                     restaurantName = null,
@@ -151,7 +171,7 @@ class NoteRepository private constructor() {
     /**
      * 根據ID取得單一筆記 (本地測試版本)
      */
-    suspend fun getNoteById(noteId: Int): Note? {
+    suspend fun getNoteById1(noteId: Int): Note? {
         // 先嘗試從本地列表查找
         val localNote = _notes.value.find { it.noteId == noteId }
         if (localNote != null) {
@@ -183,6 +203,7 @@ class NoteRepository private constructor() {
         title: String,
         content: String,
         type: CardContentType,
+        selectedDate: Date,
         restaurantName: String? = null,
     ): Int? {
         try {
@@ -190,7 +211,7 @@ class NoteRepository private constructor() {
             val newNoteId = System.currentTimeMillis().toInt()
 
             // 取得當前日期並格式化
-            val formattedDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
+            val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 .format(java.util.Date())
 
             // 創建新筆記
@@ -199,6 +220,7 @@ class NoteRepository private constructor() {
                 title = title,
                 content = content,
                 type = type,
+                selectedDate = selectedDate,
                 date = formatDate(formattedDate),  // 使用正確格式的日期字串
                 day = formatDay(formattedDate),    // 使用正確格式的日期字串
                 restaurantName = restaurantName,
@@ -220,15 +242,16 @@ class NoteRepository private constructor() {
     }
 
     // 修改 addNote 方法，暫時使用本地測試版本
-    suspend fun addNote(
+    suspend fun addNote1(
         title: String,
         content: String,
         type: CardContentType,
+        selectedDate: Date,
         restaurantName: String? = null,
     ): Int? {
         // 暫時使用本地版本測試
         return try {
-            addNoteLocal(title, content, type, restaurantName)
+            addNoteLocal(title, content, type, selectedDate, restaurantName)
         } catch (e: Exception) {
             Log.e(TAG, "新增筆記失敗", e)
             null
@@ -239,52 +262,62 @@ class NoteRepository private constructor() {
      * 新增筆記
      * @return 新增成功返回筆記ID，失敗返回null
      */
-    suspend fun addNote1(
+    /**
+     * 新增筆記
+     * @return 成功回傳正數，失敗回傳-1
+     */
+    suspend fun addNote(
         title: String,
         content: String,
-        type: CardContentType,
-        restaurantName: String? = null,
-    ): Int? {
-        val url = "$BASE_URL$API_PATH/addNote"
+        restaurantId: Int = 1,  // 先用固定值
+        memberId: Int = 1,    // int，暫時固定
+        selectedDate: Date,
+    ): Int {
+        val url = "http://192.168.2.97:8080/com.tibame.foodhunter_server/api/note/create"
+
+        // 轉成 "yyyy-MM-dd" 給後端
+        val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            .format(selectedDate)
 
         try {
             // 準備請求參數
             val requestBody = JsonObject().apply {
                 addProperty("title", title)
                 addProperty("content", content)
-                addProperty("type", type.name)  // 轉換為字串
-                // 暫時固定傳入的值，之後可以改為從登入狀態獲取
-                addProperty("member_id", 1)
-                addProperty("restaurant_id", restaurantName)  // 暫時不處理餐廳關聯
-                // 使用當前日期
-                addProperty("selected_date", LocalDate.now().toString())
+                addProperty("restaurantId", restaurantId)
+                addProperty("selectedDate", backendDateStr)
+                addProperty("memberId", memberId)
             }
 
-            // 發送請求
+            Log.d(TAG, "新增筆記請求：$requestBody")
+
             val response = CommonPost(url, requestBody.toString())
-            Log.d(TAG, "新增筆記API回應: $response")
+            Log.d(TAG, "新增筆記回應：$response")
 
             if (response.isNotEmpty()) {
                 val jsonResponse = gson.fromJson(response, JsonObject::class.java)
 
-                // 檢查是否成功
-                if (jsonResponse.has("error")) {
-                    Log.e(TAG, "新增筆記失敗: ${jsonResponse.get("error").asString}")
-                    return null
+                // 檢查回應中的 result
+                val result = jsonResponse.get("result")?.asBoolean ?: false
+
+                return if (result) {
+                    // 新增成功，重新取得筆記列表
+                    getNotes()
+                    Log.d(TAG, "新增筆記成功")
+                    1  // 成功返回1
+                } else {
+                    // 新增失敗，檢查錯誤訊息
+                    val errMsg = jsonResponse.get("errMsg")?.asString ?: "未知錯誤"
+                    Log.e(TAG, "新增筆記失敗: $errMsg")
+                    return -1
                 }
-
-                // 取得新增的筆記ID
-                val newNoteId = jsonResponse.get("note_id").asInt
-
-                // 重新取得筆記列表
-                getNotes()
-
-                return newNoteId
+            } else {
+                Log.e(TAG, "API 回應為空")
+                return -1
             }
-            return null
         } catch (e: Exception) {
             Log.e(TAG, "新增筆記時發生錯誤", e)
-            return null
+            return -1
         }
     }
 
@@ -303,11 +336,15 @@ class NoteRepository private constructor() {
 
     // API 資料轉換方法通常使用 "to" 前綴
     private fun NoteApiResponse.toNote(): Note {
+        // 字串轉 Date
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = dateFormat.parse(selected_date) ?: Date()
         return Note(
             noteId = note_id,
             title = title,
             content = content,
             type = CardContentType.NOTE,
+            selectedDate = date,
             date = formatDate(selected_date),
             day = formatDay(selected_date),
             restaurantName = null,
@@ -319,7 +356,7 @@ class NoteRepository private constructor() {
      * 格式化日期 (MM/dd)
      */
     private fun formatDate(dateString: String): String {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val outputFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
         try {
             val date = inputFormat.parse(dateString)
@@ -335,7 +372,7 @@ class NoteRepository private constructor() {
      * 格式化星期幾
      */
     private fun formatDay(dateString: String): String {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val outputFormat = SimpleDateFormat("EEEE", Locale.CHINESE)
         try {
             val date = inputFormat.parse(dateString)

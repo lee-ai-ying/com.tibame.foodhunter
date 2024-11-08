@@ -7,11 +7,14 @@ import androidx.navigation.NavHostController
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
-import kotlinx.coroutines.delay
+import com.tibame.foodhunter.sharon.data.NoteRepository.Companion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * 筆記編輯頁面的 UI 狀態
@@ -23,11 +26,13 @@ data class NoteEditUiState(
     val isExistingNote: Boolean = false, // 是否為既有筆記
     val title: String = "",               // 標題
     val content: String = "",             // 內容
-    val restaurantName: String? = null,   // 關聯餐廳名稱
+    val restaurantId: Int = 1,  // 先給固定值
     val type: CardContentType = CardContentType.NOTE, // 筆記類型
-    val date: String = "",                // 日期
     val isLoading: Boolean = false,       // 加載狀態
     val errorMessage: String? = null,      // 錯誤訊息
+    val selectedDate: Date = Date(),  // 給 DatePicker 用
+    val displayDate: String = "",     // 給卡片顯示用 (MM/dd)
+    val displayDay: String = "",      // 給卡片顯示用 (星期幾)
 )
 
 /**
@@ -44,7 +49,7 @@ sealed class NoteEditEvent {
     data class UpdateTitle(val title: String) : NoteEditEvent()
     data class UpdateContent(val content: String) : NoteEditEvent()
     data class UpdateRestaurant(val name: String?) : NoteEditEvent()
-    data class UpdateDate(val date: String) : NoteEditEvent()
+    data class UpdateDate(val date: Date) : NoteEditEvent()
 
     // 操作相關事件
     object SaveNote : NoteEditEvent()      // 保存筆記
@@ -97,18 +102,19 @@ class NoteEditVM : ViewModel() {
                             hasTitle = note.title.isNotEmpty(),
                             title = note.title,
                             content = note.content,
-                            restaurantName = note.restaurantName,
+                            restaurantId = 1,
                             type = note.type,
-                            date = note.date
+                            selectedDate = note.selectedDate
                         )
                     }
                     Log.d(TAG, "筆記載入成功: ${note.title}")
 
                 } ?: run {
-                    Log.e(TAG, "找不到指定筆記")
+                    Log.e(TAG, "找不到指定筆記，noteId: $noteId")
                     _uiState.update {
                         it.copy(errorMessage = "找不到指定筆記")
                     }
+                    return@launch
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "載入筆記失敗", e)
@@ -133,13 +139,18 @@ class NoteEditVM : ViewModel() {
             }
 
             is NoteEditEvent.UpdateRestaurant -> {
-                _uiState.update { it.copy(restaurantName = event.name) }
+                _uiState.update { it.copy(restaurantId = 1) }
             }
 
             is NoteEditEvent.UpdateDate -> {
-                _uiState.update { it.copy(date = event.date) }
+                _uiState.update {
+                    it.copy(
+                        selectedDate = event.date,
+                        displayDate = formatDate(event.date.toString()),  // MM/dd
+                        displayDay = formatDay(event.date.toString())     // 星期幾
+                    )
+                }
             }
-
             is NoteEditEvent.SaveNote -> saveNote()
             is NoteEditEvent.NavigateBack -> {
                 // 導航邏輯會在 UI 層處理
@@ -185,6 +196,7 @@ class NoteEditVM : ViewModel() {
             }
         }
     }
+
     /**
      * 返回按鈕處理
      */
@@ -212,30 +224,35 @@ class NoteEditVM : ViewModel() {
                 _uiState.update { it.copy(isLoading = true) }
                 val currentState = _uiState.value
 
-                _uiState.update { it.copy(isLoading = true) }
-                    // 執行新增操作
-                    val newNoteId = repository.addNote(
-                        title = currentState.title,
-                        content = currentState.content,
-                        type = currentState.type,
-                        restaurantName = currentState.restaurantName
-                    )
-                        // 更新狀態：不再是首次輸入
-                        _saveSuccess.value = true
+                // 執行新增操作
+                val result = repository.addNote(
+                    title = currentState.title,
+                    content = currentState.content,
+                    restaurantId = 1, // 暫時固定
+                    memberId = 1,  // 暫時固定
+                    selectedDate = currentState.selectedDate
+                )
 
-                        _uiState.update {
-                            it.copy(
-                                isFirstEntry = false,
-                                isExistingNote = true,
-                                hasTitle = true
-                            )
-                        }
-
-                    Log.d(TAG, "新筆記創建成功，ID: $newNoteId")
-
+                if (result > 0) {
+                    // 更新狀態：不再是首次輸入
+                    _saveSuccess.value = true
+                    _uiState.update {
+                        it.copy(
+                            isFirstEntry = false,
+                            isExistingNote = true,
+                            hasTitle = true
+                        )
+                    }
+                    Log.d(TAG, "筆記保存成功，ID: $result")
+                } else {
+                    _uiState.update {
+                        it.copy(errorMessage = "保存失敗")
+                    }
+                    Log.e(TAG, "筆記保存失敗")
+                }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(errorMessage = "儲存失敗：${e.message}")
+                    it.copy(errorMessage = "保存失敗：${e.message}")
                 }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
@@ -243,7 +260,38 @@ class NoteEditVM : ViewModel() {
         }
     }
 
+    /**
+     * 格式化日期 (MM/dd)
+     */
+    private fun formatDate(dateString: String): String {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
+        try {
+            val date = inputFormat.parse(dateString)
+                ?: throw IllegalArgumentException("無法解析日期: $dateString")
+            return outputFormat.format(date)
+        } catch (e: Exception) {
+            Log.e(TAG, "日期格式化錯誤: $dateString", e)
+            throw IllegalArgumentException("日期格式錯誤: $dateString", e)
+        }
+    }
 
+    /**
+     * 格式化星期幾
+     */
+    private fun formatDay(dateString: String): String {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("EEEE", Locale.CHINESE)
+        try {
+            val date = inputFormat.parse(dateString)
+                ?: throw IllegalArgumentException("無法解析日期: $dateString")
+
+            return "星期" + outputFormat.format(date).substring(2, 3)
+        } catch (e: Exception) {
+            Log.e(TAG, "日期格式化錯誤: $dateString", e)
+            throw IllegalArgumentException("日期格式錯誤: $dateString", e)
+        }
+    }
 }
 
 
