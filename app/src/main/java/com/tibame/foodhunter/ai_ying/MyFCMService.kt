@@ -1,14 +1,13 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class MyFCMService : FirebaseMessagingService() {
-    private val myTag = "qq"
-
     // repository採單例模式
-    private val repository = MyRepository
+    private val repository = GroupRepository
 
     // 當App在前景收到FCM時呼叫，App在背景收到FCM時不會呼叫此方法
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -21,24 +20,18 @@ class MyFCMService : FirebaseMessagingService() {
         }
         // 取得自訂資料
         val data = remoteMessage.data["data"]
-        Log.d(
-            myTag,
-            "onMessageReceived():\ntitle: $title, body: $body, data: $data"
-        )
-        val message = "title: $title\nbody: $body\ndata: $data"
-        // 前景收到的訊息存入repository
-        repository.setData(message)
+        //Log.d("qq","onMessageReceived():\ntitle: $title, body: $body, data: $data")
+        repository.gChatVM?.updateGroupChat()
     }
 
     // 當registration token更新時呼叫，應該將新的token傳送至server
     override fun onNewToken(token: String) {
-        Log.d(myTag, "onNewToken: $token")
-
+        //Log.d("qq", "onNewToken: $token")
     }
 
     // 當FCM server刪除暫存訊息時呼叫(例如：裝置超過4週未存取訊息)
     override fun onDeletedMessages() {
         super.onDeletedMessages()
-        Log.d(myTag, "onDeletedMessages")
+        //Log.d("qq", "onDeletedMessages")
     }
 }

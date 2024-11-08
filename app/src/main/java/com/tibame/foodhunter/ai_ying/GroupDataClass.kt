@@ -48,7 +48,7 @@ data class GroupSearchResult(
 )
 
 data class GroupChatHistory(
-    @SerializedName("memberId") var senderId: Int = 0,
+    @SerializedName("username") var username: String = "",
     @SerializedName("memberName") var senderName: String = "",
     @SerializedName("message") var message: String = "",
     @SerializedName("sendTime") var sendTime: String = ""

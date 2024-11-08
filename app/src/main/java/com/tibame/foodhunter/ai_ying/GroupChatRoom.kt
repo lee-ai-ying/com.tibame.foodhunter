@@ -88,7 +88,7 @@ fun GroupChatRoom(
     gChatVM.gotoChatRoom(groupRoomId)
     gChatVM.getGroupChatHistory(groupRoomId)
     val history by gChatVM.groupChatHistory.collectAsState()
-    val self = 1 //TODO:memberId
+    val self = gChatVM.getUserName()
     /*if (gChatVM.showEditGroup.asStateFlow().collectAsState().value) {
         EditGroupInformation(gChatVM)
         return
@@ -97,29 +97,6 @@ fun GroupChatRoom(
         EditGroupMember(gChatVM)
         return
     }
-    /*
-    val item = listOf(
-        "111",
-        "222\n222",
-        "333",
-        "4444",
-        "55555",
-        "666666",
-        "7777777",
-        "0000000000\n88888888",
-        "999999999",
-        "0000000000",
-        "111",
-        "222",
-        "333",
-        "444",
-        "555",
-        "666",
-        "777",
-        "888",
-        "999",
-        "000"
-    )*/
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -134,7 +111,7 @@ fun GroupChatRoom(
                     .padding(start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                when (it.senderId) {
+                when (it.username) {
                     self -> {}
                     else ->
                         Box(
@@ -154,12 +131,12 @@ fun GroupChatRoom(
                     modifier = Modifier
                         .weight(1f)
                         .padding(top = 8.dp, bottom = 8.dp),
-                    horizontalAlignment = when (it.senderId) {
+                    horizontalAlignment = when (it.username) {
                         self -> Alignment.End
                         else -> Alignment.Start
                     }
                 ) {
-                    when (it.senderId) {
+                    when (it.username) {
                         self -> {}
                         else -> Text(it.senderName)
                     }
@@ -167,7 +144,7 @@ fun GroupChatRoom(
                         verticalAlignment = Alignment.Bottom
                     )
                     {
-                        if (it.senderId == self) {
+                        if (it.username == self) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
@@ -180,7 +157,7 @@ fun GroupChatRoom(
                         Column(
                             modifier = Modifier
                                 .background(
-                                    when (it.senderId) {
+                                    when (it.username) {
                                         self -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
                                         else -> Color.White
                                     },
@@ -192,7 +169,7 @@ fun GroupChatRoom(
                                 text = it.message
                             )
                         }
-                        if (it.senderId != self) {
+                        if (it.username != self) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
@@ -314,7 +291,8 @@ fun GroupChatRoomBottomBar(
                     contentDescription = "",
                     tint = FColor.Orange_1st,//MaterialTheme.colorScheme.primary
                     modifier = Modifier.clickable {
-                        gChatVM.sendMessage(chatInput)
+                        //gChatVM.sendMessage(chatInput)
+                        gChatVM.sendGroupMessage(chatInput)
                         chatInput=""
                         //TODO:send message
                     }

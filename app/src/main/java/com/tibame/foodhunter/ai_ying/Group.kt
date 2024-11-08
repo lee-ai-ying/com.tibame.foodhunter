@@ -25,12 +25,14 @@ fun GroupMain(
     navController: NavHostController,
     groupVM: GroupViewModel
 ) {
+    //Log.d("qq", groupVM.getUserName())
     val context = LocalContext.current
     var selectTabIndex by remember { mutableIntStateOf(0) }
     var isShowSearchResult by remember { mutableStateOf(false) }
     //val groupChats by groupVM.groupChat.collectAsState()
     LaunchedEffect(Unit) {
-        groupVM.getGroupChatList("1")//TODO:memberId
+        groupVM.getGroupChatList(groupVM.getUserName())
+        //groupVM.getTokenSendServer()
     }
 
     Column(

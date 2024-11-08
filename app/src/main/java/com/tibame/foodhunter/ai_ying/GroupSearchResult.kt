@@ -149,7 +149,7 @@ fun GroupSearchResult(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = {
-                            groupVM.joinGroup("${selectSearchResult.id}", "1")//TODO:memver_id
+                            groupVM.joinGroup("${selectSearchResult.id}", groupVM.getUserName())
                             onJoinClick()
                             showGroupChatDetail = false
                         },
