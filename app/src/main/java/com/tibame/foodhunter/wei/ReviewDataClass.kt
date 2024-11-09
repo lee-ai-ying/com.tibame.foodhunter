@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.ImageBitmap
 
 
 data class ReviewCreateData(
@@ -50,7 +51,7 @@ data class ReviewCreateData(
     var content: String = "",
     var location: String = "",
     var timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
-    var serviceCharge:Boolean = false,
+    var serviceCharge: Int = 0,
 )
 
 data class Reviews(
@@ -65,7 +66,15 @@ data class Reviews(
     var replies: List<Reply>,
     var maxPrice: Int,
     var minPrice: Int,
-    var serviceCharge:Boolean = false,
+    var serviceCharge:Int = 0,
+)
+
+data class Reviewer(
+    val id: Int,
+    val name: String,
+    val avatarImage: ImageBitmap? = null,
+    val followers: Int = 0, // 追蹤者人數
+    val following: Int = 0  // 追蹤中人數
 )
 
 
