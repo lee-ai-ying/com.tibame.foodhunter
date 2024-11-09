@@ -1,6 +1,8 @@
 package com.tibame.foodhunter
 
 import NewPost
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -38,6 +40,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.tibame.foodhunter.a871208s.FriendAddScreen
 import com.tibame.foodhunter.a871208s.DeleteMemberScreen
 import com.tibame.foodhunter.a871208s.ForgetPassword1Screen
@@ -150,7 +155,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
     ).contains(destination?.route)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun Main(
     navController: NavHostController = rememberNavController(),
@@ -165,7 +170,19 @@ fun Main(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
+    val locationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        rememberPermissionState(
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        null
+    }
     LaunchedEffect(Unit) {
+        if (locationPermission != null) {
+            if (!locationPermission.status.isGranted) {
+                locationPermission.launchPermissionRequest()
+            }
+        }
         GroupRepository.gChatVM = gChatVM
         gChatVM.userVM = userViewModel
     }

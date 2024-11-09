@@ -8,6 +8,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.a871208s.UserViewModel
+import com.tibame.foodhunter.andysearch.Restaurant
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +53,7 @@ class GroupViewModel : ViewModel() {
                 }
             }
             incList.add(0, GroupChat(name = "進行中", state = 99))
-            endList.add(0, GroupChat(name = "已結束", state = 99))
+            endList.add(0, GroupChat(name = "已結束", state = 98))
             repository.updateGroupChatList(incList.plus(endList))
         }
     }
@@ -127,7 +129,7 @@ class GroupViewModel : ViewModel() {
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
-            jsonObject.addProperty("location", input.location)
+            jsonObject.addProperty("locationName", input.location)
             jsonObject.addProperty("time", input.time)
             jsonObject.addProperty("priceMin", input.priceMin)
             jsonObject.addProperty("priceMax", input.priceMax)
@@ -149,7 +151,7 @@ class GroupViewModel : ViewModel() {
             val gson = Gson()
             val jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
-            jsonObject.addProperty("location", "KFC")//input.location)
+            jsonObject.addProperty("location", input.location)
             jsonObject.addProperty("time", input.time)
             jsonObject.addProperty("priceMin", input.priceMin)
             jsonObject.addProperty("priceMax", input.priceMax)
@@ -194,7 +196,9 @@ class GroupViewModel : ViewModel() {
             repository.updateGroupChatHistory(list)
         }
     }
-
+//    fun clearChatHistory() {
+//        repository.updateGroupChatHistory(emptyList())
+//    }
     fun updateGroupChat() {
         getGroupChatHistory(_nowChatRoomId.value)
     }
@@ -251,5 +255,65 @@ class GroupViewModel : ViewModel() {
             val result = CommonPost("$serverUrl/fcm/register", jsonObject.toString())
             //Log.d("qq", "sendTokenToServer: $result")
         }
+    }
+
+    fun leaveGroup() {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("groupId", "${_nowChatRoomId.value}")
+            jsonObject.addProperty("username", getUserName())
+            CommonPost("$serverUrl/group/leave", jsonObject.toString())
+            getGroupChatList(getUserName())
+        }
+    }
+
+    fun getAvatarImageInGroupChat(groupRoomId: Int) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("id", "$groupRoomId")
+            val result = CommonPost("$serverUrl/group/avatar", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupChatImage>>() {}.type
+            val list = gson.fromJson<List<GroupChatImage>>(
+                jsonObject.get("result").asString,
+                collectionType
+            ) ?: emptyList()
+            val dataList = emptyList<GroupChatImage>().toMutableList()
+            list.forEach {
+                dataList.add(
+                    GroupChatImage(
+                        it.username,
+                        it.profileimage,
+                        userVM?.decodeBase64ToBitmap(it.profileimage)
+                    )
+                )
+            }
+            //Log.d("qq",dataList.toString())
+            repository.updateGroupChatAvatar(dataList)
+        }
+    }
+
+    val groupChatAvatar = repository.groupChatAvatar
+    val restaurantList = repository.restaurantList
+    fun getRestaurantList() {
+        viewModelScope.launch {
+            val gson = Gson()
+            val result = CommonPost("$serverUrl/group/restaurant", "")
+            var jsonObject = JsonObject()
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupRestaurantData>>() {}.type
+            val list = gson.fromJson<List<GroupRestaurantData>>(
+                jsonObject.get("result").asString,
+                collectionType
+            ) ?: emptyList()
+            repository.updateRestaurantList(list)
+        }
+    }
+    fun getRestaurantNameById(restaurantId:Int):String{
+        if (repository.restaurantList.value.isEmpty()){
+
+        }
+        return repository.restaurantList.value[restaurantId-1].restaurantName
     }
 }

@@ -91,14 +91,14 @@ fun GroupSearchResult(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Image(
+                                /*Image(
                                     painter = painterResource(id = R.drawable.user1),
                                     contentDescription = "avatar",
                                     modifier = Modifier
                                         .size(32.dp)
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop
-                                )
+                                )*/
                                 Text(
                                     text = it.name
                                 )
@@ -115,6 +115,9 @@ fun GroupSearchResult(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Text(text="共找到: ${result.filterNot { result ->
+                            groupChats.any { result.id == it.id }
+                        }.count()} 筆結果")
                         Button(
                             onClick = onBackClick,
                             colors = ButtonDefaults.buttonColors(
@@ -135,42 +138,54 @@ fun GroupSearchResult(
         ) {
             items(1) {
                 GroupTitleText(text = selectSearchResult.name)
-                GroupText(text = stringResource(R.string.str_create_location))
-                GroupTextWithBackground(text = selectSearchResult.location)
-                GroupText(text = stringResource(R.string.str_create_time))
-                GroupTextWithBackground(text = selectSearchResult.time)
-                GroupText(text = stringResource(R.string.str_create_price))
-                GroupTextWithBackground(text = "$${selectSearchResult.priceMin}-$${selectSearchResult.priceMax}")
-                GroupText(text = stringResource(R.string.str_create_member))
-                GroupTextWithBackground(text = "參加人數:1")
-                GroupText(text = stringResource(R.string.str_create_describe))
-                GroupTextWithBackground(text = selectSearchResult.describe)
-                Spacer(modifier = Modifier.size(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            groupVM.joinGroup("${selectSearchResult.id}", groupVM.getUserName())
-                            onJoinClick()
-                            showGroupChatDetail = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = FColor.Orange_1st
-                        )
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    GroupText(text = stringResource(R.string.str_create_location))
+                    GroupTextWithBackground(text = groupVM.getRestaurantNameById(selectSearchResult.location.toInt()))
+                    GroupText(text = stringResource(R.string.str_create_time))
+                    GroupTextWithBackground(text = selectSearchResult.time)
+                    GroupText(text = stringResource(R.string.str_create_price))
+                    GroupTextWithBackground(text = "$${selectSearchResult.priceMin}-$${selectSearchResult.priceMax}")
+                    /*GroupText(text = stringResource(R.string.str_create_member))
+                GroupTextWithBackground(text = "參加人數:1")*/
+                    GroupText(text = stringResource(R.string.str_create_describe))
+                    GroupTextWithBackground(text = selectSearchResult.describe)
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("加入")
-                    }
-                    Button(
-                        onClick = {
-                            showGroupChatDetail = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Text(
-                            text = "返回",
-                            color = Color.Black//MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    groupVM.joinGroup(
+                                        "${selectSearchResult.id}",
+                                        groupVM.getUserName()
+                                    )
+                                    onJoinClick()
+                                    showGroupChatDetail = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = FColor.Orange_1st
+                                )
+                            ) {
+                                Text("加入")
+                            }
+                            Button(
+                                onClick = {
+                                    showGroupChatDetail = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
+                                )
+                            ) {
+                                Text(
+                                    text = "返回",
+                                    color = Color.Black//MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
                     }
                 }
             }

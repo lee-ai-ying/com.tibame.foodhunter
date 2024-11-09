@@ -32,7 +32,7 @@
     <string name="Share_with">分享對象</string>
     <string name="str_create_name">名稱</string>
     <string name="str_create_location">地點</string>
-    <string name="str_create_time">時間</string>
+    <string name="str_create_time">日期</string>
     <string name="str_create_public">公開狀態</string>
     <string name="str_create_price">金額</string>
     <string name="str_create_payment">拆帳方式</string>

@@ -37,4 +37,15 @@ object GroupRepository {
     fun updateGroupChatHistory(result: List<GroupChatHistory>) {
         _groupChatHistory.update { result }
     }
+    private val _groupChatAvatar = MutableStateFlow(emptyList<GroupChatImage>())
+    val groupChatAvatar = _groupChatAvatar.asStateFlow()
+    fun updateGroupChatAvatar(result: List<GroupChatImage>) {
+        _groupChatAvatar.update { result }
+    }
+
+    private val _restaurantList = MutableStateFlow(emptyList<GroupRestaurantData>())
+    val restaurantList = _restaurantList.asStateFlow()
+    fun updateRestaurantList(result: List<GroupRestaurantData>) {
+        _restaurantList.update { result }
+    }
 }
