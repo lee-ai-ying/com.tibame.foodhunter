@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -286,13 +287,33 @@ fun Main(
                 arguments = listOf(navArgument("publisherId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
-                val currentUserId = 1 // 替換為實際獲取當前用戶 ID 的方法
                 PersonHomepage(
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController
                 )
             }
+            composable(context.getString(R.string.str_post)) {
+                NewPost(
+                    navController = navController,
+                    postViewModel = postViewModel,
+                    postId = null  // 新增模式
+                )
+            }
+
+            // 新增編輯貼文的路由
+            composable(
+                "${context.getString(R.string.str_post)}/edit/{postId}",
+                arguments = listOf(navArgument("postId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val postId = backStackEntry.arguments?.getInt("postId")
+                NewPost(
+                    navController = navController,
+                    postViewModel = postViewModel,
+                    postId = postId  // 編輯模式
+                )
+            }
+
 
 
 
@@ -325,6 +346,7 @@ fun Main(
             composable(context.getString(R.string.str_post)) {
                 NewPost(navController = navController,  postViewModel)
             }
+
             composable(context.getString(R.string.str_searchpost)) {
                 SearchPost(navController)
             }

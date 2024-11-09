@@ -9,6 +9,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.R
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
+import java.lang.reflect.Member
 
 
 class PostRepository {
@@ -26,6 +29,8 @@ class PostRepository {
     private val _postList = MutableStateFlow<List<Post>>(emptyList())
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
     private val gson = Gson()
+
+
 
     private suspend fun fetchComments(postId: Int): List<CommentResponse> {
         val url = "${serverUrl}/comment/byPost?postId=$postId"
@@ -38,7 +43,18 @@ class PostRepository {
             emptyList()
         }
     }
-
+    private suspend fun CommentResponse.toComment(profileImage: ImageBitmap? = null): Comment {
+        return Comment(
+            id = messageId,
+            commenter = Commenter(
+                id = memberId,
+                name = memberNickname,
+                avatarBitmap = profileImage
+            ),
+            content = content,
+            timestamp = messageTime
+        )
+    }
     // 獲取貼文列表
     private suspend fun fetchPosts(): List<PostResponse> {
         val url = "${serverUrl}/post/preLoad"
@@ -206,6 +222,80 @@ class PostRepository {
 
         return post
     }
+
+    private inner class ImageProcessor {
+        suspend fun processBase64Image(base64String: String?, id: Int): ImageBitmap? {
+            if (base64String.isNullOrEmpty()) {
+                Log.d("ImageProcessor", "ID: $id 的圖片數據為空")
+                return null
+            }
+
+            return withContext(Dispatchers.IO) {
+                try {
+                    // 處理 Base64 圖片
+                    val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    Log.d("ImageProcessor", "ID: $id 的圖片處理成功")
+                    bitmap?.asImageBitmap()
+                } catch (e: Exception) {
+                    Log.e("ImageProcessor", "處理 ID: $id 的圖片時發生錯誤", e)
+                    null
+                }
+            }
+        }
+    }
+
+    private val imageProcessor = ImageProcessor()
+    private suspend fun updatePostComments(postId: Int) {
+        try {
+            val commentResponses = fetchComments(postId)
+            val comments = commentResponses.map { commentResponse ->
+                Log.d("PostRepository", """
+                處理評論:
+                Comment ID: ${commentResponse.messageId}
+                Commenter ID: ${commentResponse.memberId}
+                Commenter Name: ${commentResponse.memberNickname}
+                Profile Image 是否存在: ${!commentResponse.profileImage.isNullOrEmpty()}
+                """.trimIndent())
+
+                val commentProfileImage = if (!commentResponse.profileImage.isNullOrEmpty()) {
+                    imageProcessor.processBase64Image(
+                        commentResponse.profileImage,
+                        commentResponse.memberId
+                    )
+                } else {
+                    Log.d("PostRepository", "評論者 ${commentResponse.memberId} 沒有頭像數據")
+                    null
+                }
+
+                Comment(
+                    id = commentResponse.messageId,
+                    commenter = Commenter(
+                        id = commentResponse.memberId,
+                        name = commentResponse.memberNickname,
+                        avatarBitmap = commentProfileImage
+                    ),
+                    content = commentResponse.content,
+                    timestamp = commentResponse.messageTime
+                )
+            }
+
+            _postList.update { currentPosts ->
+                currentPosts.map { post ->
+                    if (post.postId == postId) {
+                        post.copy(comments = comments)
+                    } else {
+                        post
+                    }
+                }
+            }
+
+            Log.d("PostRepository", "成功處理 ${comments.size} 條評論")
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error updating post comments", e)
+        }
+    }
+
     suspend fun createPost(postData: PostCreateData): Boolean {
         val url = "${serverUrl}/post/create"
 
@@ -230,7 +320,9 @@ class PostRepository {
         return try {
             val json = gson.toJson(commentRequest)
             val result = CommonPost(url, json)
-            loadPosts()
+
+            // 創建評論後只更新該貼文的評論
+            updatePostComments(postId)
             true
         } catch (e: Exception) {
             Log.e("PostRepository", "Error creating comment", e)
@@ -288,6 +380,48 @@ class PostRepository {
             false
         }
     }
+    suspend fun getPost(postId: Int): Post? {
+        val url = "${serverUrl}/post/get/$postId"
+        return try {
+            val result = CommonPost(url, "")
+            val response = gson.fromJson(result, PostResponse::class.java)
+            response.toPost()
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error fetching post $postId", e)
+            null
+        }
+    }
+
+    suspend fun updatePost(postId: Int, postData: PostCreateData): Boolean {
+        val url = "${serverUrl}/post/update"
+        return try {
+            val updateRequest = mapOf(
+                "postId" to postId,
+                "content" to postData.content,
+                "postTag" to postData.postTag,
+                "restaurantId" to postData.restaurantId,
+                "photos" to postData.photos
+            )
+            val json = gson.toJson(updateRequest)
+            Log.d("UpdatePost", "Request: $json")
+
+            val result = CommonPost(url, json)
+            val response = gson.fromJson(result, UpdateResponse::class.java)
+
+            if (response.success) {
+                loadPosts() // 重新載入貼文列表
+                true
+            } else {
+                Log.e("UpdatePost", "Update failed: ${response.message}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("UpdatePost", "Error updating post", e)
+            false
+        }
+    }
+
+
 }
 
 
@@ -337,4 +471,11 @@ data class CommentResponse(
     val messageTime: String,
     val memberNickname: String,
     val profileImage: String? = null
+)
+
+
+
+data class UpdateResponse(
+    val success: Boolean,
+    val message: String
 )

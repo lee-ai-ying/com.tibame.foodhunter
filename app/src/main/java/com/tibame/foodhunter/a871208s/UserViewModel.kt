@@ -213,10 +213,10 @@ class UserViewModel: ViewModel() {
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
-    
-    
-    
-    
+
+
+
+
     suspend fun image(username: String): User? {
         return try {
             val url = "${serverUrl}/member/image"
@@ -234,8 +234,8 @@ class UserViewModel: ViewModel() {
 
             // 处理图片：如果 profileImageBase64 不为空
 
-                user?.profileImageBase64?.let {
-                    Log.d("ProfileImage", "Profile image base64: $it")
+            user?.profileImageBase64?.let {
+                Log.d("ProfileImage", "Profile image base64: $it")
             }
 
             user
@@ -280,9 +280,6 @@ class UserViewModel: ViewModel() {
             Log.e("DecodeBase64", "Base64 解码失败: ${e.message}")
             null
         }
-        
+
     }
 }
-
-
-

@@ -65,7 +65,7 @@ fun SearchPost(
         )
 
         FilterChips(
-            filters = listOf("早午餐", "午餐", "晚餐"),
+            filters = listOf("早午餐", "午餐", "晚餐", "下午茶", "宵夜"),
             selectedFilters = selectedFilters,
             onFilterChange = { updatedFilters ->
                 postViewModel.updateFilters(updatedFilters)

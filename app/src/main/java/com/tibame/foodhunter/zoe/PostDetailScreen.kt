@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.a871208s.UserViewModel
 import kotlinx.coroutines.launch
 
 enum class SheetContent {
@@ -64,10 +66,11 @@ enum class SheetContent {
 fun PostDetailScreen(
     postId: Int?,
     navController: NavHostController,
-    postViewModel: PostViewModel = viewModel()
+    postViewModel: PostViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
 ) {
     // 獲取當前用戶 ID，這裡應該從你的用戶管理系統獲取
-    val currentUserId = 7 // 替換為實際的用戶 ID 獲取方式
+    val currentUserId = 7
     // 根據 postId 從 ViewModel 中取得特定的貼文
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
 
@@ -76,7 +79,7 @@ fun PostDetailScreen(
         PostDetail(
             post = nonNullPost,
             viewModel = postViewModel,
-            currentUserId = currentUserId,
+            currentUserId = currentUserId ?: -1,
             navController = navController
         )
     } ?: Column(
@@ -257,11 +260,7 @@ fun MessageSheet(
 ) {
     var commentText by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
-
-    // 使用 getPostById 來觀察貼文更新
     val currentPost by viewModel.getPostById(post.postId).collectAsState()
-
-    // 使用當前貼文的評論，如果為空則使用傳入的貼文評論
     val comments = currentPost?.comments ?: post.comments
 
     Column(
@@ -294,7 +293,7 @@ fun MessageSheet(
                     Avatar(
                         imageData = comment.commenter.avatarBitmap,
                         defaultImage = comment.commenter.avatarImage,
-                        contentDescription = "Avatar for ${post.publisher.name}"
+                        contentDescription = "Avatar for ${comment.commenter.name}"
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
@@ -305,6 +304,9 @@ fun MessageSheet(
             }
         }
 
+        // 在輸入框之前添加空間
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = commentText,
             onValueChange = { commentText = it },
@@ -312,7 +314,7 @@ fun MessageSheet(
             placeholder = { Text(text = stringResource(id = R.string.Add_message)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(bottom = 32.dp), // 增加底部 padding
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.LightGray,
                 focusedBorderColor = Color.LightGray,
@@ -370,7 +372,10 @@ fun EditSheet(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedButton(
-            onClick = { /* Handle edit */ },
+            onClick = {
+                navController.navigate("${context.getString(R.string.str_post)}/edit/${post.postId}")
+                onConfirm()
+            },
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
             border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)),
             modifier = Modifier
@@ -440,5 +445,3 @@ fun EditSheet(
         )
     }
 }
-
-
