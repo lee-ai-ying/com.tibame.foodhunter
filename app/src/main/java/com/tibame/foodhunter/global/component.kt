@@ -28,6 +28,7 @@ import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterFont
+import com.tibame.foodhunter.ui.theme.titleFamily
 
 @Composable
 fun TopFunctionBar(
@@ -41,7 +42,7 @@ fun TopFunctionBar(
         title = {
             Text(
                 stringResource(R.string.app_name),
-                fontFamily = FoodHunterFont
+                fontFamily = titleFamily
             )
         },
         navigationIcon = {

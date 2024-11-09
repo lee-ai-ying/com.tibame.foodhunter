@@ -19,7 +19,7 @@ object NoteRepository {
             date = "10/15",
             day = "星期二",
             title = "巷弄甜點店",
-            noteContent = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
+            content = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
             imageResId = R.drawable.sushi_image_1,
             restaurantName = "法式甜點工作室"
         ),
@@ -29,7 +29,7 @@ object NoteRepository {
             date = "10/16",
             day = "星期三",
             title = "老饕牛肉麵",
-            noteContent = "湯頭清甜不油膩，牛肉軟嫩入味，加上特製辣醬...",
+            content = "湯頭清甜不油膩，牛肉軟嫩入味，加上特製辣醬...",
             imageResId = R.drawable.sushi_image_1,
             restaurantName = "阿明牛肉麵"
         )

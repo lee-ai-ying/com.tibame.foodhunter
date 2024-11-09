@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,6 +55,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +66,7 @@ import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.util.getDisplayName
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewMode1
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 
 
 /**
@@ -125,7 +128,7 @@ fun BookListComposable(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarApp(
-    viewModel: CalendarViewMode1 = viewModel(),
+    viewModel: CalendarVM = viewModel(),
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
@@ -150,20 +153,20 @@ fun CalendarApp(
         }
     }
 
-    var selectedBooks by remember {
-        mutableStateOf(emptyList<Book>())
-    }
-
-    // 當 selectedDate 改變時更新 selectedBooks
-    LaunchedEffect(selectedDate, books) {
-        selectedBooks = books.filter { book ->
-            selectedDate?.let { date ->
-                book.date.dayOfMonth.toString() == date.dayOfMonth &&
-                        book.date.monthValue == date.month &&
-                        book.date.year == date.year
-            } ?: false
-        }
-    }
+//    var selectedBooks by remember {
+//        mutableStateOf(emptyList<Book>())
+//    }
+//
+//    // 當 selectedDate 改變時更新 selectedBooks
+//    LaunchedEffect(selectedDate, books) {
+//        selectedBooks = books.filter { book ->
+//            selectedDate?.let { date ->
+//                book.date.dayOfMonth.toString() == date.dayOfMonth &&
+//                        book.date.monthValue == date.month &&
+//                        book.date.year == date.year
+//            } ?: false
+//        }
+//    }
 
 
     Scaffold(
@@ -175,10 +178,14 @@ fun CalendarApp(
                 )
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier
-                .padding(padding)
+            modifier = Modifier.padding(
+                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = paddingValues.calculateBottomPadding(),
+                top = paddingValues.calculateTopPadding() - 12.dp
+            )
         ) {
             // 更新日期列表，使得用戶選中的日期顯示選中狀態
             val updatedDates = uiState.dates.map { date ->
@@ -196,7 +203,6 @@ fun CalendarApp(
                 yearMonth = uiState.yearMonth,
                 dates = updatedDates,  // 傳遞更新後的 dates 列表
 
-                selectedBooks = selectedBooks, // 傳入選中的書籍列表
 
                 // 切換到上一個月份
                 onPreviousMonthButtonClicked = { prevMonth ->
@@ -213,19 +219,6 @@ fun CalendarApp(
                     selectedDate = date
                 },
 
-                onItemClick = { book ->
-                    // 處理書籍項目點擊邏輯
-                    println("Book clicked: ${book.name}")
-                },
-                onEditClick = { book ->
-                    // 編輯書籍的邏輯
-                    println("Edit book: ${book.name}")
-                },
-                onDeleteClick = { book ->
-                    // 刪除書籍的邏輯
-                    bookViewModel.removeItem(book)
-                }
-
             )
         }
     }
@@ -240,10 +233,6 @@ fun CalendarWidget(
     onNextMonthButtonClicked: (YearMonth) -> Unit,
     onDateClickListener: (CalendarUiState.Date) -> Unit,
 
-    selectedBooks: List<Book>, // 傳入選中的書籍列表
-    onItemClick: (Book) -> Unit, // 點擊書籍項目時執行的動作
-    onEditClick: (Book) -> Unit, // 編輯書籍
-    onDeleteClick: (Book) -> Unit, // 刪除書籍
 
 ) {
 
@@ -271,16 +260,6 @@ fun CalendarWidget(
             dates = dates,
             onDateClickListener = onDateClickListener
         )
-
-        // 書籍列表，顯示選中日期的書籍
-        BookListComposable(
-            books = selectedBooks,
-            onItemClick = onItemClick,
-            onEditClick = onEditClick,
-            onDeleteClick = onDeleteClick,
-            showMore = true
-        )
-
     }
 }
 

@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon.components.topbar
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -36,8 +36,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.SearchBar
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.data.CardContentType
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.ui.theme.FColor
 
 
@@ -49,8 +50,8 @@ fun TopBarPreview(){
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
 //    BaseTopBar(mockNavController,scrollBehavior)
-    CalendarTopBar(mockNavController,scrollBehavior, CalendarViewModel())
-//    NoteTopBar(mockNavController,scrollBehavior, NoteViewModel())
+//    CalendarTopBar(mockNavController,scrollBehavior, PersonalToolsVM(noteVM, calendarVM), CalendarVM())
+//    NoteTopBar(mockNavController,scrollBehavior, PersonalToolsVM())
 
 }
 
@@ -82,7 +83,7 @@ fun BaseTopBar(
                 )
             } else {
                 // 正常情況下的標題
-                Text(stringResource(R.string.str_back))
+                Text(stringResource(R.string.str_member))
             }
         },
         navigationIcon = {
@@ -125,7 +126,6 @@ fun BaseTopBar(
                     }
                 }
             }
-            // 如果是搜尋狀態，不顯示其他按鈕，因為搜尋框已佔據標題位置
         },
         scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(
@@ -140,39 +140,38 @@ fun BaseTopBar(
 fun CalendarTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    calendarViewModel: CalendarViewModel,
+    personalToolsVM: PersonalToolsVM,
+    calendarVM: CalendarVM
 ) {
-    val isSearchVisible by calendarViewModel.isSearchVisible.collectAsState()
-    val searchQuery by calendarViewModel.searchQuery.collectAsState()
-    val isFilterChipVisible by calendarViewModel.isFilterChipVisible.collectAsState()
-    val selectedFilters by calendarViewModel.selectedFilters.collectAsState()
+    val topBarState by personalToolsVM.topBarState.collectAsState()
+
 
     Column{
         BaseTopBar(
             navController = navController,
             scrollBehavior = scrollBehavior,
             // 傳遞搜尋相關參數
-            isSearchVisible = isSearchVisible,
-            searchQuery = searchQuery,
+            isSearchVisible = topBarState.isSearchVisible,
+            searchQuery = topBarState.searchQuery,
             onSearchQueryChange = { newQuery ->
                 // 當搜尋文字改變時更新 ViewModel
-                calendarViewModel.updateSearchQuery(newQuery)
+                personalToolsVM.onSearchQueryChange(newQuery)
             },
             onToggleSearchVisibility = {
                 // 切換搜尋框顯示狀態
-                calendarViewModel.toggleSearchVisibility()
+                personalToolsVM.toggleSearchVisibility()
             },
             showFilter = true,
             onFilter = {
-                calendarViewModel.toggleFilterChipVisibility()
+                personalToolsVM.toggleFilterChipVisibility()
             }
         )
         // 新增：顯示篩選 Chip
-        if (isFilterChipVisible) {
+        if (topBarState.isFilterChipVisible) {
             FilterChipSection(
-                selectedFilters = selectedFilters,
+                selectedFilters = calendarVM.selectedContentTypes.collectAsState().value,
                 onFilterSelected = { filter ->
-                    calendarViewModel.updateSelectedFilter(filter)
+                    calendarVM.handleFilter( filter)
                 }
             )
         }
@@ -182,10 +181,9 @@ fun CalendarTopBar(
 
 @Composable
 fun FilterChipSection(
-    selectedFilters: List<String>,
-    onFilterSelected: (String) -> Unit
+    selectedFilters: Set<CardContentType>,
+    onFilterSelected: (CardContentType) -> Unit,
 ) {
-    // 新增：顯示包含 Chip 的圓角底圖區域
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
@@ -203,15 +201,18 @@ fun FilterChipSection(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
         ) {
-            val filters = listOf("揪團", "手札")
-            filters.forEach { filter ->
+            CardContentType.entries.forEach { filterType ->
                 FilterChip(
-                    selected = selectedFilters.contains(filter),
-                    onClick = { onFilterSelected(filter) },
-                    label = { Text(filter) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = FColor.Orange_5th,
-                    )
+                    selected = filterType in selectedFilters,
+                    onClick = { onFilterSelected(filterType) },
+                    label = {
+                        Text(
+                            when (filterType) {
+                                CardContentType.NOTE -> "手札"
+                                CardContentType.GROUP -> "揪團"
+                            }
+                        )
+                    }
                 )
             }
         }
@@ -225,28 +226,23 @@ fun FilterChipSection(
 fun NoteTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    noteViewModel: NoteViewModel,
+    personalToolsVM: PersonalToolsVM,
 ) {
-    // 使用 by 委派來收集狀態
-    val isSearchVisible by noteViewModel.isSearchVisible.collectAsState()
-    val searchQuery by noteViewModel.searchQuery.collectAsState()
+    val topBarState by personalToolsVM.topBarState.collectAsState()
 
     Column {
         BaseTopBar(
             navController = navController,
             scrollBehavior = scrollBehavior,
-            isSearchVisible = isSearchVisible,
-            searchQuery = searchQuery,
+            isSearchVisible = topBarState.isSearchVisible,
+            searchQuery = topBarState.searchQuery,
             onSearchQueryChange = { newQuery ->
-                noteViewModel.updateSearchQuery(newQuery)
-            },
+                Log.d("NoteTopBar", "搜尋輸入: $newQuery")
+                personalToolsVM.onSearchQueryChange(newQuery) },
             onToggleSearchVisibility = {
-                noteViewModel.toggleSearchVisibility()
-            },
+                Log.d("NoteTopBar", "切換搜尋欄位顯示")
+                personalToolsVM.toggleSearchVisibility() },
             showFilter = false,
-            onFilter = {
-                noteViewModel.toggleFilterChipVisibility()
-            }
         )
 
 //        if (isFilterChipVisible) {

@@ -9,33 +9,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
-import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.data.Book
 import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewMode1
-import com.tibame.foodhunter.sharon.viewmodel.CalendarViewModel
+import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: CalendarViewMode1 = viewModel(),
+    calendarVM: CalendarVM,
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
 
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by calendarVM.uiState.collectAsState()
     val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
-
 
     // 初始化當天為選中日期
     var selectedDate by remember {
@@ -89,40 +85,25 @@ fun CalendarScreen(
             days = DateUtil.daysOfWeek,
             yearMonth = uiState.yearMonth,
             dates = updatedDates,  // 傳遞更新後的 dates 列表
-            selectedBooks = selectedBooks, // 傳入選中的書籍列表
             // 切換到上一個月份
             onPreviousMonthButtonClicked = { prevMonth ->
-                viewModel.toPreviousMonth(prevMonth)
+                calendarVM.toPreviousMonth(prevMonth)
             },
             // 切換到下一個月份
             onNextMonthButtonClicked = { nextMonth ->
-                viewModel.toNextMonth(nextMonth)
+                calendarVM.toNextMonth(nextMonth)
             },
             // 點擊日期時更新選擇的日期和顯示的書籍
             onDateClickListener = { date ->
                 selectedDate = date
             },
 
-            onItemClick = { book ->
-                // 處理書籍項目點擊邏輯
-                println("Book clicked: ${book.name}")
-            },
-            onEditClick = { book ->
-                // 編輯書籍的邏輯
-                println("Edit book: ${book.name}")
-            },
-            onDeleteClick = { book ->
-                // 刪除書籍的邏輯
-                bookViewModel.removeItem(book)
-            }
         )
 
         LazyColumn(
             modifier = Modifier
                 .background(Color.White)
-                .fillMaxSize()
-                .padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
@@ -147,7 +128,7 @@ fun CalendarScreen(
                     date = "10/17",
                     day = "星期四",
                     title = "小巷中的咖啡廳",
-                    noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
+                    content = "這裡有各種美味的咖啡和小吃、環境乾淨...",
                     imageResId = R.drawable.sushi_image_1
                 )
             }
@@ -178,21 +159,9 @@ fun CalendarScreen(
 fun CalendarScreenPreview() {
     val navController = rememberNavController()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-//    val calendarViewModel: CalendarViewModel = viewModel() // 取得 ViewModel
+//    val calendarVM: CalendarVM = viewModel() // 取得 ViewModel
 
-    Scaffold(
-        topBar = {
-            CalendarTopBar(
-                navController = navController,
-                scrollBehavior = scrollBehavior,
-                CalendarViewModel()
-            )
-        },
-        content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
-                CalendarScreen()
-            }
-        }
-    )
+//    CalendarScreen()
+
 }
 

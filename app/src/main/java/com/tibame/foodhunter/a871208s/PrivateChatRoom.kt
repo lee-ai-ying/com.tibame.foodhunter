@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
-import com.tibame.foodhunter.ai_ying.GroupViewModel
+
 
 
 @Composable
@@ -177,7 +177,7 @@ fun PrivateChatRoomTopBar(
         scrollBehavior = scrollBehavior,
         title = {
             Text(
-                text = chatRoom.name,
+                text = chatRoom.nickname,
                 color = Color.White//colorResource(R.color.orange_1st)
             )
         },

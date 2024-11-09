@@ -1,16 +1,23 @@
 package com.tibame.foodhunter.ai_ying
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -18,12 +25,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,15 +54,25 @@ fun GroupCreate(
     gChatVM: GroupViewModel
 ) {
     var showDatePickerDialog by remember { mutableStateOf(false) }
+    var showRestautantPickerDialog by remember { mutableStateOf(false) }
     val inputData by remember { mutableStateOf(GroupCreateData()) }
-    var selectDate by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))) }
+    var selectDate by remember {
+        mutableStateOf(
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+        )
+    }
+    var searchInput by remember { mutableStateOf("") }
+    gChatVM.getRestaurantList()
+    val restaurantList by gChatVM.restaurantList.collectAsState()
+    var restaurantName by remember { mutableStateOf("") }
+    var errMsg by remember { mutableStateOf("") }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
     ) {
         items(1) {
             //*
             GroupTitleText(text = stringResource(R.string.str_create_group))
-            Column (
+            Column(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
             {
@@ -61,16 +81,24 @@ fun GroupCreate(
                     inputData.name = it
                 }
                 GroupText(text = stringResource(R.string.str_create_location))
-                GroupSingleWithIcon(
+                GroupSingleInputWithIcon(
+                    readOnly = true,
+                    placeholder = {
+                        Text(restaurantName)
+                    },
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Place,
-                            contentDescription = ""
+                            contentDescription = "",
+                            modifier = Modifier.clickable {
+                                showRestautantPickerDialog = true
+                            }
                         )
                     }
-                ) {
+                ) {}
+                /*GroupSingleInput {
                     inputData.location = it
-                }
+                }*/
                 GroupText(text = stringResource(R.string.str_create_time))
                 GroupSingleInputWithIcon(
                     readOnly = true,
@@ -90,18 +118,18 @@ fun GroupCreate(
                     inputData.time = it
                 }
                 GroupText(text = stringResource(R.string.str_create_price))
-                GroupPriceSlider { min,max->
+                GroupPriceSlider { min, max ->
                     inputData.priceMin = min
                     inputData.priceMax = max
                 }
-                GroupText(text = stringResource(R.string.str_create_member))
+                /*GroupText(text = stringResource(R.string.str_create_member))
                 GroupSelectMember {
                     inputData.joinMember = it.toString()
                 }
                 GroupText(text = stringResource(R.string.str_create_public))
-                GroupDropDownMenu(listOf("public", "invite", "private")) {
+                GroupDropDownMenu(listOf("公開", "邀請", "私人")) {
                     inputData.isPublic = it
-                }
+                }*/
                 GroupText(text = stringResource(R.string.str_create_describe))
                 GroupBigInput(5) {
                     inputData.describe = it
@@ -112,10 +140,31 @@ fun GroupCreate(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    if (errMsg.isNotBlank()){
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(errMsg)
+                        Spacer(modifier = Modifier.size(8.dp))
+                    }
                     Button(
                         onClick = {
+                            if (inputData.name.isBlank()){
+                                errMsg = "揪團名稱不可為空白!"
+                                return@Button
+                            }
+                            if (restaurantName.isBlank()){
+                                errMsg = "請選擇餐廳!"
+                                return@Button
+                            }
+                            if (inputData.time.isBlank()){
+                                errMsg = "請選擇日期!"
+                                return@Button
+                            }
+                            if (inputData.priceMin==inputData.priceMax){
+                                errMsg = "請正確選擇金額範圍!"
+                                return@Button
+                            }
                             gChatVM.createGroup(inputData)
-                            //navController.popBackStack()
+                            navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FColor.Orange_1st
@@ -129,21 +178,24 @@ fun GroupCreate(
 
         }
     }
+    var saveSelectTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
     Box {
         if (showDatePickerDialog) {
             MyDatePickerDialog(
-                //showData = { inputData.time },
+                showData =  saveSelectTime ,
                 onDismissRequest = {
                     showDatePickerDialog = false
                 },
                 // 確定時會接收到選取日期
                 onConfirm = { utcTimeMillis ->
+                    saveSelectTime = utcTimeMillis?:System.currentTimeMillis()
                     selectDate = utcTimeMillis?.let {
                         Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))?:selectDate
-                            //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+                            .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            ?: selectDate
+                        //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
                     }
-                    inputData.time=selectDate
+                    inputData.time = selectDate?:LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                     showDatePickerDialog = false
                 },
                 // 設定取消時欲執行內容
@@ -152,11 +204,83 @@ fun GroupCreate(
                 }
             )
         }
+        if (showRestautantPickerDialog) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .fillMaxWidth()
+                        .background(FColor.Orange_3rd)
+                        .padding(start = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        tint = Color.White,
+                        imageVector = Icons.Outlined.KeyboardArrowUp,
+                        contentDescription = "",
+                        modifier = Modifier.clickable {
+                            showRestautantPickerDialog = false
+                        }
+                    )
+                    GroupTitleText(text = "選擇餐廳")
+                }
+                GroupSearchBar(
+                    onValueChange = {
+                        searchInput = it
+                        searchInput
+                    },
+                    onClearClick = {
+                        searchInput = ""
+                    }
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(restaurantList.filter { it.restaurantName.contains(searchInput, true) }) {
+                        Column(
+                            modifier = Modifier
+                                .background(Color.White)
+                                .clickable {
+                                    inputData.location = it.restaurantId
+                                    restaurantName = it.restaurantName
+                                    searchInput = ""
+                                    showRestautantPickerDialog = false
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .height(56.dp)
+                                    .padding(start = 10.dp, end = 10.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = it.restaurantName
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun MyLocationPicker(){
+fun MyLocationPicker() {
 
 }
 
@@ -164,7 +288,7 @@ fun MyLocationPicker(){
 @Composable
 fun GroupCreatePreview() {
     MaterialTheme {
-        GroupCreate(rememberNavController(),viewModel())
+        GroupCreate(rememberNavController(), viewModel())
 //        MyDatePickerDialog(
 //            onDismissRequest = {
 //            },

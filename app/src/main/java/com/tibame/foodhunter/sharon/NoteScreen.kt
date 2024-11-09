@@ -3,60 +3,117 @@ package com.tibame.foodhunter.sharon
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
-import com.tibame.foodhunter.sharon.data.NoteRepository
-import com.tibame.foodhunter.sharon.viewmodel.NoteViewModel
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(
     navController: NavHostController,
-    noteViewModel: NoteViewModel = viewModel()
-) {
-    // 使用 collectAsStateWithLifecycle 收集筆記列表
-    val notes by noteViewModel.notes.collectAsStateWithLifecycle()
+    noteVM: NoteVM,
 
-    LazyColumn(
+) {
+    val filteredNotes by noteVM.filteredNotes.collectAsStateWithLifecycle()
+    val isLoading by noteVM.isLoading.collectAsStateWithLifecycle()
+    val lazyListState = rememberLazyListState()
+
+    // 當筆記列表更新時，自動滾動到頂部
+    LaunchedEffect(filteredNotes.size) {
+        if (filteredNotes.isNotEmpty()) {
+            lazyListState.animateScrollToItem(0)
+        }
+    }
+
+
+
+    Box(
         modifier = Modifier
             .background(Color.White)
             .fillMaxSize()
-            .padding(top = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 使用 items 遍歷筆記列表
-        items(notes.size) { index ->
-            val currentNote = notes[index]
-            NoteOrGroupCard(
-                onClick = {
-                    // 點擊時導航到編輯頁面
-                    navController.navigate("note_edit/${currentNote.noteId}")
-                },
-                type = currentNote.type,
-                date = currentNote.date,
-                day = currentNote.day,
-                title = currentNote.title,
-                noteContent = currentNote.noteContent,
-                imageResId = currentNote.imageResId
-            )
+        when {
+            // 只在「載入中且沒有資料」時顯示 loading
+            isLoading && filteredNotes.isEmpty() -> {
+                Log.d("NoteScreen", "顯示載入中狀態")
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            filteredNotes.isEmpty() -> {
+                Log.d("NoteScreen", "顯示空資料狀態")
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val message = if (noteVM.hasSearchQuery) {
+                        "找不到符合的筆記"
+                    } else {
+                        "目前沒有筆記"
+                    }
+                    Text(message)
+                }
+            }
+            else -> {
+                Log.d("NoteScreen", "開始顯示筆記列表，數量: ${filteredNotes.size}")
+                LazyColumn(
+                    state = lazyListState,  // 使用 LazyListState
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(
+                        count = filteredNotes.size,
+                        key = { index -> filteredNotes[index].noteId }
+                    ) { index ->
+                        val currentNote = filteredNotes[index]
+                        Log.d("NoteScreen",
+                            "渲染筆記項目: index=$index, " +
+                                    "id=${currentNote.noteId}, " +
+                                    "title=${currentNote.title}, " +
+                                    "content=${currentNote.content}")
+                        NoteOrGroupCard(
+                            onClick = {
+                                Log.d("NoteScreen", "點擊筆記: id=${currentNote.noteId}")
+                                navController.navigate("note/edit/${currentNote.noteId}")
+                            },
+                            type = currentNote.type,
+                            date = currentNote.date,
+                            day = currentNote.day,
+                            title = currentNote.title,
+                            content = currentNote.content,
+                            imageResId = currentNote.imageResId,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -65,7 +122,7 @@ fun NoteScreen(
 @Composable
 fun NoteScreenPreview() {
     val mockNavController = rememberNavController()
-    NoteScreen(navController = mockNavController)
+    NoteScreen(navController = mockNavController, noteVM = NoteVM())
 }
 
 

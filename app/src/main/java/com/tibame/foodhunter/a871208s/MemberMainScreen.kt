@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,11 +66,13 @@ fun MemberMainScreen(
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            val user = userVM.getUserInfo(userVM.username.value) // 替換為實際用戶 ID
-            val user1 = userVM.image(userVM.username.value)// 替換為實際用戶 ID
+            val user = userVM.getUserInfo(userVM.username.value)
+            //圖片
+            val user1 = userVM.image(userVM.username.value)
             if (user != null) {
                 usernameState.value = user.username // 獲取用戶名
                 nicknameState.value = user.nickname
+                //圖片
                 user1?.profileImageBase64?.let { base64 ->
                     profileBitmap = userVM.decodeBase64ToBitmap(base64)
                 }

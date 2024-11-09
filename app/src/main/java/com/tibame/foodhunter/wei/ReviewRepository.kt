@@ -1,8 +1,195 @@
 package com.tibame.foodhunter.wei
 
-object ReviewRepository {
+import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.zoe.DeleteResponse
+import com.tibame.foodhunter.zoe.PostResponse
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+
+class ReviewRepository {
+    private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
+
+    private val _reviewList = MutableStateFlow<List<Review>>(emptyList())
+    val reviewList: StateFlow<List<Review>> = _reviewList.asStateFlow()
+
+    private val _replyList = MutableStateFlow<List<Reply>>(emptyList())
+    val replyList: StateFlow<List<Reply>> = _replyList.asStateFlow()
+
+    private val gson = Gson()
+
+    // 根據評論 ID 獲取該評論的回覆列表
+    private suspend fun fetchReplies(reviewId: Int): List<ReplyResponse> {
+        val url = "${serverUrl}/reply/byReview?reviewId=$reviewId"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<ReplyResponse>>() {}.type
+        return try {
+            gson.fromJson(result, type)
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error fetching replies", e)
+            emptyList()
+        }
+    }
+
+    // 將回覆轉換為應用程式內的 Reply 物件
+    private suspend fun ReplyResponse.toReply(): Reply {
+        return Reply(
+            id = this.replyId,
+            replier = Replier(
+                id = this.memberId,
+                name = this.memberNickname,
+                avatarImage = null // 若有頭像處理方式，將其放入這裡
+            ),
+            content = this.content,
+            timestamp = this.replyTime
+        )
+    }
+
+    // 根據餐廳ID獲取評論列表
+    suspend fun fetchReviewByRestId(): List<ReviewResponse?> {
+        val url = "${com.tibame.foodhunter.global.serverUrl}/review/preLoad"
+        val result = CommonPost(url, "")
+        val type = object : TypeToken<List<ReviewResponse>>() {}.type
+        return gson.fromJson(result, type)
+    }
+
+    // 根據評論ID 獲取評論的詳細資料
+    private suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {
+        val url = "${serverUrl}/review/get?reviewId=$reviewId"
+        val result = CommonPost(url, "")
+
+        return try {
+            val response = gson.fromJson(result, ApiResponse::class.java)
+            if (response.success) {
+                gson.fromJson(gson.toJson(response.data), ReviewResponse::class.java)
+            } else {
+                Log.e("ReviewRepository", "Error fetching review: ${response.message}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error fetching review", e)
+            null
+        }
+    }
+
+    // 創建新回覆
+    suspend fun createReply(reviewId: Int, userId: Int, content: String): Boolean {
+        val url = "${serverUrl}/reply/create"
+        val replyRequest = mapOf(
+            "reviewId" to reviewId,
+            "memberId" to userId,
+            "content" to content
+        )
+
+        return try {
+            val json = gson.toJson(replyRequest)
+            val result = CommonPost(url, json)
+            loadReplies(reviewId) // 重新載入回覆列表
+            true
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error creating reply", e)
+            false
+        }
+    }
+
+    // 載入所有回覆
+    suspend fun loadReplies(reviewId: Int) {
+        try {
+            val replyResponses = fetchReplies(reviewId)
+            val replies = replyResponses.mapNotNull { response ->
+                try {
+                    response.toReply()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            // 更新回覆列表
+            _replyList.update { replies }
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error loading replies", e)
+        }
+    }
 
 
 
+//    // 刪除回覆
+//    suspend fun deleteReply(replyId: Int): Boolean {
+//        val url = "${serverUrl}/reply/delete/$replyId"
+//        return try {
+//            val result = CommonPost(url, "")
+//            val response = gson.fromJson(result, DeleteResponse::class.java)
+//            if (response.success) {
+//                // 刪除成功後更新本地回覆列表
+//                _reviewList.value = _reviewList.value.filter { it.id != replyId }
+//                true
+//            } else {
+//                Log.e("ReviewRepository", "Delete failed: ${response.message}")
+//                false
+//            }
+//        } catch (e: Exception) {
+//            Log.e("ReviewRepository", "Error deleting reply", e)
+//            false
+//        }
+//    }
 
+    companion object {
+        @Volatile
+        private var INSTANCE: ReviewRepository? = null
+
+        fun getInstance(): ReviewRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: ReviewRepository().also { INSTANCE = it }
+            }
+        }
+    }
+
+    // 數據類別
+    data class ReviewResponse(
+        val reviewId: Int,
+        val content: String,
+        val rating: Int,
+        val reviewTime: String,
+        val userId: Int,
+        val userNickname: String
+    )
+
+    data class ReplyResponse(
+        val replyId: Int,
+        val reviewId: Int,
+        val memberId: Int,
+        val content: String,
+        val replyTime: String,
+        val memberNickname: String
+    )
+
+    data class ApiResponse<T>(
+        val success: Boolean,
+        val message: String,
+        val data: T
+    )
+
+//    data class DeleteResponse(
+//        val success: Boolean,
+//        val message: String)
 }
+
+//抓會員ID用
+//val membernameState = remember { mutableStateOf(0) }
+//LaunchedEffect(Unit) {
+//    coroutineScope.launch {
+//        val user = userVM.getUserInfo(userVM.username.value)
+//        //圖片
+//    val user1 = userVM.image(userVM.username.value)}
+//        if (user != null) {
+//            membernameState.value = user.id
+//            //圖片
+//            user1?.profileImageBase64?.let { base64 ->
+//                profileBitmap = userVM.decodeBase64ToBitmap(base64)
+//        }
+//    }
+//}

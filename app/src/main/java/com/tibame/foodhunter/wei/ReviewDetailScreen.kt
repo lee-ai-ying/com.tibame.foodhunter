@@ -28,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
 
 
@@ -35,6 +36,7 @@ import com.tibame.foodhunter.ui.theme.FColor
 @Composable
 fun ReviewDetail(
     navController: NavHostController = rememberNavController(),
+    reviewVM: ReviewVM = remember { ReviewVM() }
 ) {
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf("評論頁面") }
@@ -71,7 +73,7 @@ fun ReviewDetail(
 
                             verticalArrangement = Arrangement.spacedBy(15.dp)
                         ) {
-                            ReviewInfoDetail()
+                            ReviewInfoDetail(reviewVM = reviewVM)
 
 
 
@@ -81,7 +83,7 @@ fun ReviewDetail(
 //                                color = FColor.Orange_1st
 //                            )
 
-                            DetailReviewZone()
+                            DetailReviewZone(reviewVM = reviewVM)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -99,6 +101,9 @@ fun ReviewDetail(
 
 @Preview(showBackground = true)
 @Composable
-fun ReviewDetailPreview() {
-    ReviewDetail(navController = rememberNavController())
+fun ReviewDetailScreenPreview() {
+    // 提供一個模擬的 NavHostController 和 ReviewVM
+    val navController = rememberNavController() // 不需要做太多複雜的導航設定
+    val reviewVM = remember { ReviewVM() } // 使用模擬的 ReviewVM
+    ReviewDetail(navController = navController, reviewVM = reviewVM)
 }
