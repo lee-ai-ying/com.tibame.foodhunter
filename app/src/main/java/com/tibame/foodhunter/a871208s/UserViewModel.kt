@@ -4,18 +4,37 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
-class UserViewModel: ViewModel() {
+class UserViewModel : ViewModel() {
+    var username = mutableStateOf("")
     // 登入
+// 添加 memberId 的 StateFlow
+    private val _memberId = MutableStateFlow(0)
+    val memberId: StateFlow<Int> = _memberId.asStateFlow()
+    private val _nickname = MutableStateFlow("")
+    val nickname: StateFlow<String> = _nickname.asStateFlow()
+
+
+    var profileBitmap by mutableStateOf<Bitmap?>(null)
+
+
+
+    // 在登入成功時設置 memberId
     suspend fun login(username: String, password: String): Boolean {
         try {
             val url = "${serverUrl}/member/login"
@@ -27,8 +46,21 @@ class UserViewModel: ViewModel() {
             val result = CommonPost(url, jsonObject.toString())
             val responseJson = gson.fromJson(result, JsonObject::class.java)
 
-
-            return responseJson.get("logged").asBoolean
+            // 如果登入成功，立即獲取並設置 memberId
+            if (responseJson.get("logged").asBoolean) {
+                // 獲取用戶信息並設置 memberId
+                val user = getUserInfo(username)
+                val user1 = image(username)
+                if (user != null) {
+                    _memberId.value = user.id
+                    _nickname.value = user.nickname
+                    user1?.profileImageBase64?.let { base64 ->
+                        profileBitmap = decodeBase64ToBitmap(base64)
+                    }
+                }
+                return true
+            }
+            return false
         } catch (e: Exception) {
             return false
         }
@@ -39,7 +71,7 @@ class UserViewModel: ViewModel() {
         password: String,
         nickname: String,
         email: String,
-        phone:String,
+        phone: String,
         gender: String,
         birthday: String,
     ): Boolean {
@@ -63,14 +95,11 @@ class UserViewModel: ViewModel() {
             val responseJson = gson.fromJson(result, JsonObject::class.java)
 
             // 根據響應中的 logged 屬性來判斷是否註冊成功
-            return  responseJson.get("registered").asBoolean
+            return responseJson.get("registered").asBoolean
         } catch (e: Exception) {
             return false
         }
     }
-
-
-
 
 
     suspend fun getUserInfo(username: String): User? {
@@ -111,14 +140,15 @@ class UserViewModel: ViewModel() {
 
 
 
-    var username = mutableStateOf("")
+
+
 
     suspend fun save(
         username: String,
         password: String,
         nickname: String,
         email: String,
-        phone:String,
+        phone: String,
     ): Boolean {
         try {
             // server URL
@@ -138,7 +168,7 @@ class UserViewModel: ViewModel() {
             val responseJson = gson.fromJson(result, JsonObject::class.java)
 
             // 根據響應中的 logged 屬性來判斷是否註冊成功
-            return  responseJson.get("save").asBoolean
+            return responseJson.get("save").asBoolean
         } catch (e: Exception) {
             return false
         }
@@ -209,14 +239,16 @@ class UserViewModel: ViewModel() {
 
     fun encodeBitmapToBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 10, byteArrayOutputStream)  // 80 表示壓縮品質，您可以根據需要調整
+        bitmap.compress(
+            Bitmap.CompressFormat.JPEG,
+            10,
+            byteArrayOutputStream
+        )  // 80 表示壓縮品質，您可以根據需要調整
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
-    
-    
-    
-    
+
+
     suspend fun image(username: String): User? {
         return try {
             val url = "${serverUrl}/member/image"
@@ -230,12 +262,13 @@ class UserViewModel: ViewModel() {
 
             // 使用 TypeToken 获取 User 的类型
             val userType = object : TypeToken<User>() {}.type
-            val user = gson.fromJson<User>(result, userType) // 显式指定类型
+            val user = gson.fromJson<User>(result, userType)
+            // 显式指定类型
 
             // 处理图片：如果 profileImageBase64 不为空
 
-                user?.profileImageBase64?.let {
-                    Log.d("ProfileImage", "Profile image base64: $it")
+            user?.profileImageBase64?.let {
+                Log.d("ProfileImage", "Profile image base64: $it")
             }
 
             user
@@ -244,6 +277,7 @@ class UserViewModel: ViewModel() {
             null
         }
     }
+
     fun decodeBase64ToBitmap(base64String: String): Bitmap? {
         return try {
             // 打印原始 Base64 字符串
@@ -252,7 +286,10 @@ class UserViewModel: ViewModel() {
             // 去除 Base64 字符串的前缀（例如 data:image/png;base64,）
             val cleanBase64String = if (base64String.startsWith("data:image/")) {
                 // 如果有前缀，去除前缀部分
-                val cleanedString = base64String.replaceFirst("^[A-Za-z0-9+/=]+(?:[ \t\r\n]*;[ \t\r\n]*charset=[A-Za-z0-9-]+)?(?:[ \t\r\n]*base64)?,?".toRegex(), "")
+                val cleanedString = base64String.replaceFirst(
+                    "^[A-Za-z0-9+/=]+(?:[ \t\r\n]*;[ \t\r\n]*charset=[A-Za-z0-9-]+)?(?:[ \t\r\n]*base64)?,?".toRegex(),
+                    ""
+                )
                 // 打印去除前缀后的 Base64 字符串
                 Log.d("DecodeBase64", "Cleaned Base64 String: $cleanedString")
                 cleanedString
@@ -280,7 +317,7 @@ class UserViewModel: ViewModel() {
             Log.e("DecodeBase64", "Base64 解码失败: ${e.message}")
             null
         }
-        
+
     }
 }
 
