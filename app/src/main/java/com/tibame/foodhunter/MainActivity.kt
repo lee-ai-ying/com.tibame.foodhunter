@@ -380,7 +380,7 @@ fun Main(
                 DeleteMemberScreen(navController = navController)
             }
             composable(context.getString(R.string.str_member) + "/5") {
-                OtherSettingScreen(navController = navController)
+                OtherSettingScreen(navController = navController,pChatVM)
             }
             composable(context.getString(R.string.str_member) + "/6") {
                 FriendManagementScreen(navController = navController, friendVM, userViewModel)
@@ -389,7 +389,7 @@ fun Main(
                 FriendAddScreen(navController = navController, friendVM, userViewModel)
             }
             composable(context.getString(R.string.str_member) + "/8") {
-                PrivateChatScreen(navController = navController, pChatVM)
+                PrivateChatScreen(navController = navController,pChatVM,userViewModel)
             }
 
 

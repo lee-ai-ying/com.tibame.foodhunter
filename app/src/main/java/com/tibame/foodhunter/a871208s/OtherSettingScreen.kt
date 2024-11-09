@@ -37,9 +37,9 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 
 @Composable
-fun OtherSettingScreen(navController: NavHostController = rememberNavController()) {
+fun OtherSettingScreen(navController: NavHostController = rememberNavController(),pChatVM: PrivateViewModel) {
     val context = LocalContext.current
-    var sw1 by remember { mutableStateOf(false) }
+    var sw1 = pChatVM.wall.value
 
     Column(
         horizontalAlignment = Alignment.Start,
@@ -98,9 +98,10 @@ fun OtherSettingScreen(navController: NavHostController = rememberNavController(
                     .fillMaxWidth()
                     .padding(16.dp, 2.dp)
             ) {
-                SwitchWithText(sw1) {
+                SwitchWithText(checked = sw1, onCheckedChange = {
                     sw1 = it
-                }
+                    pChatVM.wall.value = it  // 更新 ViewModel 中的 wall 状态
+                })
             }
         }
 
@@ -174,13 +175,6 @@ fun SwitchWithText(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun OtherSettingsScreenPreview() {
-    MaterialTheme {
-        OtherSettingScreen()
-    }
 
-}
 
 

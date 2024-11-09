@@ -1,7 +1,7 @@
 package com.tibame.foodhunter.a871208s
 
 
-data class Friend(var username: String, var name: String, var image: Int){
+data class Friend(var username: String, var nickname: String, val profileImageBase64: String?){
     override fun equals(other: Any?): Boolean {
         return this.username == (other as Friend).username
     }
@@ -16,4 +16,4 @@ data class Friend(var username: String, var name: String, var image: Int){
 
 
 
-data class PrivateChat(var roomid: String ="",var id: String ="", var name: String="6", var image: Int=0,var status: Int=0)
+data class PrivateChat(var roomid: String ="", var username: String ="", var nickname: String="", var profileImageBase64: String?="")
