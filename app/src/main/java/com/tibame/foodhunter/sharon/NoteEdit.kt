@@ -85,29 +85,19 @@ import com.tibame.foodhunter.sharon.viewmodel.NoteEditEvent
 import com.tibame.foodhunter.sharon.viewmodel.NoteEditVM
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-//    NoteScreen(navController = mockNavController)
 
-//    NoteEdit(
-//        navController = mockNavController,
-//        note = Note(
-//            noteId =1,
-//            type = CardContentType.NOTE,
-//            date = "10/15",
-//            day = "星期二",
-//            title = "巷弄甜點店",
-//            content = "隱藏在民生社區的法式甜點，檸檬塔酸甜適中...",
-//            imageResId = R.drawable.sushi_image_1,
-//            restaurantName = "法式甜點工作室"
-//        )
-//    )
 }
 
 /**
@@ -230,7 +220,6 @@ fun NoteEdit(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             NoteEditTopBar(
-                canback = true,
                 navController = navController,
                 scrollBehavior = scrollBehavior,
                 noteEditVM = noteEditVM
@@ -288,30 +277,30 @@ fun NoteEdit(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
             ) {
-                // 只在有選中餐廳時顯示 DisplayRestaurantChip
-                if (uiState.restaurantName?.isNotEmpty() == true) {
-                    DisplayRestaurantChip(
-                        label = uiState.restaurantName ?: "",
-                        onClear = {
-                            noteEditVM.onEvent(NoteEditEvent.UpdateRestaurant(null))
-                        }
-                    )
-                    VerticalLine()
-                }
-
-                // 只在沒有選中餐廳時顯示 SelectRestaurantChip
-                if (uiState.restaurantName == null) {
-                    SelectRestaurantChip(
-                        onClick = { isBottomSheetVisible = true },
-                        selectedRestaurant = true  // 因為只在需要選擇時顯示，所以直接設為 true
-                    )
-                    VerticalLine()
-                }
+//                // 只在有選中餐廳時顯示 DisplayRestaurantChip
+//                if (uiState.restaurantId?.isNotEmpty() == true) {
+//                    DisplayRestaurantChip(
+//                        label = uiState.restaurantName ?: "",
+//                        onClear = {
+//                            noteEditVM.onEvent(NoteEditEvent.UpdateRestaurant(null))
+//                        }
+//                    )
+//                    VerticalLine()
+//                }
+//
+//                // 只在沒有選中餐廳時顯示 SelectRestaurantChip
+//                if (uiState.restaurantName == null) {
+//                    SelectRestaurantChip(
+//                        onClick = { isBottomSheetVisible = true },
+//                        selectedRestaurant = true  // 因為只在需要選擇時顯示，所以直接設為 true
+//                    )
+//                    VerticalLine()
+//                }
 
                 // 日期顯示保持不變
                 DisplayDateChip(
-                    onDateSelected = { localDate ->
-                        noteEditVM.onEvent(NoteEditEvent.UpdateDate(localDate.toString()))
+                    onDateSelected = { selectedDate ->
+                        noteEditVM.onEvent(NoteEditEvent.UpdateDate(selectedDate))
                     }
                 )
             }
@@ -378,23 +367,24 @@ fun VerticalLine() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayDateChip(
-    initialDate: LocalDate = LocalDate.now(), // TODO()預設今天，之後可改為從資料庫獲取
-    onDateSelected: (LocalDate) -> Unit = {}, // 當日期改變時的回調
+    initialDate: Date = Date(),
+    onDateSelected: (Date) -> Unit = {} // 回調也改用 Date
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var currentDate by remember { mutableStateOf(initialDate) }
 
     // 日期格式化
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    val displayFormatter = remember {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    }
 
     // 設置 DatePicker 的初始狀態
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = currentDate.atStartOfDay(ZoneId.systemDefault())
-            .toInstant().toEpochMilli(),
+        initialSelectedDateMillis = currentDate.time,  // 直接使用 Date 的 time
         initialDisplayMode = DisplayMode.Picker
     )
 
@@ -402,12 +392,11 @@ fun DisplayDateChip(
         modifier = Modifier.height(32.dp),
         onClick = { showDatePicker = true },
         label = {
-            Text(text = currentDate.format(dateFormatter))
+            Text(text = displayFormatter.format(currentDate))
         },
         selected = true,
     )
 
-    // 顯示日期選擇器對話框
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -415,20 +404,8 @@ fun DisplayDateChip(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { milliseconds ->
-                            val newDate =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                    LocalDate.ofInstant(
-                                        java.time.Instant.ofEpochMilli(milliseconds),
-                                        ZoneId.systemDefault()
-                                    )
-                                } else {
-                                    TODO("VERSION.SDK_INT < UPSIDE_DOWN_CAKE")
-                                }
+                            val newDate = Date(milliseconds)  // 轉換成 Date
                             currentDate = newDate
-
-                            // TODO: 更新資料庫中的日期
-                            // viewModel.updateNoteDate(noteId, newDate)
-
                             onDateSelected(newDate)
                         }
                         showDatePicker = false
@@ -438,21 +415,18 @@ fun DisplayDateChip(
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showDatePicker = false }
-                ) {
+                TextButton(onClick = { showDatePicker = false }) {
                     Text("取消")
                 }
             }
         ) {
             DatePicker(
                 state = datePickerState,
-                showModeToggle = false // 設置為 true 可以切換between calendar/input modes
+                showModeToggle = false
             )
         }
     }
 }
-
 @Composable
 fun SelectRestaurantChip(
     onClick: () -> Unit,
