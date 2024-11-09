@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.zoe
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,22 +44,20 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
-
 @Composable
 fun RecommendedPosts(
     navController: NavHostController? = null,
     postViewModel: PostViewModel = viewModel(),
-    userViewModel: UserViewModel = viewModel(),
+    userVM: UserViewModel,
 ) {
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
-    // 取得當前用戶ID
-    val currentUserId = 7
-
-    // 新增loading state
+    val memberId by userVM.memberId.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
-
-    // 使用LaunchedEffect來模擬資料載入
+    LaunchedEffect(memberId) {
+        Log.d("RecommendedPosts", "Current memberId from userVM: $memberId")
+    }
+    // 監聽資料變化
     LaunchedEffect(filteredPosts) {
         isLoading = filteredPosts.isEmpty()
     }
@@ -72,7 +71,6 @@ fun RecommendedPosts(
             }
         )
 
-        // 根據loading狀態顯示不同內容
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -97,7 +95,7 @@ fun RecommendedPosts(
                 PostList(
                     posts = filteredPosts,
                     viewModel = postViewModel,
-                    currentUserId = currentUserId ?: -1,
+                    memberId = memberId,
                     onUserClick = { publisherId ->
                         navController?.navigate("person_homepage/$publisherId") {
                             launchSingleTop = true
@@ -113,9 +111,13 @@ fun RecommendedPosts(
 fun PostList(
     posts: List<Post>,
     viewModel: PostViewModel,
-    currentUserId: Int,
-    onUserClick: (Int) -> Unit // 新增參數用於處理用戶點擊
+    memberId: Int,
+    onUserClick: (Int) -> Unit
 ) {
+    LaunchedEffect(memberId) {
+        Log.d("PostList", "Received memberId: $memberId")
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -124,22 +126,24 @@ fun PostList(
             PostItem(
                 post = post,
                 viewModel = viewModel,
-                currentUserId = currentUserId,
-                onUserClick = onUserClick // 傳遞點擊事件處理函數
+                memberId = memberId,
+                onUserClick = onUserClick
             )
         }
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostItem(
     post: Post,
-    viewModel: PostViewModel,  // 添加 ViewModel
-    currentUserId: Int,        // 添加當前用戶 ID
+    viewModel: PostViewModel,
+    memberId: Int,
     onUserClick: (Int) -> Unit
 ) {
+    LaunchedEffect(memberId) {
+        Log.d("PostItem", "PostItem received memberId: $memberId")
+    }
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -150,9 +154,7 @@ fun PostItem(
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -161,7 +163,7 @@ fun PostItem(
         ) {
             PostHeader(
                 post = post,
-                onUserClick = onUserClick // 傳遞點擊事件
+                onUserClick = onUserClick,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -182,19 +184,21 @@ fun PostItem(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FavoriteIcon()
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { showBottomSheet = true }) {
+                        IconButton(
+                            onClick = {
+                                Log.d("PostItem", "Comment button clicked")
+                                showBottomSheet = true
+                            }
+                        ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.chat_bubble_outline_24),
                                 contentDescription = "Chat Bubble",
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        // 顯示留言數量
                         Text(
                             text = "${post.comments.size}",
                             style = MaterialTheme.typography.bodySmall,
@@ -202,30 +206,27 @@ fun PostItem(
                         )
                     }
                 }
-
-//                Icon(
-//                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-//                    contentDescription = "Bookmark",
-//                    modifier = Modifier.size(24.dp)
-//                )
             }
 
-            Text(
-                text = post.content,
-            )
+            Text(text = post.content)
         }
     }
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
+            onDismissRequest = {
+                Log.d("PostItem", "Dismissing MessageSheet")
+                showBottomSheet = false
+            },
             sheetState = sheetState,
+            containerColor = Color.White
         ) {
             MessageSheet(
                 post = post,
                 viewModel = viewModel,
-                currentUserId = currentUserId,
+                memberId = memberId,
                 onConfirm = {
+                    Log.d("PostItem", "MessageSheet confirmed")
                     scope.launch {
                         sheetState.hide()
                         showBottomSheet = false
@@ -235,10 +236,11 @@ fun PostItem(
         }
     }
 }
+
 @Composable
 private fun PostHeader(
     post: Post,
-    onUserClick: (Int) -> Unit // 新增點擊事件回調
+    onUserClick: (Int) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -253,8 +255,7 @@ private fun PostHeader(
         )
 
         Column(
-            modifier = Modifier
-                .clickable { onUserClick(post.publisher.id) }
+            modifier = Modifier.clickable { onUserClick(post.publisher.id) }
         ) {
             Text(
                 text = post.publisher.name,

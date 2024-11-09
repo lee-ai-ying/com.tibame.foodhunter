@@ -11,11 +11,19 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 class UserViewModel: ViewModel() {
     // 登入
+    // 添加 memberId 的 StateFlow
+    private val _memberId = MutableStateFlow(0)
+    val memberId: StateFlow<Int> = _memberId.asStateFlow()
+
+    // 在登入成功時設置 memberId
     suspend fun login(username: String, password: String): Boolean {
         try {
             val url = "${serverUrl}/member/login"
@@ -27,8 +35,17 @@ class UserViewModel: ViewModel() {
             val result = CommonPost(url, jsonObject.toString())
             val responseJson = gson.fromJson(result, JsonObject::class.java)
 
-
-            return responseJson.get("logged").asBoolean
+            // 如果登入成功，立即獲取並設置 memberId
+            if (responseJson.get("logged").asBoolean) {
+                // 獲取用戶信息並設置 memberId
+                val user = getUserInfo(username)
+                if (user != null) {
+                    _memberId.value = user.id
+                    Log.d("UserViewModel", "Login success, memberId set to: ${user.id}")
+                }
+                return true
+            }
+            return false
         } catch (e: Exception) {
             return false
         }

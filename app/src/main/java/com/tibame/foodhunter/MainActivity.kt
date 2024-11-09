@@ -16,9 +16,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,6 +77,7 @@ import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -162,6 +165,7 @@ fun Main(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
+
 
 
     Scaffold(
@@ -265,10 +269,17 @@ fun Main(
                 ForgetPassword2Screen(navController = navController, {})
             }
             composable(context.getString(R.string.str_Recommended_posts)) {
-                Home(navController, 0)
+                val memberId by userViewModel.memberId.collectAsState()
+                Log.d("Navigation", "Current memberId in navigation: $memberId")
+                Home(
+                    navController = navController,
+                    initTab = 0,
+                    memberId = memberId,
+                    userVM = userViewModel  // 傳遞同一個 ViewModel 實例
+                )
             }
             composable(context.getString(R.string.str_searchpost)) {
-                Home(navController, 1)
+                Home(navController, 1, 0, userViewModel)
             }
             composable(
                 "postDetail/{postId}",
@@ -278,7 +289,9 @@ fun Main(
                 PostDetailScreen(
                     postId = postId,
                     navController = navController,
-                    postViewModel = postViewModel
+                    postViewModel = postViewModel,
+                    userVM = userViewModel,
+
                 )
             }
 
@@ -290,18 +303,20 @@ fun Main(
                 PersonHomepage(
                     publisherId = publisherId,
                     postViewModel = postViewModel,
-                    navController = navController
+                    navController = navController,
+                    userVM = userViewModel
                 )
             }
             composable(context.getString(R.string.str_post)) {
                 NewPost(
                     navController = navController,
                     postViewModel = postViewModel,
-                    postId = null  // 新增模式
+                    postId = null,  // 新增模式
+                    userVM = userViewModel
                 )
             }
 
-            // 新增編輯貼文的路由
+
             composable(
                 "${context.getString(R.string.str_post)}/edit/{postId}",
                 arguments = listOf(navArgument("postId") { type = NavType.IntType })
@@ -310,6 +325,7 @@ fun Main(
                 NewPost(
                     navController = navController,
                     postViewModel = postViewModel,
+                    userVM = userViewModel,
                     postId = postId  // 編輯模式
                 )
             }
@@ -343,9 +359,7 @@ fun Main(
 
 
 
-            composable(context.getString(R.string.str_post)) {
-                NewPost(navController = navController,  postViewModel)
-            }
+
 
             composable(context.getString(R.string.str_searchpost)) {
                 SearchPost(navController)

@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
@@ -84,9 +85,10 @@ fun NewPost(
     postViewModel: PostViewModel = viewModel(),
     testVM: SearchScreenVM = viewModel(),
     PostEditorViewModel: PostEditorViewModel = viewModel(),
+    userVM: UserViewModel,
     postId: Int? = null
 ) {
-    val currentUserId = 7
+
     val choiceRest by testVM.choiceOneRest.collectAsState()
     var selectedTag by remember { mutableStateOf("") }
     val selectedLocation by PostEditorViewModel.selectedLocation.collectAsState()
@@ -95,24 +97,38 @@ fun NewPost(
     var showBottomSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
-
+    var isEditing by remember { mutableStateOf(false) }
     // 收集貼文數據
     val post = if (postId != null) {
         postViewModel.getPostById(postId).collectAsState().value
     } else {
         null
     }
+    val membernameState = remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val user = userVM.getUserInfo(userVM.username.value)
+            if (user != null) {
+                membernameState.value = user.id
+            }
+        }
+    }
 
 
     // 監聽貼文數據變化並更新 UI
     LaunchedEffect(post) {
         post?.let {
+            isEditing = true
             text = TextFieldValue(it.content)
             selectedTag = it.postTag
+            // 這裡可以添加圖片 URI 的處理
             PostEditorViewModel.apply {
                 updateInputData(content = it.content)
                 updateTags(setOf(it.postTag))
                 updateLocation(0, it.location)
+                // 如果有需要，這裡可以設置原有的圖片
             }
         }
     }
@@ -324,7 +340,7 @@ fun NewPost(
                 // 發布按鈕
                 Button(
                     onClick = {
-                        PostEditorViewModel.updatePublisher(currentUserId)
+                        PostEditorViewModel.updatePublisher(membernameState.value)
                         PostEditorViewModel.submitPost(context)
                         navController.navigate(context.getString(R.string.str_Recommended_posts))
                     },
@@ -462,12 +478,12 @@ fun TagSelectionSheet(
 
 
 
-
-@Preview(showBackground = true)
-@Composable
-fun PostPreview() {
-
-    FoodHunterTheme {
-        NewPost(rememberNavController())
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun PostPreview() {
+//
+//    FoodHunterTheme {
+//        NewPost(rememberNavController())
+//    }
+//}
