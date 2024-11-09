@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -59,6 +61,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.andysearch.IsOpenNow
+import com.tibame.foodhunter.sharon.components.NiaTab
+import com.tibame.foodhunter.sharon.components.NiaTabRow
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 import com.tibame.foodhunter.zoe.FilterChips
@@ -115,18 +120,18 @@ fun RestaurantInfoDetail(
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
-            Text(
-                text = restaurant?.address.toString(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-            Text(
-                text = restaurant?.opening_hours.toString(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
+//            Text(
+//                text = restaurant?.address.toString(),
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                color = Color.Black
+//            )
+//            Text(
+//                text = restaurant?.opening_hours.toString(),
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                color = Color.Black
+//            )
         }
 
         Spacer(modifier = Modifier.size(10.dp))
@@ -195,7 +200,61 @@ fun RestaurantInfoDetail(
             }
         }
     }
+    var selectedTab by remember { mutableIntStateOf(-1) }
+    val titles = listOf("營業時間", "電話", "地址")
+    NiaTabRow(selectedTabIndex = if (selectedTab == -1) 0 else selectedTab,
+        modifier = Modifier.fillMaxWidth()) {
+        titles.forEachIndexed { index, title ->
+            NiaTab(
+                selected = selectedTab == index,
+                onClick = { selectedTab = if (selectedTab == index) -1 else index },
+                text = { Text(text = title) },
+            )
+        }
+    }
+    if (selectedTab != -1){
+        when (selectedTab) {
+            0 -> {
+                // 營業時間
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    restaurant?.opening_hours?.let { openingHours ->
+                        openingHours.split(";").forEach { dayHours ->
+                            Text(
+                                text = dayHours,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+            1 -> {
+                // 電話
+                Text(
+                    text = restaurant?.home_phone ?: "無電話資訊",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            2 -> {
+                // 地址
+                Text(
+                    text = restaurant?.address ?: "無地址資訊",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+    }
 }
+
 
 
 /**相關貼文*/

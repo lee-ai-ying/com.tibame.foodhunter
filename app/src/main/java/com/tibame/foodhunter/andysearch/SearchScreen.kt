@@ -3,6 +3,7 @@ package com.tibame.foodhunter.andysearch
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -31,8 +33,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
-import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,8 +63,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+
+@Composable
+fun ControllerScreen(){
+
+}
 
 
 @Composable
@@ -79,7 +88,7 @@ fun SearchScreen(
 
     // 使用 LaunchedEffect 做延遲控制
     LaunchedEffect(Unit) {
-        delay(1500) // 延遲 2 秒鐘
+        delay(1000) // 延遲 2 秒鐘
         delayScreen = false // 2 秒後切換到主頁面顯示
     }
 
@@ -87,7 +96,7 @@ fun SearchScreen(
         AlertDialog(
             onDismissRequest = {},
             title = { Text("載入中") },
-            text = { Text("正在準備您的餐廳資訊，請稍候...") },
+            text = { Text("正在準備餐廳資訊，請稍候...") },
             confirmButton = {}
         )
     } else {
@@ -129,7 +138,6 @@ fun SearchScreen(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowSearchBar(
@@ -151,13 +159,25 @@ fun ShowSearchBar(
     val finalSearchText by searchTextVM.finalSearchText.collectAsState()
     SearchBar(
         query = showSearchText,
-        onQueryChange = { searchTextVM.updateSearchText(it)
-                        searchTextVM.loadShowSearchText()},
+        onQueryChange = {
+            searchTextVM.updateSearchText(it)
+            searchTextVM.loadShowSearchText()
+        },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(start = 12.dp, end = 12.dp, top = 12.dp)
+            .heightIn(min = 40.dp)
+            .background(
+                color = if (showSearchText.isNotEmpty()) Color.White else FColor.Gary_20,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = if (showSearchText.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                shape = RoundedCornerShape(12.dp)
+            ),
 //        windowInsets =if (isActive) SearchBarDefaults.windowInsets else WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
-        windowInsets =  WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
+        windowInsets = WindowInsets(top = (-8).dp, left = 0.dp, right = 0.dp),
         onSearch = {
             isActive = false
             searchTextVM.updateSearchText(it)
@@ -174,18 +194,28 @@ fun ShowSearchBar(
         },
         active = isActive,
         onActiveChange = { isActive = it },
-        placeholder = { Text(text = "搜尋想吃的食物, 店家") },
+        placeholder = {
+            Text(
+                text = "搜尋想吃的食物, 店家",
+                color = Color.Gray.copy(alpha = 0.5f)
+            )
+        },
         leadingIcon = {
             if (isActive) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "ArrowBack",
-                    modifier = Modifier.clickable { isActive = false }
+                    modifier = Modifier
+                        .clickable { isActive = false }
+                        .size(20.dp),
+                    tint = FColor.Dark_80
                 )
             } else {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "search",
+                    modifier = Modifier.size(20.dp),
+                    tint = FColor.Dark_80
                 )
             }
 
@@ -195,18 +225,21 @@ fun ShowSearchBar(
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = "clear",
-                    modifier = Modifier.clickable {
-                        searchTextVM.clearSearchText()
-                        searchTextVM.loadShowSearchText()
-                    }
+                    modifier = Modifier
+                        .clickable {
+                            searchTextVM.clearSearchText()
+                            searchTextVM.loadShowSearchText()
+                        }
+                        .size(24.dp),
+                    tint = FColor.Dark_80,
                 )
             }
         },
-
-        ) {
-        SearchBerContent(cities, searchTextVM)
-
-    }
+        colors = SearchBarDefaults.colors(
+            containerColor = if (showSearchText.isNotEmpty()) Color.White else FColor.Gary_20
+        ),
+        content = { SearchBerContent(cities, searchTextVM) }
+    )
 }
 
 @Composable
@@ -237,7 +270,7 @@ fun ShowRestaurantLists(
         ) {
 
             Text(
-                text = "美食", style = TextStyle(
+                text = "", style = TextStyle(
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -384,7 +417,7 @@ fun RestCard(
                         )
                     }
                     Text(
-                        text = extractCityArea(restaurant.address)?:"",
+                        text = extractCityArea(restaurant.address) ?: "",
                         modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -397,25 +430,32 @@ fun RestCard(
                     Image(
                         painter = painterResource(R.drawable.googlemap),
                         contentDescription = "open google map",
-                        modifier = Modifier.clickable{
-                            openNavigationMap(context = context,
+                        modifier = Modifier.clickable {
+                            openNavigationMap(
+                                context = context,
                                 latitude = restaurant.latitude,
-                                longitude = restaurant.longitude)
+                                longitude = restaurant.longitude
+                            )
                         }
                     )
                     Spacer(modifier = Modifier.padding(4.dp))
-                    if (IsOpenNow( restaurant.opening_hours)){
-                    Text(text = "營業中", style = TextStyle(
-                        color = colorResource(R.color.teal_700), fontSize = 16.sp
-                    ))
-                } else {
-                    Text(text = "休息中", style = TextStyle(
-                        color = Color.Gray, fontSize = 16.sp
-                    ))
-                }
+                    if (IsOpenNow(restaurant.opening_hours)) {
+                        Text(
+                            text = "營業中", style = TextStyle(
+                                color = colorResource(R.color.teal_700), fontSize = 16.sp
+                            )
+                        )
+                    } else {
+                        Text(
+                            text = "休息中", style = TextStyle(
+                                color = Color.Gray, fontSize = 16.sp
+                            )
+                        )
+                    }
                     Spacer(modifier = Modifier.padding(4.dp))
-                    trailingIcon()  }
-},
+                    trailingIcon()
+                }
+            },
             modifier = Modifier.height(100.dp),
             colors = ListItemColors(
                 containerColor = colorResource(R.color.orange_5th),
@@ -433,11 +473,6 @@ fun RestCard(
     }
 }
 
-//地區選擇
-@Composable
-fun ChoiceCity() {
-
-}
 
 // 照片顯示 url 版
 @Composable

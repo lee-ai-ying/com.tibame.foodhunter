@@ -35,6 +35,7 @@ class FColor(val value: ULong) {
         val Dark_20 = Color(0xFF6E7489)
         val Dark_80 = Color(0xFF2A2F3D)
 
+        val Banana_Yellow = Color(0xFFFFE135)
         val Transparent = Color(0x00000000)
     }
 }
