@@ -1,18 +1,19 @@
 package com.tibame.foodhunter.a871208s
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
-import com.tibame.foodhunter.ai_ying.GroupChat
-import com.tibame.foodhunter.ai_ying.GroupRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
 
 class PrivateViewModel : ViewModel() {
     private val repository = PrivateChatRepository
-    val PrivateChatFlow = repository.PrivateChatList
-
+    val PrivateChatFlow = repository.chatroomState
+    val PrivateChatFlow2 = repository.chatroomState2
+    suspend fun refreshchatroom(username:String) {
+        repository.refreshchatroom(username)}
     private val _nowChatRoomId = MutableStateFlow("")
     val nowChatRoomId = _nowChatRoomId.asStateFlow()
     fun gotoChatRoom(roomId: String) {
@@ -20,7 +21,7 @@ class PrivateViewModel : ViewModel() {
             roomId
         }
     }
-
+    var wall =mutableStateOf(false)
     private val _chatInput = MutableStateFlow("")
     val chatInput = _chatInput.asStateFlow()
     fun chatRoomInput(text: String) {
@@ -36,4 +37,7 @@ class PrivateViewModel : ViewModel() {
             privateChat
         }
     }
+
+
+
 }

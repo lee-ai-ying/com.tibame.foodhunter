@@ -1,12 +1,15 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.tibame.foodhunter.a871208s.UserViewModel
+import com.tibame.foodhunter.andysearch.Restaurant
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +17,46 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 
 class GroupViewModel : ViewModel() {
+    var userVM: UserViewModel? = null
+    fun getUserName(): String {
+        return userVM?.username?.value ?: ""
+    }
 
     private val repository = GroupRepository
-    val groupChatFlow = repository.groupChatList
+    val groupChat = repository.groupChatList
+    fun getGroupChatList(username: String) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("username", username)
+            val result = CommonPost("$serverUrl/group/list", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupChat>>() {}.type
+            val list =
+                gson.fromJson<List<GroupChat>>(jsonObject.get("result").asString, collectionType)
+                    ?: emptyList()
+            val incList = emptyList<GroupChat>().toMutableList()
+            val endList = emptyList<GroupChat>().toMutableList()
+            list.forEach {
+                val date = LocalDate.parse(it.time, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                val today = LocalDate.now()
+                if (today > date) {
+                    it.state = 0
+                    endList.add(it)
+                } else {
+                    incList.add(it)
+                }
+            }
+            incList.add(0, GroupChat(name = "進行中", state = 99))
+            endList.add(0, GroupChat(name = "已結束", state = 98))
+            repository.updateGroupChatList(incList.plus(endList))
+        }
+    }
 
     private val _nowChatRoomId = MutableStateFlow(999)
     val nowChatRoomId = _nowChatRoomId.asStateFlow()
@@ -47,7 +85,7 @@ class GroupViewModel : ViewModel() {
 
     fun getGroupChatDetailFromId(id: Int) {
         _chatRoom.update {
-            groupChatFlow.value.find {
+            groupChat.value.find {
                 it.id == id && it.state != 99
             } ?: GroupChat()
         }
@@ -91,7 +129,7 @@ class GroupViewModel : ViewModel() {
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
-            jsonObject.addProperty("location", input.location)
+            jsonObject.addProperty("locationName", input.location)
             jsonObject.addProperty("time", input.time)
             jsonObject.addProperty("priceMin", input.priceMin)
             jsonObject.addProperty("priceMax", input.priceMax)
@@ -99,39 +137,183 @@ class GroupViewModel : ViewModel() {
             val result = CommonPost("$serverUrl/group/search", jsonObject.toString())
             jsonObject = gson.fromJson(result, JsonObject::class.java)
             val collectionType = object : TypeToken<List<GroupSearchResult>>() {}.type
-            val list=gson.fromJson<List<GroupSearchResult>>(jsonObject.get("result").asString, collectionType)
-            repository.updateSearchGroupResult(list?: emptyList())
+            val list = gson.fromJson<List<GroupSearchResult>>(
+                jsonObject.get("result").asString,
+                collectionType
+            )
+            repository.updateSearchGroupResult(list ?: emptyList())
         }
     }
-    val groupSearchCache=repository.searchCache
+
+    val groupSearchCache = repository.searchCache
     fun createGroup(input: GroupCreateData) {
         viewModelScope.launch {
             val gson = Gson()
-            var jsonObject = JsonObject()
+            val jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
-            jsonObject.addProperty("location", "KFC")//input.location)
+            jsonObject.addProperty("location", input.location)
             jsonObject.addProperty("time", input.time)
             jsonObject.addProperty("priceMin", input.priceMin)
             jsonObject.addProperty("priceMax", input.priceMax)
             jsonObject.addProperty("isPublic", input.isPublic)
             jsonObject.addProperty("describe", input.describe)
-            val result = CommonPost("$serverUrl/group/create", jsonObject.toString())
+            val result = gson.fromJson(
+                CommonPost("$serverUrl/group/create", jsonObject.toString()),
+                JsonObject::class.java
+            )
+            joinGroup(result.get("groupId").toString(), getUserName())
         }
     }
-//    init {
+
+    fun joinGroup(groupId: String, username: String) {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("groupId", groupId)
+            jsonObject.addProperty("username", username)
+            CommonPost("$serverUrl/group/join", jsonObject.toString())
+            getGroupChatList(username)
+        }
+    }
+
+    val selectSearchResult = repository.selectSearchResult
+    fun updateSelectSearchResult(input: GroupSearchResult) {
+        repository.updateSelectSearchResult(input)
+    }
+
+    val groupChatHistory = repository.groupChatHistory
+    fun getGroupChatHistory(groupRoomId: Int) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("id", "$groupRoomId")
+            val result = CommonPost("$serverUrl/group/chat/get", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupChatHistory>>() {}.type
+            val list = gson.fromJson<List<GroupChatHistory>>(
+                jsonObject.get("result").asString,
+                collectionType
+            ) ?: emptyList()
+            repository.updateGroupChatHistory(list)
+        }
+    }
+//    fun clearChatHistory() {
+//        repository.updateGroupChatHistory(emptyList())
+//    }
+    fun updateGroupChat() {
+        getGroupChatHistory(_nowChatRoomId.value)
+    }
+
+    //    fun sendMessage(chatInput: String) {
 //        viewModelScope.launch {
-//            val gson = Gson()
-//            var jsonObject = JsonObject()
-//            jsonObject.addProperty("id", 2)
-//            val result=CommonPost(serverUrl+"/getGroupList",jsonObject.toString())
-//
-//            jsonObject = gson.fromJson(result, JsonObject::class.java)
-//            val collectionType = object : TypeToken<List<GroupChat>>() {}.type
-//            val list = gson.fromJson<List<GroupChat>>(jsonObject.get("groups").asString, collectionType)
-//            list.forEach{
-//                Log.d("qq",it.id.toString()+" "+it.name)
-//            }
-////            Log.d("qq",jsonObject.toString())
+//            val jsonObject = JsonObject()
+//            jsonObject.addProperty("groupId", "${_nowChatRoomId.value}")
+//            jsonObject.addProperty("username", getUserName())
+//            jsonObject.addProperty("message", chatInput)
+//            CommonPost("$serverUrl/group/chat/send", jsonObject.toString())
+//            getGroupChatHistory(_nowChatRoomId.value)
 //        }
 //    }
+    fun sendGroupMessage(chatInput: String) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("groupId", "${_nowChatRoomId.value}")
+        jsonObject.addProperty("username", getUserName())
+        jsonObject.addProperty("message", chatInput)
+        sendGroupFcm(chatInput, jsonObject.toString())
+    }
+
+    /** 發送群組FCM */
+    private fun sendGroupFcm(chatInput: String, groupChatJson: String) {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("title", _chatRoom.value.name)
+            jsonObject.addProperty("body", chatInput)
+            jsonObject.addProperty("data", groupChatJson)
+            CommonPost("$serverUrl/group/chat/send", jsonObject.toString())
+            getGroupChatHistory(_nowChatRoomId.value)
+        }
+    }
+
+    fun getTokenSendServer() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                task.result?.let { token ->
+                    // 複製token到Firebase的Cloud Messaging測試區
+                    //Log.d("qq", "token: $token")
+                    sendTokenToServer(token)
+                }
+            }
+        }
+    }
+
+    /** 將token送到server */
+    private fun sendTokenToServer(token: String) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("username", getUserName())
+        jsonObject.addProperty("fcmToken", token)
+        //Log.d("qq",jsonObject.toString())
+        viewModelScope.launch {
+            val result = CommonPost("$serverUrl/fcm/register", jsonObject.toString())
+            //Log.d("qq", "sendTokenToServer: $result")
+        }
+    }
+
+    fun leaveGroup() {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("groupId", "${_nowChatRoomId.value}")
+            jsonObject.addProperty("username", getUserName())
+            CommonPost("$serverUrl/group/leave", jsonObject.toString())
+            getGroupChatList(getUserName())
+        }
+    }
+
+    fun getAvatarImageInGroupChat(groupRoomId: Int) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("id", "$groupRoomId")
+            val result = CommonPost("$serverUrl/group/avatar", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupChatImage>>() {}.type
+            val list = gson.fromJson<List<GroupChatImage>>(
+                jsonObject.get("result").asString,
+                collectionType
+            ) ?: emptyList()
+            val dataList = emptyList<GroupChatImage>().toMutableList()
+            list.forEach {
+                dataList.add(
+                    GroupChatImage(
+                        it.username,
+                        it.profileimage,
+                        userVM?.decodeBase64ToBitmap(it.profileimage)
+                    )
+                )
+            }
+            //Log.d("qq",dataList.toString())
+            repository.updateGroupChatAvatar(dataList)
+        }
+    }
+
+    val groupChatAvatar = repository.groupChatAvatar
+    val restaurantList = repository.restaurantList
+    fun getRestaurantList() {
+        viewModelScope.launch {
+            val gson = Gson()
+            val result = CommonPost("$serverUrl/group/restaurant", "")
+            var jsonObject = JsonObject()
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<List<GroupRestaurantData>>() {}.type
+            val list = gson.fromJson<List<GroupRestaurantData>>(
+                jsonObject.get("result").asString,
+                collectionType
+            ) ?: emptyList()
+            repository.updateRestaurantList(list)
+        }
+    }
+    fun getRestaurantNameById(restaurantId:Int):String{
+        if (repository.restaurantList.value.isEmpty()){
+
+        }
+        return repository.restaurantList.value[restaurantId-1].restaurantName
+    }
 }

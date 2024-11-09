@@ -35,9 +35,10 @@ val Typography = Typography(
     )
     */
 )
-
-val FoodHunterFont = FontFamily(
+val titleFamily= FontFamily(
     Font(R.font.holtwood, FontWeight.Black, FontStyle.Normal),
+)
+val FoodHunterFont = FontFamily(
     Font(R.font.roboto_regular, FontWeight.Normal),
     Font(R.font.roboto_medium, FontWeight.Medium),
     Font(R.font.roboto_bold, FontWeight.Bold),

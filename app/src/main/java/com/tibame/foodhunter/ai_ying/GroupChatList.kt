@@ -41,12 +41,12 @@ import com.tibame.foodhunter.ui.theme.FColor
 
 @Composable
 fun GroupChatList(
-    groupChats: List<GroupChat>,
+    //groupChats: List<GroupChat>,
     navController: NavHostController,
     gChatVM: GroupViewModel
 ) {
     var searchInput by remember { mutableStateOf("") }
-
+    val groupChats by gChatVM.groupChat.collectAsState()
     GroupSearchBar(
         onValueChange= {
             searchInput = it
@@ -63,7 +63,7 @@ fun GroupChatList(
             if (groupChat.state == 99 && searchInput.isEmpty()) {
                 Column(
                     modifier = Modifier
-                        .background(FColor.Orange_3rd)//MaterialTheme.colorScheme.primary)
+                        .background(FColor.Orange_3rd)
                 ) {
                     Text(
                         modifier = Modifier
@@ -71,6 +71,20 @@ fun GroupChatList(
                             .padding(horizontal = 8.dp, vertical = 16.dp),
                         text = groupChat.name,
                         color = Color.White
+                    )
+                }
+            }
+            else if (groupChat.state == 98 && searchInput.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .background(FColor.Gary_20)
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 16.dp),
+                        text = groupChat.name,
+                        color = FColor.Gary
                     )
                 }
             }
@@ -95,14 +109,14 @@ fun GroupChatList(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ){
-                                Image(
+                                /*Image(
                                     painter = painterResource(id = R.drawable.user1),
                                     contentDescription = "avatar",
                                     modifier = Modifier
                                         .size(32.dp)
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop
-                                )
+                                )*/
                                 Text(
                                     text = groupChat.name
                                 )

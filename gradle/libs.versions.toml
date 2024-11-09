@@ -27,6 +27,10 @@ generativeai = "0.9.0"
 cloudinaryAndroid = "3.0.2"
 firebaseCrashlyticsBuildtools = "3.0.2"
 
+googleServices = "4.4.2"
+firebaseBom = "33.5.1"
+firebaseMessagingKtx = "24.0.3"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -59,6 +63,8 @@ androidx-benchmark-common = { group = "androidx.benchmark", name = "benchmark-co
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 cloudinary-android = { group = "com.cloudinary", name = "cloudinary-android", version.ref = "cloudinaryAndroid" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
 
 
@@ -67,4 +73,4 @@ firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "fireb
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 map-serect ={id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePlugin"}
-
+google-gms-googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }

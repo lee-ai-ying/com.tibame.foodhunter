@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 
@@ -58,7 +61,10 @@ fun PreviewReviewEdit() {
 
 /**評論顯示區*/
 @Composable
-fun ReviewZone() {
+fun ReviewZone(
+    navController: NavHostController,
+) {
+
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -75,7 +81,7 @@ fun ReviewZone() {
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
-                //navController.navigate("評論頁面")
+                navController.navigate("評論頁面")
             },
             modifier = Modifier
                 .width(150.dp)
@@ -99,7 +105,7 @@ fun ReviewZone() {
     }
 }
 
-
+/**評論範例*/
 @Composable
 fun GetReviews() {
     val reviews = listOf(
@@ -117,7 +123,7 @@ fun GetReviews() {
         }
     }
 }
-
+/**評論範例資料*/
 @Composable
 fun ReviewItem(review: Review) {
     var rememberRating by remember { mutableStateOf(review.rating) }

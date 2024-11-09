@@ -27,20 +27,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -67,9 +65,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -85,11 +82,6 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-
 
 @Composable
 fun GroupChatRoom(
@@ -97,42 +89,26 @@ fun GroupChatRoom(
     gChatVM: GroupViewModel
 ) {
     gChatVM.gotoChatRoom(groupRoomId)
-//    if (gChatVM.showEditGroup.asStateFlow().collectAsState().value) {
-//        EditGroupInformation(gChatVM)
-//        return
-//    }
+    gChatVM.getGroupChatHistory(groupRoomId)
+    gChatVM.getAvatarImageInGroupChat(groupRoomId)
+    val history by gChatVM.groupChatHistory.collectAsState()
+    val self = gChatVM.getUserName()
+    val avatars by gChatVM.groupChatAvatar.collectAsState()
+    /*if (gChatVM.showEditGroup.asStateFlow().collectAsState().value) {
+        EditGroupInformation(gChatVM)
+        return
+    }*/
     if (gChatVM.showEditMember.asStateFlow().collectAsState().value) {
         EditGroupMember(gChatVM)
         return
     }
-    val item = listOf(
-        "111",
-        "222\n222",
-        "333",
-        "4444",
-        "55555",
-        "666666",
-        "7777777",
-        "0000000000\n88888888",
-        "999999999",
-        "0000000000",
-        "111",
-        "222",
-        "333",
-        "444",
-        "555",
-        "666",
-        "777",
-        "888",
-        "999",
-        "000"
-    )
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(FColor.Orange_6th),
         reverseLayout = true
     ) {
-        items(item) {
+        items(history) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -140,54 +116,67 @@ fun GroupChatRoom(
                     .padding(start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                when (it) {
-                    "111" -> {}
+                when (it.username) {
+                    self -> {}
                     else ->
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.user1),
-                                contentDescription = "avatar",
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
+                            val avatar =
+                                avatars.firstOrNull { avatar -> avatar.username == it.username && avatar.image != null }
+                            if (avatar != null) {
+                                Image(
+                                    bitmap = avatar.image!!.asImageBitmap(),
+                                    contentDescription = "avatar",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(id = R.drawable.user1),
+                                    contentDescription = "avatar",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                 }
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(top = 8.dp, bottom = 8.dp),
-                    horizontalAlignment = when (it) {
-                        "111" -> Alignment.End
+                    horizontalAlignment = when (it.username) {
+                        self -> Alignment.End
                         else -> Alignment.Start
                     }
                 ) {
-                    when (it) {
-                        "111" -> {}
-                        else -> Text("name")
+                    when (it.username) {
+                        self -> {}
+                        else -> Text(it.senderName)
                     }
                     Row(
                         verticalAlignment = Alignment.Bottom
                     )
                     {
-                        if (it == "111") {
+                        if (it.username == self) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
                                     vertical = 4.dp
                                 ),
-                                text = "AM11:11",
+                                text = it.sendTime.substring(11, 16),
                                 fontSize = 12.sp
                             )
                         }
                         Column(
                             modifier = Modifier
                                 .background(
-                                    when (it) {
-                                        "111" -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
+                                    when (it.username) {
+                                        self -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
                                         else -> Color.White
                                     },
                                     shape = RoundedCornerShape(8.dp)
@@ -195,24 +184,22 @@ fun GroupChatRoom(
                                 .padding(8.dp)
                         ) {
                             Text(
-                                text = it
+                                text = it.message
                             )
                         }
-                        if (it != "111") {
+                        if (it.username != self) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
                                     vertical = 4.dp
                                 ),
-                                text = "AM11:11",
+                                text = it.sendTime.substring(11, 16),
                                 fontSize = 12.sp
                             )
                         }
                     }
-
                 }
             }
-
         }
     }
 }
@@ -240,6 +227,7 @@ fun GroupChatRoomTopBar(
                 modifier = Modifier.clickable {
                     gChatVM.chatRoomInput("")
                     gChatVM.setShowEditMember(false)
+                    //gChatVM.clearChatHistory()
                     navController.popBackStack()
                 },
                 tint = Color.White
@@ -264,26 +252,29 @@ fun GroupChatRoomBottomBar(
             selectedImageUri = uri
         }
     )
-    val chatInput = gChatVM.chatInput.collectAsState()
+    var chatInput by remember { mutableStateOf("") }
     var showFunc by remember { mutableStateOf(false) }
     var showAlert by remember { mutableStateOf(false) }
     var showEndAlert by remember { mutableStateOf(false) }
     var showNotManagerAlert by remember { mutableStateOf(false) }
-    var showManagerFunction by remember { mutableStateOf(false) }
+    val showManagerFunction by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var stars by remember { mutableIntStateOf(0) }
-    val showEditGroup=gChatVM.showEditGroup.asStateFlow().collectAsState().value
-    val showEditMember=gChatVM.showEditMember.asStateFlow().collectAsState().value
+    val showEditGroup = gChatVM.showEditGroup.asStateFlow().collectAsState().value
+    val showEditMember = gChatVM.showEditMember.asStateFlow().collectAsState().value
     val showMemberControl = gChatVM.showEditMember.asStateFlow().collectAsState().value
+
+    val chatRoom = gChatVM.chatRoom.collectAsState()
+    val chatEnable = chatRoom.value.state==1
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 16.dp)
     ) {
-        if (!showEditGroup && !showEditMember){
+        if (!showEditGroup && !showEditMember) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -292,7 +283,7 @@ fun GroupChatRoomBottomBar(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Add,
+                    imageVector = if (!showFunc) Icons.Outlined.Add else Icons.Outlined.KeyboardArrowUp,
                     contentDescription = "",
                     tint = FColor.Orange_1st,//MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
@@ -300,9 +291,9 @@ fun GroupChatRoomBottomBar(
                     }
                 )
                 TextField(
-                    value = chatInput.value,
+                    value = chatInput,
                     onValueChange = {
-                        gChatVM.chatRoomInput(it)
+                        chatInput = it
                     },
                     modifier = Modifier
                         .weight(1f),
@@ -310,17 +301,33 @@ fun GroupChatRoomBottomBar(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
                         focusedContainerColor = FColor.Orange_4th,//MaterialTheme.colorScheme.primaryContainer,
-                        unfocusedContainerColor = FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
+                        unfocusedContainerColor = FColor.Orange_4th,//MaterialTheme.colorScheme.primaryContainer
+                        disabledContainerColor = FColor.Orange_6th,
                     ),
                     placeholder = {
-                        Text(text = "請輸入訊息")
-                    }
+                        Text(text = if (chatEnable) "請輸入訊息" else "揪團已結束")
+                    },
+                    enabled = chatEnable
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "",
-                    tint = FColor.Orange_1st//MaterialTheme.colorScheme.primary
+                    tint = if (chatEnable) {
+                        FColor.Orange_1st
+                    }
+                    else{
+                        FColor.Orange_4th
+                    },//MaterialTheme.colorScheme.primary
+                    modifier = if (chatEnable) {
+                        Modifier.clickable {
+                            //gChatVM.sendMessage(chatInput)
+                            gChatVM.sendGroupMessage(chatInput)
+                            chatInput = ""
+
+                        }
+                    }else Modifier
                 )
             }
         }
@@ -336,31 +343,31 @@ fun GroupChatRoomBottomBar(
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     if (!showManagerFunction) {
-                        GroupFunction("傳送圖片", Icons.Filled.AccountBox) {
+                        /*GroupFunction("傳送圖片", Icons.Filled.AccountBox) {
                             pickImageLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
-                        }
+                        }*/
                         GroupFunction("發表評論", Icons.Filled.Edit) {
                             showBottomSheet = true
                         }
                         GroupFunction("離開揪團", Icons.AutoMirrored.Filled.ExitToApp) {
                             showAlert = true
                         }
-                        GroupFunction("管理成員", Icons.Outlined.Person) {
+                        /*GroupFunction("管理成員", Icons.Outlined.Person) {
                             if (true) {
                                 gChatVM.setShowEditMember(!showMemberControl)
                             } else {
                                 showNotManagerAlert = true
                             }
-                        }
-                        GroupFunction("終止揪團", Icons.Filled.Settings) {
+                        }*/
+                        /*GroupFunction("終止揪團", Icons.Filled.Settings) {
                             if (true) {
                                 showEndAlert = true
                             } else {
                                 showNotManagerAlert = true
                             }
-                        }
+                        }*/
                     }
 //                    else {
 //                        GroupFunction("返回上層", Icons.AutoMirrored.Filled.ArrowBack) {
@@ -413,6 +420,7 @@ fun GroupChatRoomBottomBar(
                 },
                 // 設定確定時欲執行內容
                 onConfirm = {
+                    gChatVM.leaveGroup()
                     navController.popBackStack()
                     showAlert = false
                 },
@@ -441,7 +449,7 @@ fun GroupChatRoomBottomBar(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "發表評論")
-                    Text(text = "XXX餐廳")
+                    Text(text = chatRoom.value.locationName)
                     Row(
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
@@ -457,12 +465,12 @@ fun GroupChatRoomBottomBar(
                         }
                         repeat(5 - stars) {
                             Icon(
-                                imageVector = Icons.Outlined.Settings,
+                                imageVector = Icons.Outlined.Star,
                                 contentDescription = "",
                                 modifier = Modifier.clickable {
                                     stars += it + 1
                                 },
-                                tint = FColor.Orange_1st
+                                tint = FColor.Orange_4th
                             )
                         }
                     }
@@ -488,10 +496,10 @@ fun GroupChatRoomBottomBar(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
+                                containerColor = FColor.Orange_1st
                             )
                         ) {
-                            Text("取消", color = Color.Black)//MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text("送出")
                         }
                         Button(
                             onClick = {
@@ -502,10 +510,13 @@ fun GroupChatRoomBottomBar(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = FColor.Orange_1st
+                                containerColor = FColor.Orange_5th//MaterialTheme.colorScheme.primaryContainer
                             )
                         ) {
-                            Text("送出")
+                            Text(
+                                "取消",
+                                color = Color.Black
+                            )//MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
@@ -515,6 +526,7 @@ fun GroupChatRoomBottomBar(
 
     }
 }
+
 //@Composable
 //fun EditGroupInformation(
 //    gChatVM: GroupViewModel
@@ -592,16 +604,18 @@ fun GroupChatRoomBottomBar(
 @Composable
 fun EditGroupMember(
     gChatVM: GroupViewModel
-){
-    val users = listOf(1,2,3,4,5)
-    val users2 = listOf(1,2,3,4,5,6,7,8,9,10)
+) {
+    val users = listOf(1, 2, 3, 4, 5)
+    val users2 = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(Color.White),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
     ) {
-        items(1){
+        items(1) {
             GroupTitleText(text = "待確認")
         }
-        items(users){
+        items(users) {
             Row(
                 modifier = Modifier
                     .height(56.dp)
@@ -642,10 +656,10 @@ fun EditGroupMember(
                 )
             }
         }
-        items(1){
+        items(1) {
             GroupTitleText(text = "已加入")
         }
-        items(users2){
+        items(users2) {
             Row(
                 modifier = Modifier
                     .height(56.dp)
@@ -683,6 +697,7 @@ fun EditGroupMember(
         }
     }
 }
+
 @Composable
 fun EndGroupChatDialog(
     onDismissRequest: () -> Unit,
@@ -690,7 +705,7 @@ fun EndGroupChatDialog(
     onDismiss: () -> Unit,
     gChatVM: GroupViewModel
 ) {
-    val chatRoom = gChatVM.chatRoom.collectAsState()
+    //val chatRoom = gChatVM.chatRoom.collectAsState()
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text("確定要終止此揪團嗎?") },
@@ -722,6 +737,7 @@ fun EndGroupChatDialog(
         containerColor = FColor.Orange_6th
     )
 }
+
 @Composable
 fun LeaveGroupChatDialog(
     onDismissRequest: () -> Unit,
@@ -779,7 +795,9 @@ fun NotManagerDialog(
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().background(FColor.Orange_6th),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(FColor.Orange_6th),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -833,7 +851,6 @@ fun GroupFunction(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 fun GroupChatRoomPreview() {

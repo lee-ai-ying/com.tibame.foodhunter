@@ -1,9 +1,11 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -23,10 +25,15 @@ fun GroupMain(
     navController: NavHostController,
     groupVM: GroupViewModel
 ) {
+    //Log.d("qq", groupVM.getUserName())
     val context = LocalContext.current
     var selectTabIndex by remember { mutableIntStateOf(0) }
     var isShowSearchResult by remember { mutableStateOf(false) }
-    val groupChats by groupVM.groupChatFlow.collectAsState()
+    //val groupChats by groupVM.groupChat.collectAsState()
+    LaunchedEffect(Unit) {
+        groupVM.getGroupChatList(groupVM.getUserName())
+        //groupVM.getTokenSendServer()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -44,7 +51,7 @@ fun GroupMain(
         ) {
             when (selectTabIndex) {
                 0 -> {
-                    GroupChatList(groupChats, navController, groupVM)
+                    GroupChatList(navController, groupVM)//groupChats, navController, groupVM)
                 }
 
                 1 -> {

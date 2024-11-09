@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +52,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -252,7 +254,7 @@ fun GroupText(text: String) {
 fun GroupTextWithBackground(text: String) {
     Column(
         modifier = Modifier
-            .heightIn(min = 40.dp)
+            .heightIn(min = 56.dp)
             .fillMaxWidth()
             .background(FColor.Orange_5th)//MaterialTheme.colorScheme.primaryContainer)
             .padding(8.dp),
@@ -427,7 +429,7 @@ fun GroupTopTabs(selectedTabIndex: Int, onTabClick1: () -> Unit, onTabClick2: ()
                         matchContentSize = true
                     ),
                 width = Dp.Unspecified,
-                color = Color.Black
+                color = FColor.Dark_66
             )
         }
     ) {
@@ -437,7 +439,7 @@ fun GroupTopTabs(selectedTabIndex: Int, onTabClick1: () -> Unit, onTabClick2: ()
             text = {
                 Text(
                     text = stringResource(R.string.str_my_group),
-                    color = Color.Black
+                    color = FColor.Dark
                 )
             }
         )
@@ -447,7 +449,7 @@ fun GroupTopTabs(selectedTabIndex: Int, onTabClick1: () -> Unit, onTabClick2: ()
             text = {
                 Text(
                     text = stringResource(R.string.str_search_group),
-                    color = Color.Black
+                    color = FColor.Dark
                 )
             }
         )
@@ -516,18 +518,20 @@ fun GroupSearchBar(onValueChange: (String) -> String, onClearClick: () -> Unit) 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDatePickerDialog(
-    //showData: (Long?)->String,
+    showData: Long = System.currentTimeMillis(),
     onDismissRequest: () -> Unit,
     onConfirm: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = showData,
         // SelectableDates介面用來限制可選擇的日期與年，
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                 /* 將使用者選取的時間轉成LocalDate物件後取出星期幾的資訊
                    API 26開始支援Instant */
-                return utcTimeMillis > System.currentTimeMillis()
+                //Log.d("qq","$utcTimeMillis > ${System.currentTimeMillis()}")
+                return (utcTimeMillis-System.currentTimeMillis())>-86400000
             }
 
             override fun isSelectableYear(year: Int): Boolean {
@@ -590,7 +594,9 @@ fun MyDatePickerDialog(
             showModeToggle = false,
             colors = DatePickerDefaults.colors(
                 containerColor = FColor.Orange_6th,
-                selectedDayContainerColor = FColor.Orange_1st
+                selectedDayContainerColor = FColor.Orange_1st,
+                disabledSelectedDayContainerColor = FColor.Orange_1st,
+                todayDateBorderColor = FColor.Orange_1st
             )
         )
     }
