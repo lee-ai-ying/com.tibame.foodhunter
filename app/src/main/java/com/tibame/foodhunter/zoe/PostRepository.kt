@@ -394,29 +394,46 @@ class PostRepository {
 
     suspend fun updatePost(postId: Int, postData: PostCreateData): Boolean {
         val url = "${serverUrl}/post/update"
+
         return try {
+            Log.d("UpdatePost", "開始更新貼文流程 - ID: $postId")
+            Log.d("UpdatePost", "更新內容 - " +
+                    "Content: ${postData.content}, " +
+                    "Tag: ${postData.postTag}, " +
+                    "Photos: ${postData.photos.size}")
+
             val updateRequest = mapOf(
                 "postId" to postId,
+                "publisher" to postData.publisher,
                 "content" to postData.content,
                 "postTag" to postData.postTag,
                 "restaurantId" to postData.restaurantId,
-                "photos" to postData.photos
+                "photos" to postData.photos.map { photo ->
+                    mapOf(
+                        "imgBase64Str" to photo.imgBase64Str
+                    )
+                }
             )
+
             val json = gson.toJson(updateRequest)
-            Log.d("UpdatePost", "Request: $json")
+            Log.d("UpdatePost", "發送更新請求")
 
             val result = CommonPost(url, json)
-            val response = gson.fromJson(result, UpdateResponse::class.java)
+            Log.d("UpdatePost", "收到伺服器回應: $result")
 
-            if (response.success) {
+            if (result.contains("貼文更新成功")) {
+                // 成功的情況
+                Log.d("UpdatePost", "更新成功: $result")
                 loadPosts() // 重新載入貼文列表
-                true
+                true  // 返回 true 表示成功
             } else {
-                Log.e("UpdatePost", "Update failed: ${response.message}")
+                // 失敗的情況
+                Log.e("UpdatePost", "更新失敗，回應: $result")
                 false
             }
         } catch (e: Exception) {
-            Log.e("UpdatePost", "Error updating post", e)
+            Log.e("UpdatePost", "更新過程發生錯誤: ${e.message}")
+            e.printStackTrace()
             false
         }
     }

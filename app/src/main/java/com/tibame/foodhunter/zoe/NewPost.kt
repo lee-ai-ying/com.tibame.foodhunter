@@ -106,7 +106,9 @@ fun NewPost(
     }
     val membernameState = remember { mutableStateOf(0) }
     val coroutineScope = rememberCoroutineScope()
-
+    LaunchedEffect(postId) {
+        PostEditorViewModel.initializeEditor(postId)
+    }
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val user = userVM.getUserInfo(userVM.username.value)
