@@ -55,7 +55,9 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 @Composable
 fun RestaurantDetail(
     navController: NavHostController,
-    restaurantVM: SearchScreenVM
+    restaurantVM: SearchScreenVM,
+    reviewVM: ReviewVM
+
 ) {
     val restNavController = rememberNavController()
     val context = LocalContext.current
@@ -65,6 +67,7 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
+    val navController = rememberNavController()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -92,7 +95,7 @@ fun RestaurantDetail(
                         ) {
                             Spacer(modifier = Modifier)
 
-//                            RestaurantInfoDetail(snackbarHostState = snackbarHostState)
+                            RestaurantInfoDetail(restaurantVM)
 
                             HorizontalDivider(
                                 modifier = Modifier,
@@ -103,11 +106,11 @@ fun RestaurantDetail(
 
                             //社群預覽
 
-//                            Text(
-//                                text = "社群預覽  待修",
-//                                fontSize = 18.sp
-//                            )
-//                            RelatedPosts("")
+                            Text(
+                                text = "社群預覽  待修",
+                                fontSize = 18.sp
+                            )
+                            //RelatedPosts("")
 
 
                             HorizontalDivider(
@@ -124,7 +127,7 @@ fun RestaurantDetail(
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
-                            ReviewZone()
+                            ReviewZone(navController = navController)
                         }
                     }
                 }
@@ -140,6 +143,7 @@ fun RestaurantDetailPreview() {
     // 提供一個模擬的 NavHostController 和 SearchScreenVM
     val navController = rememberNavController()
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
+    val reviewVM = ReviewVM()
 
-    RestaurantDetail(navController = navController, restaurantVM = restaurantVM)
+    RestaurantDetail(navController = navController, restaurantVM = restaurantVM, reviewVM = reviewVM )
 }

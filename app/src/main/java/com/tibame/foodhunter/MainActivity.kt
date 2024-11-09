@@ -75,6 +75,7 @@ import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.wei.ReviewVM
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
@@ -327,8 +328,10 @@ fun Main(
                 )
             }
 
-            composable(context.getString(R.string.restaurantDetail)) {
-                RestaurantDetail(navController = navController, restaurantVM = searchVM)
+            composable(context.getString(R.string.restaurantDetail)){
+                RestaurantDetail(
+                    navController = navController, restaurantVM = SearchScreenVM(),reviewVM = ReviewVM()
+                )
             }
 
 
