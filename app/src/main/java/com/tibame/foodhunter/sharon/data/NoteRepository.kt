@@ -5,9 +5,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -86,7 +88,7 @@ class NoteRepository private constructor() {
 
                 }
                 // 按 note_id 排序 (升序)
-                val sortedNotesList = notesList.sortedByDescending { it.noteId }
+                val sortedNotesList = notesList.sortedByDescending { it.selectedDate }
 
                 // 更新 StateFlow
                 _notes.value = sortedNotesList
@@ -273,7 +275,7 @@ class NoteRepository private constructor() {
         memberId: Int = 1,    // int，暫時固定
         selectedDate: Date,
     ): Int {
-        val url = "http://192.168.2.97:8080/com.tibame.foodhunter_server/api/note/create"
+        val url = "http://10.2.16.225:8080/com.tibame.foodhunter_server/api/note/create"
 
         // 轉成 "yyyy-MM-dd" 給後端
         val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -301,7 +303,10 @@ class NoteRepository private constructor() {
                 val result = jsonResponse.get("result")?.asBoolean ?: false
 
                 return if (result) {
-                    // 新增成功，重新取得筆記列表
+                    // 從本地端更新
+
+
+                    // 新增成功，從後端重新取得筆記列表
                     getNotes()
                     Log.d(TAG, "新增筆記成功")
                     1  // 成功返回1
@@ -382,6 +387,81 @@ class NoteRepository private constructor() {
         } catch (e: Exception) {
             Log.e(TAG, "日期格式化錯誤: $dateString", e)
             throw IllegalArgumentException("日期格式錯誤: $dateString", e)
+        }
+    }
+
+    suspend fun deleteNoteById(noteId: Int): Int {
+        val url = "$BASE_URL$API_PATH/deleteNoteById"
+        val requestBody = JsonObject().apply {
+            addProperty("note_id", noteId)
+        }
+
+        return try {
+            val response = CommonPost(url, requestBody.toString())
+            Log.d(TAG, "刪除筆記回應：$response")
+
+            if (response.isNotEmpty()) {
+                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
+                val resultStr = jsonResponse.get("result")?.asString ?: ""
+
+                if (resultStr.contains("刪除成功")) {
+                    Log.d(TAG, "刪除筆記成功，ID: $noteId")
+
+                    // 立即從本地列表移除
+
+                    _notes.value = _notes.value.filter { it.noteId != noteId }
+
+//                    getNotes()
+
+                    1  // 成功返回1
+                } else {
+                    val errMsg = jsonResponse.get("error")?.asString ?: "未知錯誤"
+                    Log.e(TAG, "刪除筆記失敗: $errMsg")
+                    -1  // 刪除失敗
+                }
+            } else {
+                Log.e(TAG, "API 回應為空")
+                -1  // 空回應時的錯誤碼
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "刪除筆記時發生錯誤", e)
+            -1  // 例外錯誤時的錯誤碼
+        }
+    }
+
+
+    suspend fun updateNote(
+        noteId: Int,
+        title: String,
+        content: String,
+        restaurantId: Int,
+        selectedDate: Date
+    ): Int {
+        val url = "$BASE_URL$API_PATH/update"
+
+        val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            .format(selectedDate)
+
+        val requestBody = JsonObject().apply {
+            addProperty("noteId", noteId)
+            addProperty("title", title)
+            addProperty("content", content)
+            addProperty("restaurantId", restaurantId)
+            addProperty("selectedDate", backendDateStr)
+        }
+
+        return try {
+            val response = CommonPost(url, requestBody.toString())
+            if (response.contains("更新成功")) {
+                // 更新本地資料
+                getNotes()  // 重新取得資料
+                1
+            } else {
+                -1
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "更新筆記失敗", e)
+            -1
         }
     }
 }

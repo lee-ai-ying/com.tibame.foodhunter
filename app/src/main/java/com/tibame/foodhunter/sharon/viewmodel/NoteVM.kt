@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
+import com.tibame.foodhunter.sharon.event.NoteEvent
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
@@ -25,6 +27,8 @@ class NoteVM : ViewModel() {
 
     // 用於與後端通訊
     private val repository = NoteRepository.instance
+    val notes: StateFlow<List<Note>> = repository.notes
+
 
     // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
     private val _note = MutableStateFlow<Note?>(null)
@@ -48,7 +52,18 @@ class NoteVM : ViewModel() {
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
     init {
+        // 首次載入
         loadNotes()
+
+        // 監聽刷新事件
+        viewModelScope.launch {
+            NoteEvent.refreshTrigger.collect { needRefresh ->
+                if (needRefresh) {
+                    loadNotes()   // 再次載入
+                    NoteEvent.resetTrigger()  // 重置觸發器
+                }
+            }
+        }
         setupSearchFlow()  // 搜尋資料流
     }
 
@@ -65,19 +80,13 @@ class NoteVM : ViewModel() {
                 Log.d(TAG, "呼叫 repository.getNotes()")
                 repository.getNotes()
 
-                // 2. 開始收集 Repository 的資料流
-                Log.d(TAG, "開始收集 repository.notes")
-                repository.notes.collect { notes ->
-                    Log.d(TAG, "收到筆記資料: ${notes.size}筆")
-                    // 3. 更新 ViewModel 的兩個狀態
-                    _allNotes.value = notes      // 保存完整列表
-                    Log.d(TAG,"設置到 _notes 的值: ${_allNotes.value}")
+                val notes = repository.notes.value
+                Log.d(TAG, "收到筆記資料: ${notes.size}筆")
 
-                    _filteredNotes.value = notes // 初始時顯示全部
+                // 3. 更新 ViewModel 的狀態
+                _allNotes.value = notes      // 保存完整列表
+                _filteredNotes.value = notes // 初始時顯示全部
 
-                    _isLoading.value = false
-                    Log.d(TAG, "設置 isLoading = false")
-                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing notes", e)
             } finally {

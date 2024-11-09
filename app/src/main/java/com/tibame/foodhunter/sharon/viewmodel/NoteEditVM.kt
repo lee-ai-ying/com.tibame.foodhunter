@@ -1,6 +1,9 @@
 package com.tibame.foodhunter.sharon.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
@@ -8,6 +11,8 @@ import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
 import com.tibame.foodhunter.sharon.data.NoteRepository.Companion
+import com.tibame.foodhunter.sharon.event.NoteEvent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -52,15 +57,19 @@ sealed class NoteEditEvent {
     data class UpdateDate(val date: Date) : NoteEditEvent()
 
     // 操作相關事件
-    object SaveNote : NoteEditEvent()      // 保存筆記
+//    object SaveNote : NoteEditEvent()      // 保存筆記
     object NavigateBack : NoteEditEvent()  // 返回上一頁
     object DismissError : NoteEditEvent()  // 關閉錯誤提示
 }
 
+
+
+
 /**
  * 筆記編輯頁面的 ViewModel
  */
-class NoteEditVM : ViewModel() {
+class NoteEditVM: ViewModel() {
+
 
     companion object {
         private const val TAG = "NoteEditVM"
@@ -92,6 +101,7 @@ class NoteEditVM : ViewModel() {
                 // 使用你現有的 repository 方法
                 val noteData = repository.getNoteById(noteId)
                 _note.value = noteData
+//                val notes = repository.getNotes()
 
                 // 更新 UI 狀態
                 noteData?.let { note ->
@@ -143,15 +153,19 @@ class NoteEditVM : ViewModel() {
             }
 
             is NoteEditEvent.UpdateDate -> {
+                val dateString = formatDate(event.date)  // MM/dd 格式的日期
+                val dayString = formatDay(event.date)    // 星期格式的日期
+
                 _uiState.update {
                     it.copy(
                         selectedDate = event.date,
-                        displayDate = formatDate(event.date.toString()),  // MM/dd
-                        displayDay = formatDay(event.date.toString())     // 星期幾
+                        displayDate = dateString,   // 使用格式化後的日期字串
+                        displayDay = dayString      // 使用格式化後的星期字串
                     )
                 }
             }
-            is NoteEditEvent.SaveNote -> saveNote()
+
+//            is NoteEditEvent.SaveNote -> saveNote()
             is NoteEditEvent.NavigateBack -> {
                 // 導航邏輯會在 UI 層處理
             }
@@ -162,6 +176,7 @@ class NoteEditVM : ViewModel() {
         }
     }
 
+
     private fun handleTitleUpdate(newTitle: String) {
         _uiState.update { currentState ->
             currentState.copy(
@@ -170,29 +185,26 @@ class NoteEditVM : ViewModel() {
                 isFirstEntry =
                 if (currentState.isFirstEntry && newTitle.isEmpty()) true
                 else currentState.isFirstEntry
-
             )
         }
         // 2. 根據不同情境處理自動保存
         when {
             // 情境1: 首次輸入且有標題
             uiState.value.isFirstEntry && newTitle.isNotEmpty() -> {
-//                saveNote()  // 自動保存
-                Log.d(TAG, "首次輸入標題，自動創建筆記")
+                Log.d(TAG, "首次輸入標題、標題不為空")
             }
 
             // 情境2: 非首次輸入且標題被清空
             !uiState.value.isFirstEntry && newTitle.isEmpty() -> {
-                _uiState.update {
-                    it.copy(errorMessage = "請輸入標題")
-                }
+//                _uiState.update {
+//                    it.copy(errorMessage = "請輸入標題")
+//                }
                 Log.d(TAG, "既有筆記標題被清空，顯示警告")
             }
 
-            // 情境3: 既有筆記修改 - 自動更新
-            !uiState.value.isFirstEntry && newTitle.isNotEmpty() -> {
-//                saveNote()  // 自動保存更新
-                Log.d(TAG, "既有筆記標題修改，自動更新")
+            // 情境3: 既有筆記修改
+            !uiState.value.isFirstEntry && uiState.value.isExistingNote && newTitle.isNotEmpty() -> {
+                Log.d(TAG, "既有筆記標題修改、標題不為空、返回即可更新")
             }
         }
     }
@@ -201,15 +213,74 @@ class NoteEditVM : ViewModel() {
      * 返回按鈕處理
      */
     fun saveAndNavigateBack(navController: NavHostController) {
+        Log.d(TAG, "開始執行 saveAndNavigateBack")
         viewModelScope.launch {
-            // 有標題才保存
-            if (uiState.value.hasTitle) {
-                saveNote()
+            try {
+                if (uiState.value.hasTitle) {
+                    Log.d(TAG, "標題檢查通過，開始保存筆記")
+                    Log.d(TAG, "當前UI狀態: title=${uiState.value.title}, content=${uiState.value.content}")
+
+                    // 保存筆記
+                    val saveResult = saveNote()
+                    Log.d(TAG, "保存結果: $saveResult")
+
+                    // 檢查保存是否成功
+                    if (_saveSuccess.value) {
+                        Log.d(TAG, "保存成功，觸發刷新")
+                        NoteEvent.triggerRefresh()
+                        delay(300)
+                    } else {
+                        Log.e(TAG, "保存失敗: saveSuccess = ${_saveSuccess.value}")
+                    }
+                } else {
+                    Log.w(TAG, "未輸入標題，無法保存")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "saveAndNavigateBack 發生異常", e)
+            } finally {
+                Log.d(TAG, "準備導航返回")
+                navController.popBackStack()
             }
-            // 保存成功或沒有內容需要保存時，返回
-            navController.popBackStack()
         }
     }
+
+
+    /**
+     * 刪除筆記邏輯
+     */
+    fun deleteNote(navController: NavHostController) {
+        viewModelScope.launch {
+            val noteId = note.value?.noteId  // 從當前 note 中取得 ID
+            if (noteId != null) {
+                try {
+                    _uiState.update { it.copy(isLoading = true) }
+                    val result = repository.deleteNoteById(noteId)
+
+                    if (result > 0) {
+
+                        NoteEvent.triggerRefresh()
+
+                        delay(500)
+
+                        navController.popBackStack()
+                    } else {
+                        // 刪除失敗
+                        _uiState.update { it.copy(errorMessage = "刪除失敗") }
+                        Log.e("NoteEditVM", "刪除筆記失敗")
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(errorMessage = "刪除失敗：${e.message}") }
+                    Log.e("NoteEditVM", "刪除筆記時發生錯誤", e)
+                } finally {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+            } else {
+                Log.e("NoteEditVM", "無效的筆記 ID，無法刪除")
+                _uiState.update { it.copy(errorMessage = "無效的筆記 ID") }
+            }
+        }
+    }
+
 
     /**
      * 筆記保存邏輯
@@ -218,79 +289,86 @@ class NoteEditVM : ViewModel() {
      * 2. 更新筆記狀態
      * 3. 錯誤處理
      */
-    private fun saveNote() {
-        viewModelScope.launch {
-            try {
-                _uiState.update { it.copy(isLoading = true) }
-                val currentState = _uiState.value
+    private suspend fun saveNote(): Boolean {
+        Log.d(TAG, "開始執行 saveNote")
+        return try {
+            _uiState.update { it.copy(isLoading = true) }
+            val currentState = _uiState.value
+            Log.d(TAG, "當前狀態: isExistingNote=${currentState.isExistingNote}, " +
+                    "title=${currentState.title}, " +
+                    "restaurantId=${currentState.restaurantId}, " +
+                    "memberId=1")
 
-                // 執行新增操作
-                val result = repository.addNote(
+            // 檢查標題
+            if (currentState.title.isEmpty()) {
+                Log.w(TAG, "標題為空，中止保存")
+                _uiState.update { it.copy(errorMessage = "請輸入標題") }
+                return false
+            }
+
+            val result = if (currentState.isExistingNote) {
+                Log.d(TAG, "更新既有筆記")
+                note.value?.noteId?.let { noteId ->
+                    Log.d(TAG, "正在更新筆記 ID: $noteId")
+                    repository.updateNote(
+                        noteId = noteId,
+                        title = currentState.title,
+                        content = currentState.content,
+                        restaurantId = currentState.restaurantId,
+                        selectedDate = currentState.selectedDate
+                    )
+                } ?: run {
+                    Log.e(TAG, "無效的筆記 ID")
+                    -1
+                }
+            } else {
+                Log.d(TAG, "新增筆記")
+                repository.addNote(
                     title = currentState.title,
                     content = currentState.content,
-                    restaurantId = 1, // 暫時固定
-                    memberId = 1,  // 暫時固定
+                    restaurantId = currentState.restaurantId,
+                    memberId = 1,
                     selectedDate = currentState.selectedDate
                 )
-
-                if (result > 0) {
-                    // 更新狀態：不再是首次輸入
-                    _saveSuccess.value = true
-                    _uiState.update {
-                        it.copy(
-                            isFirstEntry = false,
-                            isExistingNote = true,
-                            hasTitle = true
-                        )
-                    }
-                    Log.d(TAG, "筆記保存成功，ID: $result")
-                } else {
-                    _uiState.update {
-                        it.copy(errorMessage = "保存失敗")
-                    }
-                    Log.e(TAG, "筆記保存失敗")
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(errorMessage = "保存失敗：${e.message}")
-                }
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
             }
+
+            Log.d(TAG, "資料庫操作結果: $result")
+
+            if (result > 0) {
+                _saveSuccess.value = true
+                Log.d(TAG, "保存成功")
+                true
+            } else {
+                Log.e(TAG, "保存失敗，result = $result")
+                _uiState.update { it.copy(errorMessage = "儲存失敗") }
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "保存過程發生異常", e)
+            _uiState.update { it.copy(errorMessage = "保存失敗：${e.message}") }
+            false
+        } finally {
+            _uiState.update { it.copy(isLoading = false) }
+            Log.d(TAG, "saveNote 執行完成")
         }
     }
+
 
     /**
      * 格式化日期 (MM/dd)
      */
-    private fun formatDate(dateString: String): String {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
-        try {
-            val date = inputFormat.parse(dateString)
-                ?: throw IllegalArgumentException("無法解析日期: $dateString")
-            return outputFormat.format(date)
-        } catch (e: Exception) {
-            Log.e(TAG, "日期格式化錯誤: $dateString", e)
-            throw IllegalArgumentException("日期格式錯誤: $dateString", e)
-        }
+    private fun formatDate(date: Date): String {
+        val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
+        return dateFormat.format(date)  // 轉換成 MM/dd 格式
     }
 
     /**
      * 格式化星期幾
      */
-    private fun formatDay(dateString: String): String {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("EEEE", Locale.CHINESE)
-        try {
-            val date = inputFormat.parse(dateString)
-                ?: throw IllegalArgumentException("無法解析日期: $dateString")
+    private fun formatDay(date: Date): String {
+        val dayFormat = SimpleDateFormat("EEEE", Locale.CHINESE)
+        return dayFormat.format(date)  // 轉換成 MM/dd 格式
 
-            return "星期" + outputFormat.format(date).substring(2, 3)
-        } catch (e: Exception) {
-            Log.e(TAG, "日期格式化錯誤: $dateString", e)
-            throw IllegalArgumentException("日期格式錯誤: $dateString", e)
-        }
     }
 }
 

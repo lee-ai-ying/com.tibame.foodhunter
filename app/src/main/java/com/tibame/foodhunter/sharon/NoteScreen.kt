@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +34,18 @@ fun NoteScreen(
     noteVM: NoteVM,
 
 ) {
-    val notes by noteVM.filteredNotes.collectAsStateWithLifecycle()
+    val filteredNotes by noteVM.filteredNotes.collectAsStateWithLifecycle()
     val isLoading by noteVM.isLoading.collectAsStateWithLifecycle()
+    val lazyListState = rememberLazyListState()
+
+    // 當筆記列表更新時，自動滾動到頂部
+    LaunchedEffect(filteredNotes.size) {
+        if (filteredNotes.isNotEmpty()) {
+            lazyListState.animateScrollToItem(0)
+        }
+    }
+
+
 
     Box(
         modifier = Modifier
@@ -41,13 +53,14 @@ fun NoteScreen(
             .fillMaxSize()
     ) {
         when {
-            isLoading -> {
+            // 只在「載入中且沒有資料」時顯示 loading
+            isLoading && filteredNotes.isEmpty() -> {
                 Log.d("NoteScreen", "顯示載入中狀態")
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-            notes.isEmpty() -> {
+            filteredNotes.isEmpty() -> {
                 Log.d("NoteScreen", "顯示空資料狀態")
                 Column(
                     modifier = Modifier
@@ -65,18 +78,19 @@ fun NoteScreen(
                 }
             }
             else -> {
-                Log.d("NoteScreen", "開始顯示筆記列表，數量: ${notes.size}")
+                Log.d("NoteScreen", "開始顯示筆記列表，數量: ${filteredNotes.size}")
                 LazyColumn(
+                    state = lazyListState,  // 使用 LazyListState
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(
-                        count = notes.size,
-                        key = { index -> notes[index].noteId }
+                        count = filteredNotes.size,
+                        key = { index -> filteredNotes[index].noteId }
                     ) { index ->
-                        val currentNote = notes[index]
+                        val currentNote = filteredNotes[index]
                         Log.d("NoteScreen",
                             "渲染筆記項目: index=$index, " +
                                     "id=${currentNote.noteId}, " +
