@@ -23,7 +23,7 @@ fun CardContent(
     headcount: Int? = null,
     isPublic: Boolean? = null,
     // Note 特有參數
-    noteContent: String? = null,
+    content: String? = null,
     imageResId: Int? = null
 ) {
     Row(modifier = modifier.fillMaxSize()) {
@@ -53,7 +53,7 @@ fun CardContent(
             CardContentType.NOTE -> {
                 NoteTextContent(
                     title = title,
-                    content = noteContent ?: "",
+                    content = content ?: "",
                     modifier = Modifier.weight(1f)
                 )
                 // 筆記才需要顯示圖片

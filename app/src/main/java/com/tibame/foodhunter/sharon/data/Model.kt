@@ -1,15 +1,17 @@
 package com.tibame.foodhunter.sharon.data
 
 import java.time.LocalDate
+import java.util.Date
 
 
 data class Note(
     val noteId: Int,
     val type: CardContentType,
+    val selectedDate: Date = Date()  ,
     val date: String,
     val day: String,
     val title: String,
-    val noteContent: String,
+    val content: String,
     val imageResId: Int? = null, // 可選欄位
     val restaurantName: String? = null  // 可選欄位
 )

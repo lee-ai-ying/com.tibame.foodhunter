@@ -1,8 +1,9 @@
 package com.tibame.foodhunter.zoe
 
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,10 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +26,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,24 +35,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.a871208s.UserViewModel
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 @Composable
 fun RecommendedPosts(
     navController: NavHostController? = null,
-    postViewModel: PostViewModel = viewModel()
+    postViewModel: PostViewModel = viewModel(),
+    userVM: UserViewModel,
 ) {
     val filteredPosts by postViewModel.getFilteredPosts().collectAsState()
     val selectedFilters by postViewModel.selectedFilters.collectAsState()
-    // 取得當前用戶ID
-    val currentUserId = 7 // 替換為實際的用戶ID獲取方式
+    val memberId by userVM.memberId.collectAsState()
+    var isLoading by remember { mutableStateOf(true) }
+    LaunchedEffect(memberId) {
+        Log.d("RecommendedPosts", "Current memberId from userVM: $memberId")
+    }
+    // 監聽資料變化
+    LaunchedEffect(filteredPosts) {
+        isLoading = filteredPosts.isEmpty()
+    }
 
     Column {
         FilterChips(
@@ -61,26 +71,53 @@ fun RecommendedPosts(
             }
         )
 
-        PostList(
-            posts = filteredPosts,
-            viewModel = postViewModel,
-            currentUserId = currentUserId,
-            onUserClick = { publisherId ->
-                navController?.navigate("person_homepage/$publisherId") {
-                    launchSingleTop = true
-                    restoreState = true
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(50.dp),
+                        color = FColor.Orange_1st
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "載入中...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FColor.Orange_1st
+                    )
                 }
+            } else {
+                PostList(
+                    posts = filteredPosts,
+                    viewModel = postViewModel,
+                    memberId = memberId,
+                    onUserClick = { publisherId ->
+                        navController?.navigate("person_homepage/$publisherId") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
-        )
+        }
     }
 }
 @Composable
 fun PostList(
     posts: List<Post>,
     viewModel: PostViewModel,
-    currentUserId: Int,
-    onUserClick: (Int) -> Unit // 新增參數用於處理用戶點擊
+    memberId: Int,
+    onUserClick: (Int) -> Unit
 ) {
+    LaunchedEffect(memberId) {
+        Log.d("PostList", "Received memberId: $memberId")
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -89,22 +126,24 @@ fun PostList(
             PostItem(
                 post = post,
                 viewModel = viewModel,
-                currentUserId = currentUserId,
-                onUserClick = onUserClick // 傳遞點擊事件處理函數
+                memberId = memberId,
+                onUserClick = onUserClick
             )
         }
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostItem(
     post: Post,
-    viewModel: PostViewModel,  // 添加 ViewModel
-    currentUserId: Int,        // 添加當前用戶 ID
+    viewModel: PostViewModel,
+    memberId: Int,
     onUserClick: (Int) -> Unit
 ) {
+    LaunchedEffect(memberId) {
+        Log.d("PostItem", "PostItem received memberId: $memberId")
+    }
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -115,9 +154,7 @@ fun PostItem(
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -126,7 +163,7 @@ fun PostItem(
         ) {
             PostHeader(
                 post = post,
-                onUserClick = onUserClick // 傳遞點擊事件
+                onUserClick = onUserClick,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -147,19 +184,21 @@ fun PostItem(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FavoriteIcon()
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { showBottomSheet = true }) {
+                        IconButton(
+                            onClick = {
+                                Log.d("PostItem", "Comment button clicked")
+                                showBottomSheet = true
+                            }
+                        ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.chat_bubble_outline_24),
                                 contentDescription = "Chat Bubble",
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        // 顯示留言數量
                         Text(
                             text = "${post.comments.size}",
                             style = MaterialTheme.typography.bodySmall,
@@ -167,30 +206,27 @@ fun PostItem(
                         )
                     }
                 }
-
-//                Icon(
-//                    painter = painterResource(id = R.drawable.baseline_bookmark_border_24),
-//                    contentDescription = "Bookmark",
-//                    modifier = Modifier.size(24.dp)
-//                )
             }
 
-            Text(
-                text = post.content,
-            )
+            Text(text = post.content)
         }
     }
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
+            onDismissRequest = {
+                Log.d("PostItem", "Dismissing MessageSheet")
+                showBottomSheet = false
+            },
             sheetState = sheetState,
+            containerColor = Color.White
         ) {
             MessageSheet(
                 post = post,
                 viewModel = viewModel,
-                currentUserId = currentUserId,
+                memberId = memberId,
                 onConfirm = {
+                    Log.d("PostItem", "MessageSheet confirmed")
                     scope.launch {
                         sheetState.hide()
                         showBottomSheet = false
@@ -200,10 +236,11 @@ fun PostItem(
         }
     }
 }
+
 @Composable
 private fun PostHeader(
     post: Post,
-    onUserClick: (Int) -> Unit // 新增點擊事件回調
+    onUserClick: (Int) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -218,8 +255,7 @@ private fun PostHeader(
         )
 
         Column(
-            modifier = Modifier
-                .clickable { onUserClick(post.publisher.id) }
+            modifier = Modifier.clickable { onUserClick(post.publisher.id) }
         ) {
             Text(
                 text = post.publisher.name,

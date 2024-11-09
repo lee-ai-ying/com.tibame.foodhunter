@@ -38,7 +38,7 @@ fun NoteOrGroupCard(
     headcount: Int? = null,
     isPublic: Boolean? = null,
     // Note 特有參數
-    noteContent: String? = null,
+    content: String? = null,
     imageResId: Int? = null
 ) {
     // 邊邊的顏色
@@ -79,7 +79,7 @@ fun NoteOrGroupCard(
             restaurantAddress = restaurantAddress,
             headcount = headcount,
             isPublic = isPublic,
-            noteContent = noteContent,
+            content = content,
             imageResId = imageResId
         )
     }
@@ -110,7 +110,7 @@ fun NoteCardExample() {
         date = "10/17",
         day = "星期四",
         title = "小巷中的咖啡廳",
-        noteContent = "這裡有各種美味的咖啡和小吃、環境乾淨...",
+        content = "這裡有各種美味的咖啡和小吃、環境乾淨...",
         imageResId = R.drawable.sushi_image_1
     )
 }

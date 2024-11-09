@@ -136,7 +136,7 @@ class CalendarVM : ViewModel() {
 //                        date = "2024-03-05",
 //                        day = "星期二",
 //                        title = "新開幕咖啡廳",
-//                        noteContent = "環境很不錯，餐點也很精緻",
+//                        content = "環境很不錯，餐點也很精緻",
 //                        restaurantName = "晴天咖啡",
 //                        imageResId = R.drawable.breakfast_image_3
 //                    ),
@@ -146,7 +146,7 @@ class CalendarVM : ViewModel() {
 //                        date = "2024-03-06",
 //                        day = "星期三",
 //                        title = "美式餐廳探索",
-//                        noteContent = "漢堡很juicy，薯條酥脆",
+//                        content = "漢堡很juicy，薯條酥脆",
 //                        restaurantName = "Big Burger",
 //                        imageResId = R.drawable.image
 //                    )

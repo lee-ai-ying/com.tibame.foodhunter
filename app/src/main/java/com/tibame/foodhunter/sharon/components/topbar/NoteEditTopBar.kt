@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.sharon.components.topbar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.DeleteConfirmationDialog
+import com.tibame.foodhunter.sharon.viewmodel.NoteEditEvent
 import com.tibame.foodhunter.sharon.viewmodel.NoteEditVM
 import com.tibame.foodhunter.ui.theme.FColor
 import perfetto.protos.UiState
@@ -38,23 +40,26 @@ import perfetto.protos.UiState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditTopBar(
-    canback:Boolean = true,
     navController: NavHostController,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         rememberTopAppBarState()
     ),
     noteEditVM: NoteEditVM,
-//    hasTitleInput: () -> Unit,
 ){
     var showDeleteDialog by remember { mutableStateOf(false) }
     val uiState by noteEditVM.uiState.collectAsState()
+
+    Log.d("NoteEditTopBar", "TopBar UI狀態: $uiState")
+
 
     TopAppBar(
         title = {},
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            if (canback) {
-                IconButton(onClick = { navController.popBackStack() }) {
+            if (uiState.hasTitle) {
+                IconButton(onClick = {
+                    noteEditVM.saveAndNavigateBack(navController)
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                         contentDescription = stringResource(R.string.str_back)
@@ -64,8 +69,7 @@ fun NoteEditTopBar(
         },
         actions = {
             when {
-                // 是首次進入、也不是既有筆記
-                uiState.isFirstEntry && !uiState.isExistingNote ->
+                uiState.isFirstEntry && !uiState.hasTitle  ->
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             modifier = Modifier
@@ -76,11 +80,11 @@ fun NoteEditTopBar(
                         )
                     }
                 // 不是首次進入、有既有筆記
-                !uiState.isFirstEntry && uiState.isExistingNote ->
+                uiState.hasTitle ->
                     IconButton(
                         onClick = {
                             showDeleteDialog = true
-                        }  //TODO 刪除警告vm
+                        }
                     ) {
                         Icon(
                             Icons.Outlined.Delete,
@@ -101,7 +105,9 @@ fun NoteEditTopBar(
                 onDeleteConfirmed = {
                     // 點擊確定刪除後的操作
                     showDeleteDialog = false
-                    // TODO: 在這裡添加刪除邏輯
+                    noteEditVM.deleteNote(navController)
+                    navController.popBackStack() // 返回上一頁
+
                 },
                 onCancel = {
                     // 點擊取消後隱藏對話框

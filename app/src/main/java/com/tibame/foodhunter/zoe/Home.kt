@@ -1,11 +1,13 @@
 package com.tibame.foodhunter.zoe
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.components.NiaTab
 import com.tibame.foodhunter.sharon.components.NiaTabRow
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
@@ -27,8 +30,11 @@ import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 fun Home(
     navController: NavHostController,
     initTab: Int,
+    memberId: Int,
+    userVM: UserViewModel,  // 確保從外部接收 userVM
     postViewModel: PostViewModel = viewModel()
 ) {
+
 
     var selectedTab by remember { mutableIntStateOf(initTab) }
 
@@ -51,7 +57,9 @@ fun Home(
 
         // 根據選中的 Tab 顯示對應的頁面
         when (selectedTab) {
-            0 -> RecommendedPosts(navController)
+            0 -> RecommendedPosts(  navController = navController,
+                postViewModel = postViewModel,
+                userVM = userVM)
             1 -> SearchPost(navController)
 
 
@@ -87,18 +95,18 @@ fun PostTabBarComponent(
 
 
 
-
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun HomePreview() {
-    val mockNavController = rememberNavController()
-    FoodHunterTheme  {
-       Home(navController = mockNavController, 0)
-    }
-
-
-
-}
+//
+//
+//
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun HomePreview() {
+//    val mockNavController = rememberNavController()
+//    FoodHunterTheme  {
+//       Home(navController = mockNavController, 0)
+//    }
+//
+//
+//
+//}
