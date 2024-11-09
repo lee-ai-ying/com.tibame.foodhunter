@@ -42,8 +42,29 @@ class ReviewVM : ViewModel() {
     private val _reviewCreateData = MutableStateFlow(ReviewCreateData())
     val reviewCreateData: StateFlow<ReviewCreateData> = _reviewCreateData.asStateFlow()
 
+    // 目前的篩選條件，預設為最新
+    private val _sortOrder = MutableStateFlow(SortOrder.NEWEST)
+    val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
+
     init {
         loadReviews()  // 預設載入評論資料
+    }
+
+    // 根據選擇的排序方式更新評論列表
+    private fun sortReviews() {
+        _reviewState.update { reviews ->
+            when (_sortOrder.value) {
+                SortOrder.NEWEST -> reviews.sortedByDescending { it.timestamp } // 根據時間排序
+                SortOrder.MOST_LIKED -> reviews.sortedByDescending { it.isLiked } // 根據讚數排序
+                SortOrder.HIGHEST_RATING -> reviews.sortedByDescending { it.rating } // 根據評分排序
+            }
+        }
+    }
+
+    // 更新排序方式
+    fun updateSortOrder(order: SortOrder) {
+        _sortOrder.update { order }
+        sortReviews()  // 更新排序
     }
 
     /** 載入所有評論 */
@@ -142,6 +163,14 @@ class ReviewVM : ViewModel() {
         filterReviews()  // 清空搜尋後重新過濾評論
     }
 }
+
+// 定義篩選條件的類型
+enum class SortOrder {
+    NEWEST,        // 最新評論
+    MOST_LIKED,    // 讚數最多
+    HIGHEST_RATING // 評分最高
+}
+
 //
 //    /** 移除一本書並更新_bookState內容 */
 //    fun removeItem(item: Book) {
@@ -152,37 +181,7 @@ class ReviewVM : ViewModel() {
 //        }
 //    }
 
-    //改為篩選器項目
-//    fun getFilteredPosts(): StateFlow<List<Post>> {
-//        return combine(
-//            postFlow,
-//            selectedFilters,
-//            searchQuery
-//        ) { posts, filters, query ->
-//            var filteredList = posts
-//
-//            // 應用標籤過濾
-//            if (filters.isNotEmpty()) {
-//                filteredList = filteredList.filter { post ->
-//                    filters.contains(post.postTag)
-//                }
-//            }
-//
-//            // 應用搜尋過濾
-//            if (query.isNotEmpty()) {
-//                filteredList = filteredList.filter { post ->
-//                    post.content.contains(query, ignoreCase = true) ||
-//                            post.location.contains(query, ignoreCase = true) ||
-//                            post.publisher.name.contains(query, ignoreCase = true)
-//                }
-//            }
-//
-//            // 根據時間排序（最新的優先）
-//            filteredList.sortedByDescending { post ->
-//                post.timestamp
-//            }
-//        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-//    }
+
 
 
 //    @Composable

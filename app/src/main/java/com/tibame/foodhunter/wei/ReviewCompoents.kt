@@ -46,12 +46,12 @@ import com.tibame.foodhunter.zoe.FilterChips
 
 @Preview
 @Composable
-fun ReviewCompoents() {
+fun ReviewCompoentsPreview() {
     val navController = rememberNavController()
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
 
-    DetailReviewZone( reviewVM = reviewVM )
+    ReviewInfoDetail( reviewVM = reviewVM )
 }
 
 
@@ -63,12 +63,15 @@ fun ReviewInfoDetail(
 
 ) {
     val review by reviewVM.reviewState.collectAsState()
-    var isBookmarked by remember { mutableStateOf(false) }
+    val sortOrder by reviewVM.sortOrder.collectAsState()
+    // 控制收藏狀態(icon圖示及snackbar文字)
+    //var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    val options = listOf("複製文字", "回覆此評論", "編輯評論")
+    val options = listOf("最新發布", "最多好評", "最高評分")
+
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    // 控制收藏狀態(icon圖示及snackbar文字)
+
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
 
@@ -93,27 +96,31 @@ fun ReviewInfoDetail(
             )
         }
 
-        //篩選器
+        // DropDownMenu開關按鈕
         IconButton(onClick = { expanded = !expanded }) {
             Icon(
                 painter = painterResource(id = R.drawable.filter_list),
-                contentDescription = "篩選器排序",
+                contentDescription = "評論篩選器",
                 modifier = Modifier.size(30.dp)
             )
         }
 
+        // DropDownMenu 顯示選項
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            // 下拉選單內容由DropdownMenuItem選項元件組成
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option) },
-                    // 點選項目後呼叫
                     onClick = {
-                        // 跳到各功能
-                        expanded = false
+                        // 根據選擇更新排序方式
+                        when (option) {
+                            "Newest" -> reviewVM.updateSortOrder(SortOrder.NEWEST)
+                            "Most Liked" -> reviewVM.updateSortOrder(SortOrder.MOST_LIKED)
+                            "Highest Rating" -> reviewVM.updateSortOrder(SortOrder.HIGHEST_RATING)
+                        }
+                        expanded = false // 選擇後關閉下拉選單
                     }
                 )
             }
@@ -121,6 +128,7 @@ fun ReviewInfoDetail(
 
         Spacer(modifier = Modifier.size(10.dp))
 
+        //val options = listOf("複製文字", "回覆此評論", "編輯評論")
 
         /**加入收藏(暫時擱置)*/
 //        Column(

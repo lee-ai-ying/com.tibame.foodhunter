@@ -54,7 +54,10 @@ import com.tibame.foodhunter.ui.theme.FColor
 @Preview
 @Composable
 fun PreviewReviewEdit() {
-    CommentButton()
+    CommentDialog(
+        onDismiss = { println("Dialog Dismissed") },
+        onSubmit = { comment, rating -> println("Comment Submitted: $comment with rating $rating") }
+    )
 
 }
 
@@ -257,20 +260,20 @@ fun RatingBar(
 
 /**新增評論的按鈕*/
 @Composable
-fun CommentButton(ReviewViewModel: ReviewVM = viewModel()) {
+fun CommentButton(reviewVM: ReviewVM = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
 
     Button(
         onClick = { showDialog = true },
         modifier = Modifier.padding(16.dp)
     ) {
-//        Icon(
-//            painter = painterResource(
-//                id = R.drawable.新增評論的圖示
-//            ),
-//            contentDescription = "建立評論",
-//            modifier = Modifier.size(30.dp)
-//        )
+        Icon(
+            painter = painterResource(
+                id = R.drawable.baseline_edit
+            ),
+            contentDescription = "建立評論",
+            modifier = Modifier.size(30.dp)
+        )
         Text("新增評論")
     }
 
@@ -290,7 +293,7 @@ fun CommentButton(ReviewViewModel: ReviewVM = viewModel()) {
 fun CommentDialog(
     onDismiss: () -> Unit,
     onSubmit: (String, Int) -> Unit,
-    reviewViewModel: ReviewVM = viewModel()
+    reviewVM: ReviewVM = viewModel()
 ) {
     var commentText by remember { mutableStateOf("") }
     var inputData by remember { mutableStateOf(ReviewCreateData()) }
@@ -349,7 +352,7 @@ fun CommentDialog(
                     Button(
                         onClick = {
                             onSubmit(commentText, rating)
-                            reviewViewModel.setReviewCreateData(inputData)
+                            reviewVM.setReviewCreateData(inputData)
                         },
                         enabled = commentText.isNotEmpty() && rating > 0,
 
@@ -361,3 +364,4 @@ fun CommentDialog(
         }
     }
 }
+
