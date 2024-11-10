@@ -89,7 +89,6 @@ fun RestaurantDetail(
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
     LaunchedEffect (restaurant){ postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)}
 //    Log.d(relatedPosts, )
-    val navController = rememberNavController()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -136,7 +135,7 @@ fun RestaurantDetail(
 //                                text = "社群預覽  待修",
 //                                fontSize = 18.sp
 //                            )
-//                            RelatedPosts("")
+                            RelatedPost(relatedPosts)
 
 
                             HorizontalDivider(

@@ -386,7 +386,7 @@ fun Main(
 
             composable(context.getString(R.string.restaurantDetail)){
                 RestaurantDetail(
-                    navController = navController, restaurantVM = SearchScreenVM(),reviewVM = ReviewVM()
+                    navController = navController, restaurantVM = searchVM,reviewVM = ReviewVM()
                 )
             }
 
