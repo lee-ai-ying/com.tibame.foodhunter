@@ -32,7 +32,12 @@ class PostViewModel : ViewModel() {
     val selectedPostId = _selectedPostId.asStateFlow()
 
     private val personalPostsCache = mutableMapOf<Int, StateFlow<List<Post>>>()
+    private val _carouselItems = MutableStateFlow<List<CarouselItem>>(emptyList())
+    val carouselItems: StateFlow<List<CarouselItem>> = _carouselItems.asStateFlow()
 
+    fun updateCarouselItems(items: List<CarouselItem>) {
+        _carouselItems.value = items
+    }
     init {
         viewModelScope.launch {
             repository.loadPosts()

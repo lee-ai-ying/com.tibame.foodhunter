@@ -282,7 +282,7 @@ fun Main(
                     navController = navController,
                     initTab = 0,
                     memberId = memberId,
-                    userVM = userViewModel  // 傳遞同一個 ViewModel 實例
+                    userVM = userViewModel
                 )
             }
             composable(context.getString(R.string.str_searchpost)) {
