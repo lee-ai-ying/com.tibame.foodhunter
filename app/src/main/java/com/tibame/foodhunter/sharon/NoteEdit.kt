@@ -98,7 +98,6 @@ import java.util.Locale
 @Composable
 fun AddNotePreview() {
     val mockNavController = rememberNavController()
-
 }
 
 /**
@@ -136,7 +135,7 @@ fun NoteEditRoute(
     noteEditVM: NoteEditVM = viewModel(),
     userVM: UserViewModel
 ) {
-    // when 表達式用於處理不同的導航類型
+    // 處理不同的導航類型
     when (navigation) {
         // 新增模式，顯示空白頁面
         is NoteEditNavigation.Add -> {
@@ -174,8 +173,6 @@ fun NoteEditRoute(
         }
     }
 }
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -80,7 +80,7 @@ fun NoteEditTopBar(
                         )
                     }
                 // 不是首次進入、有既有筆記
-                uiState.hasTitle ->
+                uiState.hasTitle || uiState.isExistingNote ->
                     IconButton(
                         onClick = {
                             showDeleteDialog = true

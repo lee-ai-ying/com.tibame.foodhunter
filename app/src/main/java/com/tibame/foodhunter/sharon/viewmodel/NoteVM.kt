@@ -1,10 +1,8 @@
 package com.tibame.foodhunter.sharon.viewmodel
 
-import android.icu.text.SimpleDateFormat
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.data.CardContentType
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
@@ -16,10 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Date
-import java.util.Locale
 
-class NoteVM() : ViewModel() {
+
+class NoteVM : ViewModel() {
     companion object {
         private const val TAG = "NoteVM"
         private const val SEARCH_DEBOUNCE_TIME = 300L  // 搜尋延遲時間
@@ -48,21 +45,20 @@ class NoteVM() : ViewModel() {
     private var memberId: Int? = null
 
 
+    fun setMemberId(memberId: Int) {
+        this.memberId = memberId
+        loadNotes(memberId)
+    }
+
     // 預留篩選相關狀態，目前未實作
     // private val _selectedContentTypes = MutableStateFlow<Set<CardContentType>>(emptySet())
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
-//    private var currentMemberId = userVM.memberId.value ?: 0  // 保存當前會員ID
-
-
     init {
-//        // 首次載入
-//        loadNotes()
-        // 監聽刷新事件
         viewModelScope.launch {
             NoteEvent.refreshTrigger.collect { needRefresh ->
                 if (needRefresh && memberId != null) {
-                    loadNotes(memberId!!)   // 再次載入
+                    loadNotes(memberId!!)
                     NoteEvent.resetTrigger()  // 重置觸發器
                 }
             }
@@ -79,7 +75,6 @@ class NoteVM() : ViewModel() {
                 Log.d(TAG, "開始載入筆記")
                 _isLoading.value = true
 
-                // 1. 觸發 Repository 發送 HTTP 請求
                 Log.d(TAG, "呼叫 repository.getNotes()")
                 repository.getNotes(memberId)
 
@@ -167,7 +162,6 @@ class NoteVM() : ViewModel() {
         // 預留給未來實作篩選功能
     }
 
-
     // 當用戶點選某個筆記時
     fun getNoteById(noteId: Int) {
         viewModelScope.launch {
@@ -188,10 +182,5 @@ class NoteVM() : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         // 清理資源
-    }
-
-    fun setMemberId(memberId: Int) {
-        this.memberId = memberId
-        loadNotes(memberId)
     }
 }
