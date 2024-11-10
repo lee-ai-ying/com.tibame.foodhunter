@@ -109,6 +109,7 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
         context.getString(R.string.str_login) + "/4",
+        context.getString(R.string.restaurantDetail),
     )
     return !(noTopBarRoutes.contains(destination?.route) ||
             destination?.parent?.route == "personal_tools")

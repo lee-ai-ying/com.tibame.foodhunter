@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,7 +66,7 @@ fun ShowGoogleMap(
     val locationPermission = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-    var currentLocation by remember { mutableStateOf<LatLng?>(LatLng(25.04776, 121.517059)) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var newPosition by remember { mutableStateOf<LatLng?>(null) }
 
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
@@ -80,9 +81,9 @@ fun ShowGoogleMap(
         }
 
         LaunchedEffect(locationPermission.status.isGranted) {
-            fusedLocationClient.lastLocation.addOnSuccessListener{
-                location ->
+            fusedLocationClient.lastLocation.addOnSuccessListener{ location ->
                 if (location==null) return@addOnSuccessListener
+                Log.e("TAG","lastLocation: ${location.longitude}")
                 currentLocation = LatLng(location.latitude, location.longitude)
                 onLocationUpdate(currentLocation)
             }

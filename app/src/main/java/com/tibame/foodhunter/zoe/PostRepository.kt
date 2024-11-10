@@ -11,8 +11,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.Restaurant
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +32,8 @@ class PostRepository {
     val postList: StateFlow<List<Post>> = _postList.asStateFlow()
     private val gson = Gson()
 
-
+    private val _restRelatedPost = MutableStateFlow<List<Post>>(emptyList())
+    val restRelatedPost: StateFlow<List<Post>> = _restRelatedPost.asStateFlow()
 
     private suspend fun fetchComments(postId: Int): List<CommentResponse> {
         val url = "${serverUrl}/comment/byPost?postId=$postId"
@@ -422,6 +425,98 @@ class PostRepository {
     }
 
 
+
+    suspend fun loadRestRelatedPosts(restId: Int) {
+        try {
+            val restRelatedPostResponses = selectPostByRestId(restId)
+            val posts = restRelatedPostResponses.mapNotNull{ response ->
+                try {
+                    response.toRestRelatedPost()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            _restRelatedPost.update { posts }
+
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error loading posts", e)
+        }
+    }
+
+
+
+
+
+    suspend fun selectPostByRestId(restId: Int): List<RestRelatedPostResponse> {
+        val url = "${serverUrl}/post/RestRelatedPost"
+        val gson = Gson()
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("restaurantId", restId)
+
+        val result = CommonPost(url, jsonObject.toString())
+        val type = object : TypeToken<List<RestRelatedPostResponse>>() {}.type
+        return gson.fromJson(result, type)
+
+    }
+
+    private suspend fun RestRelatedPostResponse.toRestRelatedPost(): Post {
+        // 圖片處理
+        val carouselItems = photos?.mapNotNull { photo ->
+            Log.d("RestRelatedPostResponse", "處理貼文照片 ID: ${photo.postPhotoId}")
+            val imageBitmap = processBase64Image(photo.photoFile, photo.postPhotoId)
+            imageBitmap?.let {
+                Log.d("RestRelatedPostResponse", "成功處理貼文照片 ID: ${photo.postPhotoId}")
+                CarouselItem(
+                    id = photo.postPhotoId,
+                    imageData = it,
+                    order = 0
+                )
+            } ?: run {
+                Log.e("RestRelatedPostResponse", "無法處理貼文照片 ID: ${photo.postPhotoId}")
+                null
+            }
+        } ?: emptyList()
+
+        Log.d("RestRelatedPostResponse", "成功處理 ${carouselItems.size} 張貼文照片")
+
+        // 創建 RestRelatedPost 對象
+        val restRelatedPost = Post(
+            postId = this.postId,
+            publisher = Publisher(
+                id = this.postId, // 這裡假設發布者 ID 與 postId 相同，如有不同需調整
+                name = "Unknown User", // 這裡沒有提供發布者名稱，使用預設值
+                avatarBitmap = profileImage?.let {
+                    try {
+                        val bitmap = processBase64Image(it, postId)
+                        Log.d("RestRelatedPostResponse", "發布者頭像處理${if (bitmap != null) "成功" else "失敗"}")
+                        bitmap
+                    } catch (e: Exception) {
+                        Log.e("RestRelatedPostResponse", "處理發布者頭像時發生錯誤", e)
+                        null
+                    }
+                }
+            ),
+            content = this.content,
+            location = "Unknown Location", // 這裡沒有提供位置，使用預設值
+            timestamp = System.currentTimeMillis().toString(), // 假設當前時間為時間戳，如有不同需調整
+            postTag = "", // 這裡沒有提供標籤，使用空字符串
+            carouselItems = carouselItems,
+            comments = emptyList(), // 沒有評論信息，使用空列表
+            isFavorited = false
+        )
+
+        Log.d("PostRepository", """
+        貼文處理完成:
+        Post ID: ${restRelatedPost.postId}
+        Publisher: ${restRelatedPost.publisher.name} (ID: ${restRelatedPost.publisher.id})
+        Has Publisher Avatar: ${restRelatedPost.publisher.avatarBitmap != null}
+        Photos Count: ${restRelatedPost.carouselItems.size}
+        Comments Count: ${restRelatedPost.comments.size}
+    """.trimIndent())
+
+        return restRelatedPost
+    }
+
 }
 
 
@@ -478,4 +573,12 @@ data class CommentResponse(
 data class UpdateResponse(
     val success: Boolean,
     val message: String
+)
+
+
+data class RestRelatedPostResponse(
+    val postId: Int,
+    val content: String,
+    val profileImage: String? = null,
+    val photos: List<PhotoResponse>? = null
 )
