@@ -188,6 +188,7 @@ fun Main(
         }
         GroupRepository.gChatVM = gChatVM
         gChatVM.userVM = userViewModel
+        gChatVM.getTokenSendServer()
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

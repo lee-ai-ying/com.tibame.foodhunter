@@ -12,12 +12,16 @@ import com.tibame.foodhunter.andysearch.Restaurant
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
+import com.tibame.foodhunter.wei.ReviewCreateData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 
@@ -31,6 +35,7 @@ class GroupViewModel : ViewModel() {
     val groupChat = repository.groupChatList
     fun getGroupChatList(username: String) {
         viewModelScope.launch {
+            _isLoading.update { true }
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("username", username)
@@ -55,8 +60,12 @@ class GroupViewModel : ViewModel() {
             incList.add(0, GroupChat(name = "進行中", state = 99))
             endList.add(0, GroupChat(name = "已結束", state = 98))
             repository.updateGroupChatList(incList.plus(endList))
+            _isLoading.update { false }
         }
     }
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
 
     private val _nowChatRoomId = MutableStateFlow(999)
     val nowChatRoomId = _nowChatRoomId.asStateFlow()
@@ -181,8 +190,9 @@ class GroupViewModel : ViewModel() {
     }
 
     val groupChatHistory = repository.groupChatHistory
-    fun getGroupChatHistory(groupRoomId: Int) {
+    fun getGroupChatHistory(groupRoomId: Int, isload: Boolean = true) {
         viewModelScope.launch {
+            _isLoading.update { true }
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("id", "$groupRoomId")
@@ -194,11 +204,15 @@ class GroupViewModel : ViewModel() {
                 collectionType
             ) ?: emptyList()
             repository.updateGroupChatHistory(list)
+            _isLoading.update { false }
+
         }
     }
-//    fun clearChatHistory() {
-//        repository.updateGroupChatHistory(emptyList())
-//    }
+
+    fun clearChatHistory() {
+        repository.updateGroupChatHistory(emptyList())
+    }
+
     fun updateGroupChat() {
         getGroupChatHistory(_nowChatRoomId.value)
     }
@@ -300,8 +314,7 @@ class GroupViewModel : ViewModel() {
         viewModelScope.launch {
             val gson = Gson()
             val result = CommonPost("$serverUrl/group/restaurant", "")
-            var jsonObject = JsonObject()
-            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val jsonObject = gson.fromJson(result, JsonObject::class.java)
             val collectionType = object : TypeToken<List<GroupRestaurantData>>() {}.type
             val list = gson.fromJson<List<GroupRestaurantData>>(
                 jsonObject.get("result").asString,
@@ -310,10 +323,48 @@ class GroupViewModel : ViewModel() {
             repository.updateRestaurantList(list)
         }
     }
-    fun getRestaurantNameById(restaurantId:Int):String{
-        if (repository.restaurantList.value.isEmpty()){
 
+    fun getRestaurantNameById(restaurantId: Int): String {
+        if (repository.restaurantList.value.isEmpty()) {
+            return ""
         }
-        return repository.restaurantList.value[restaurantId-1].restaurantName
+        return repository.restaurantList.value[restaurantId - 1].restaurantName
+    }
+
+    val restaurantReview = repository.restaurantReview
+    private fun updateRestaurantReview(input: GroupReviewData) {
+        repository.updateRestaurantList(input)
+    }
+
+    fun getRestaurantReview(location: Int) {
+        viewModelScope.launch {
+            val gson = Gson()
+            var jsonObject = JsonObject()
+            jsonObject.addProperty("restaurantId", "$location")
+            jsonObject.addProperty("reviewerNickname", getUserName())
+            val result = CommonPost("$serverUrl/group/review", jsonObject.toString())
+            jsonObject = gson.fromJson(result, JsonObject::class.java)
+            val collectionType = object : TypeToken<GroupReviewData>() {}.type
+            val data =
+                gson.fromJson<GroupReviewData>(jsonObject.get("result").asString, collectionType)
+                    ?: GroupReviewData()
+            updateRestaurantReview(data)
+        }
+    }
+
+    fun sendRestaurantReview(location: Int, stars: Int, comment: String) {
+        viewModelScope.launch {
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("reviewerNickname", getUserName())
+            jsonObject.addProperty("restaurantId", "$location")
+            jsonObject.addProperty("rating", "$stars")
+            jsonObject.addProperty("comments", comment)
+            jsonObject.addProperty(
+                "reviewDate", LocalDateTime.now(ZoneId.of("UTC+8"))
+                    .format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm:ss"))
+            )
+            CommonPost("$serverUrl/group/review/send", jsonObject.toString())
+            getRestaurantReview(location)
+        }
     }
 }

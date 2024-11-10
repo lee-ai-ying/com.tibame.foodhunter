@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +55,9 @@ fun GroupSearchResult(
     onBackClick: () -> Unit = {},
     onJoinClick: () -> Unit = {}
 ) {
-    groupVM.getGroupSearchResult()
+    LaunchedEffect(Unit) {
+        groupVM.getGroupSearchResult()
+    }
     val result by groupVM.groupSearchResult.collectAsState()
     var showGroupChatDetail by remember { mutableStateOf(false) }
     val selectSearchResult by groupVM.selectSearchResult.collectAsState()

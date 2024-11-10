@@ -1,6 +1,7 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +44,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +57,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -80,122 +84,152 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
+import com.tibame.foodhunter.wei.CommentDialog
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @Composable
 fun GroupChatRoom(
     groupRoomId: Int,
     gChatVM: GroupViewModel
 ) {
-    gChatVM.gotoChatRoom(groupRoomId)
-    gChatVM.getGroupChatHistory(groupRoomId)
-    gChatVM.getAvatarImageInGroupChat(groupRoomId)
     val history by gChatVM.groupChatHistory.collectAsState()
     val self = gChatVM.getUserName()
     val avatars by gChatVM.groupChatAvatar.collectAsState()
+    val isLoading by gChatVM.isLoading.collectAsState()
+    DisposableEffect(Unit) {
+        gChatVM.gotoChatRoom(groupRoomId)
+        gChatVM.getGroupChatHistory(groupRoomId)
+        gChatVM.getAvatarImageInGroupChat(groupRoomId)
+        onDispose {
+            // onDestroy
+            gChatVM.clearChatHistory()
+
+        }
+    }
+
     /*if (gChatVM.showEditGroup.asStateFlow().collectAsState().value) {
         EditGroupInformation(gChatVM)
         return
     }*/
-    if (gChatVM.showEditMember.asStateFlow().collectAsState().value) {
+    /*if (gChatVM.showEditMember.asStateFlow().collectAsState().value) {
         EditGroupMember(gChatVM)
         return
+    }*/
+    if (isLoading) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(50.dp),
+                color = FColor.Orange_1st
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "載入中...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = FColor.Orange_1st
+            )
+        }
     }
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FColor.Orange_6th),
-        reverseLayout = true
-    ) {
-        items(history) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(FColor.Orange_6th)//MaterialTheme.colorScheme.surfaceContainerLow)
-                    .padding(start = 8.dp, end = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                when (it.username) {
-                    self -> {}
-                    else ->
-                        Box(
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            val avatar =
-                                avatars.firstOrNull { avatar -> avatar.username == it.username && avatar.image != null }
-                            if (avatar != null) {
-                                Image(
-                                    bitmap = avatar.image!!.asImageBitmap(),
-                                    contentDescription = "avatar",
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(id = R.drawable.user1),
-                                    contentDescription = "avatar",
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-                }
-                Column(
+    else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FColor.Orange_6th),
+            reverseLayout = true
+        ) {
+            items(history) {
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(top = 8.dp, bottom = 8.dp),
-                    horizontalAlignment = when (it.username) {
-                        self -> Alignment.End
-                        else -> Alignment.Start
-                    }
+                        .fillMaxWidth()
+                        .background(FColor.Orange_6th)//MaterialTheme.colorScheme.surfaceContainerLow)
+                        .padding(start = 8.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     when (it.username) {
                         self -> {}
-                        else -> Text(it.senderName)
+                        else ->
+                            Box(
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                val avatar =
+                                    avatars.firstOrNull { avatar -> avatar.username == it.username && avatar.image != null }
+                                if (avatar != null) {
+                                    Image(
+                                        bitmap = avatar.image!!.asImageBitmap(),
+                                        contentDescription = "avatar",
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.user1),
+                                        contentDescription = "avatar",
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
                     }
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    )
-                    {
-                        if (it.username == self) {
-                            Text(
-                                modifier = Modifier.padding(
-                                    horizontal = 8.dp,
-                                    vertical = 4.dp
-                                ),
-                                text = it.sendTime.substring(11, 16),
-                                fontSize = 12.sp
-                            )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 8.dp, bottom = 8.dp),
+                        horizontalAlignment = when (it.username) {
+                            self -> Alignment.End
+                            else -> Alignment.Start
                         }
-                        Column(
-                            modifier = Modifier
-                                .background(
-                                    when (it.username) {
-                                        self -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
-                                        else -> Color.White
-                                    },
-                                    shape = RoundedCornerShape(8.dp)
+                    ) {
+                        when (it.username) {
+                            self -> {}
+                            else -> Text(it.senderName)
+                        }
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        )
+                        {
+                            if (it.username == self) {
+                                Text(
+                                    modifier = Modifier.padding(
+                                        horizontal = 8.dp,
+                                        vertical = 4.dp
+                                    ),
+                                    text = it.sendTime.substring(11, 16),
+                                    fontSize = 12.sp
                                 )
-                                .padding(8.dp)
-                        ) {
-                            Text(
-                                text = it.message
-                            )
-                        }
-                        if (it.username != self) {
-                            Text(
-                                modifier = Modifier.padding(
-                                    horizontal = 8.dp,
-                                    vertical = 4.dp
-                                ),
-                                text = it.sendTime.substring(11, 16),
-                                fontSize = 12.sp
-                            )
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .background(
+                                        when (it.username) {
+                                            self -> FColor.Orange_4th//MaterialTheme.colorScheme.primaryContainer
+                                            else -> Color.White
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(8.dp)
+                            ) {
+                                Text(
+                                    text = it.message
+                                )
+                            }
+                            if (it.username != self) {
+                                Text(
+                                    modifier = Modifier.padding(
+                                        horizontal = 8.dp,
+                                        vertical = 4.dp
+                                    ),
+                                    text = it.sendTime.substring(11, 16),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -226,8 +260,8 @@ fun GroupChatRoomTopBar(
                 contentDescription = stringResource(R.string.str_back),
                 modifier = Modifier.clickable {
                     gChatVM.chatRoomInput("")
-                    gChatVM.setShowEditMember(false)
-                    //gChatVM.clearChatHistory()
+                    //gChatVM.setShowEditMember(false)
+
                     navController.popBackStack()
                 },
                 tint = Color.White
@@ -262,13 +296,16 @@ fun GroupChatRoomBottomBar(
 
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var stars by remember { mutableIntStateOf(0) }
     val showEditGroup = gChatVM.showEditGroup.asStateFlow().collectAsState().value
     val showEditMember = gChatVM.showEditMember.asStateFlow().collectAsState().value
     val showMemberControl = gChatVM.showEditMember.asStateFlow().collectAsState().value
 
     val chatRoom = gChatVM.chatRoom.collectAsState()
-    val chatEnable = chatRoom.value.state==1
+    val chatEnable = chatRoom.value.state == 1
+    val review by gChatVM.restaurantReview.collectAsState()
+    gChatVM.getRestaurantReview(chatRoom.value.location)
+    var stars by remember { mutableIntStateOf(5) }
+    var comment by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -316,8 +353,7 @@ fun GroupChatRoomBottomBar(
                     contentDescription = "",
                     tint = if (chatEnable) {
                         FColor.Orange_1st
-                    }
-                    else{
+                    } else {
                         FColor.Orange_4th
                     },//MaterialTheme.colorScheme.primary
                     modifier = if (chatEnable) {
@@ -327,7 +363,7 @@ fun GroupChatRoomBottomBar(
                             chatInput = ""
 
                         }
-                    }else Modifier
+                    } else Modifier
                 )
             }
         }
@@ -432,6 +468,8 @@ fun GroupChatRoomBottomBar(
             )
         }
         if (showBottomSheet) {
+            stars = review.rating
+            comment = review.content
             ModalBottomSheet(
                 containerColor = Color.White,
                 // 使用者點擊bottom sheet以外區域時執行
@@ -475,13 +513,16 @@ fun GroupChatRoomBottomBar(
                         }
                     }
                     GroupTextInputField(
+                        defaultInput = review.content,
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
                             .padding(16.dp),
                         singleLine = false,
                         maxLines = 5,
-                        onValueChange = {}
+                        onValueChange = {
+                            comment = it
+                        }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
@@ -491,6 +532,11 @@ fun GroupChatRoomBottomBar(
                             onClick = {
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     if (!sheetState.isVisible) {
+                                        gChatVM.sendRestaurantReview(
+                                            chatRoom.value.location,
+                                            stars,
+                                            comment
+                                        )
                                         showBottomSheet = false
                                     }
                                 }

@@ -1,6 +1,8 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.util.Log
+import com.tibame.foodhunter.wei.Review
+import com.tibame.foodhunter.wei.ReviewCreateData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,4 +50,11 @@ object GroupRepository {
     fun updateRestaurantList(result: List<GroupRestaurantData>) {
         _restaurantList.update { result }
     }
+
+    private val _restaurantReview = MutableStateFlow(GroupReviewData())
+    val restaurantReview = _restaurantReview.asStateFlow()
+    fun updateRestaurantList(result: GroupReviewData) {
+        _restaurantReview.update { result }
+    }
+
 }
