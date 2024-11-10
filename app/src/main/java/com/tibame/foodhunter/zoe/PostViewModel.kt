@@ -19,11 +19,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 class PostViewModel : ViewModel() {
     private val repository = PostRepository.getInstance()
-    // 現有的狀態
 
-
-
-    // 搜尋和篩選相關狀態
+    // 基本狀態
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
     private val _selectedFilters = MutableStateFlow<List<String>>(emptyList())
@@ -31,26 +28,95 @@ class PostViewModel : ViewModel() {
     private val _selectedPostId = MutableStateFlow<Int?>(null)
     val selectedPostId = _selectedPostId.asStateFlow()
 
+    // 評論相關狀態
+    private val _commentLoadingStates = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    val commentLoadingStates = _commentLoadingStates.asStateFlow()
+    private val _commentLoadingError = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val commentLoadingError = _commentLoadingError.asStateFlow()
+
     private val personalPostsCache = mutableMapOf<Int, StateFlow<List<Post>>>()
     private val _carouselItems = MutableStateFlow<List<CarouselItem>>(emptyList())
     val carouselItems: StateFlow<List<CarouselItem>> = _carouselItems.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
-    fun updateCarouselItems(items: List<CarouselItem>) {
-        _carouselItems.value = items
-    }
     init {
         viewModelScope.launch {
             repository.loadPosts()
         }
     }
 
+    // 更新的評論載入方法
+    fun loadCommentsForPost(postId: Int) {
+        viewModelScope.launch {
+            try {
+                // 設置載入狀態
+                _commentLoadingStates.update { it + (postId to true) }
+                _commentLoadingError.update { it - postId }
+
+                // 載入評論
+                repository.loadCommentsForPost(postId)
+
+                // 清除載入狀態
+                _commentLoadingStates.update { it - postId }
+            } catch (e: Exception) {
+                Log.e("PostViewModel", "載入評論失敗: postId=$postId", e)
+                _commentLoadingStates.update { it - postId }
+
+            }
+        }
+    }
+
+    // 更新後的評論創建方法
+    fun createComment(postId: Int, userId: Int, content: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val success = repository.createComment(postId, userId, content)
+                if (!success) {
+                    Log.e("PostViewModel", "評論創建失敗")
+                }
+            } catch (e: Exception) {
+                Log.e("PostViewModel", "評論創建時發生錯誤", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // 獲取特定貼文的評論載入狀態
+    fun isLoadingComments(postId: Int): Boolean {
+        return commentLoadingStates.value[postId] ?: false
+    }
+
+    // 獲取特定貼文的評論載入錯誤
+    fun getCommentLoadingError(postId: Int): String? {
+        return commentLoadingError.value[postId]
+    }
+
+    // 重試載入評論
+    fun retryLoadingComments(postId: Int) {
+        loadCommentsForPost(postId)
+    }
+
+    // 更新的 getPostById 方法
+    fun getPostById(postId: Int): StateFlow<Post?> {
+        // 自動觸發評論載入
+        loadCommentsForPost(postId)
+
+        return repository.postList
+            .map { posts -> posts.find { it.postId == postId } }
+            .stateIn(viewModelScope, SharingStarted.Lazily, null)
+    }
+
+    // 其他現有方法保持不變
+    fun updateCarouselItems(items: List<CarouselItem>) {
+        _carouselItems.value = items
+    }
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
-
-
-
 
     fun deletePost(context: Context, postId: Int) {
         viewModelScope.launch {
@@ -84,45 +150,10 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    fun getPostById(postId: Int): StateFlow<Post?> {
-        return combine(
-            repository.postList.map { posts -> posts.find { it.postId == postId } },
-            _tempComments
-        ) { post, tempComments ->
-            post?.let {
-                // 如果有暫存的評論，合併到貼文中
-                if (tempComments.containsKey(postId)) {
-                    post.copy(comments = tempComments[postId] ?: post.comments)
-                } else {
-                    post
-                }
-            }
-        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-    }
-
     fun setPostId(postId: Int) {
         _selectedPostId.value = postId
     }
-    private val _tempComments = MutableStateFlow<Map<Int, List<Comment>>>(emptyMap())
-    private val _currentComments = MutableStateFlow<List<Comment>>(emptyList())
-    val currentComments = _currentComments.asStateFlow()
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
-    fun createComment(postId: Int, userId: Int, content: String) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                val success = repository.createComment(postId, userId, content)
-                if (!success) {
-                    Log.e("PostViewModel", "Failed to create comment")
-                }
-            } catch (e: Exception) {
-                Log.e("PostViewModel", "Error creating comment", e)
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
+
     fun getFilteredPosts(): StateFlow<List<Post>> {
         return combine(
             repository.postList,
@@ -148,6 +179,7 @@ class PostViewModel : ViewModel() {
             filteredList.sortedByDescending { it.timestamp }
         }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
+
     fun updateFilters(filters: List<String>) {
         _selectedFilters.value = filters
     }

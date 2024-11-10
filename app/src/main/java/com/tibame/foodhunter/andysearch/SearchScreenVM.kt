@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.andysearch
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -15,9 +16,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.lang.Thread.State
 
-class SearchScreenVM: ViewModel(){
+class SearchScreenVM: ViewModel() {
     private val _showSearchText = MutableStateFlow("")
     val showSearchText: StateFlow<String> = _showSearchText.asStateFlow()
+
     // 搜尋文字
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()
@@ -55,17 +57,17 @@ class SearchScreenVM: ViewModel(){
         // 初始化時設置預設值
         updateCityText("")
         updateChoicePrice("")
-        _otherConditions.update{""}
+        _otherConditions.update { "" }
         updateSearchText("")
 
     }
 
 
-    fun updateSearchText(newText: String){
-        _searchText.update {newText}
+    fun updateSearchText(newText: String) {
+        _searchText.update { newText }
     }
 
-    fun loadShowSearchText(){
+    fun loadShowSearchText() {
         val cityPart = _cityText.value
         val pricePart = _choicePrice.value
         val otherPart = _otherConditions.value
@@ -78,23 +80,23 @@ class SearchScreenVM: ViewModel(){
         }
     }
 
-    fun clearSearchText(){
+    fun clearSearchText() {
         updateCityText("")
         updateChoicePrice("")
-        _otherConditions.update{""}
+        _otherConditions.update { "" }
         updateSearchText("")
     }
 
-    fun buildSearch(){
-        _finalSearchText.update{
+    fun buildSearch() {
+        _finalSearchText.update {
             val cityPart = _cityText.value
             val pricePart = _choicePrice.value
             val otherPart = _otherConditions.value
             val inputPart = _searchText.value
 
-            if (pricePart.isNotBlank()){
+            if (pricePart.isNotBlank()) {
                 val calPrice = (pricePart.split(" ~ ")[0].toInt()
-                        + pricePart.split(" ~ ")[1].toInt())/2
+                        + pricePart.split(" ~ ")[1].toInt()) / 2
 
                 listOf(calPrice.toString(), cityPart, otherPart, inputPart)
                     .filter { it.isNotBlank() } // 過濾掉空白的條件
@@ -107,31 +109,32 @@ class SearchScreenVM: ViewModel(){
         }
     }
 
-    fun updateCityText(newCity: String){
+    fun updateCityText(newCity: String) {
         _cityText.update { newCity }
     }
 
-    fun updateChoicePrice(newPrice: String){
+    fun updateChoicePrice(newPrice: String) {
         _choicePrice.update { newPrice }
     }
 
-    fun updateOtherConditions(conditions: List<String>){
-        _otherConditions.update{
+    fun updateOtherConditions(conditions: List<String>) {
+        _otherConditions.update {
             conditions.joinToString(" ")
         }
     }
 
     // 選擇餐廳
-    fun updateChoiceOneRest(choiceRest: Restaurant){
+    fun updateChoiceOneRest(choiceRest: Restaurant) {
         _choiceOneRest.update { choiceRest }
     }
+
     // 清空單一餐廳
-    fun clearChoiceRest(){
+    fun clearChoiceRest() {
         _choiceOneRest.update { null }
     }
 
     // 預先載入10家餐廳
-    fun preloadRestaurants(){
+    fun preloadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             val initialRestaurants = fetchInitRestaurant()
             _preRestaurantList.update { initialRestaurants }
@@ -139,34 +142,48 @@ class SearchScreenVM: ViewModel(){
     }
 
     // 從資料庫中獲取10家餐廳
-    private suspend fun fetchInitRestaurant(): List<Restaurant>{
+    private suspend fun fetchInitRestaurant(): List<Restaurant> {
         try {
             val url = "${serverUrl}/PreLoadRest"
             val gson = Gson()
             val result = CommonPost(url, "")
-            val type = object : TypeToken<List<Restaurant>>() {}.type
-            return gson.fromJson(result, type)
+            return if (result.contains("NotFind")) {
+                // 如果包含 "NotFind"，返回一個空的餐廳列表
+                emptyList<Restaurant>()
+            } else {
+                // 正常解析 JSON 並返回餐廳列表
+                val type = object : TypeToken<List<Restaurant>>() {}.type
+                gson.fromJson(result, type)
+            }
         } catch (e: Exception) {
             e.printStackTrace()  // 打印出錯信息，方便調試
             return emptyList()    // 出錯時返回一個空的 List<Restaurant>
         }
     }
 
-    suspend fun updateSearchRest(searchText: String){
+    suspend fun updateSearchRest(searchText: String) {
         _selectRestList.update {
-            fetchRestaurant(searchText) }
+            fetchRestaurant(searchText)
+        }
     }
 
     // 搜尋餐廳從database
-    private suspend fun fetchRestaurant(searchText: String): List<Restaurant>{
+    private suspend fun fetchRestaurant(searchText: String): List<Restaurant> {
         try {
             val url = "${serverUrl}/SelectRestController"
             val gson = Gson()
             val jsonObject = JsonObject()
             jsonObject.addProperty("searchText", searchText)
             val result = CommonPost(url, jsonObject.toString())
-            val type = object : TypeToken<List<Restaurant>>() {}.type
-            return gson.fromJson(result, type)
+            Log.d("NotFind", result)
+            return if (result.contains("NotFind")) {
+                // 如果包含 "NotFind"，返回一個空的餐廳列表
+                emptyList<Restaurant>()
+            } else {
+                // 正常解析 JSON 並返回餐廳列表
+                val type = object : TypeToken<List<Restaurant>>() {}.type
+                gson.fromJson(result, type)
+            }
         } catch (e: Exception) {
             e.printStackTrace()  // 打印出錯信息，方便調試
             return emptyList()    // 出錯時返回一個空的 List<Restaurant>
