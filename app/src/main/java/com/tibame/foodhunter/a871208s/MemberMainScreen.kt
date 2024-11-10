@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,6 +65,7 @@ fun MemberMainScreen(
     val nicknameState = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val currentUserId by userVM.memberId.collectAsState()
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val user = userVM.getUserInfo(userVM.username.value)
@@ -244,7 +246,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                onClick = {}
+                onClick = {navController.navigate("person_homepage/$currentUserId")}
             ) {
 
             }

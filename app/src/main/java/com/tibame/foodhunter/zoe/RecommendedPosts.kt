@@ -187,6 +187,7 @@ fun PostItem(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        FavoriteIcon()
                         IconButton(
                             onClick = {
                                 Log.d("PostItem", "Comment button clicked")

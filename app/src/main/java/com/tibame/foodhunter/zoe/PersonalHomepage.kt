@@ -42,7 +42,6 @@ fun PersonHomepage(
     userVM: UserViewModel,
     navController: NavHostController
 ) {
-    var username = mutableStateOf("")
     val personalPosts = postViewModel.getPersonalPosts(publisherId).collectAsState()
     val memberId by userVM.memberId.collectAsState() // 直接使用 UserViewModel 中的 memberId
     LaunchedEffect(memberId) {
@@ -60,7 +59,7 @@ fun PersonHomepage(
         personalPosts.value.firstOrNull()?.publisher?.let { publisher ->
             PostHeader(
                 publisher = publisher,
-                isCurrentUser = memberId == publisherId // 使用收集到的 memberId
+                isCurrentUser = memberId == publisherId
             )
         }
 
