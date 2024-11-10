@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.Restaurant
 import com.tibame.foodhunter.ui.theme.FColor
 
 
@@ -66,15 +70,16 @@ fun PreviewReviewEdit() {
 @Composable
 fun ReviewZone(
     navController: NavHostController,
+    viewModel: ReviewVM,
+    restaurantId: Int
 ) {
-
+    val context = LocalContext.current
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-
         HorizontalDivider(
             modifier = Modifier,
             thickness = 2.5.dp,
@@ -84,12 +89,12 @@ fun ReviewZone(
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
-                navController.navigate("評論頁面")
+                // 記得傳遞餐廳 ID 參數到詳細頁面
+                navController.navigate(context.getString(R.string.reviewDetail))
             },
             modifier = Modifier
                 .width(150.dp)
                 .height(50.dp),
-
             shape = ButtonDefaults.outlinedShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFED2C7),
@@ -100,11 +105,33 @@ fun ReviewZone(
                 text = "顯示所有評論",
                 modifier = Modifier,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-
-                )
+                fontWeight = FontWeight.SemiBold
+            )
         }
-        GetReviews()
+
+        // 確保從 viewModel 中載入評論，並傳遞正確的 restaurantId
+        ReviewList(restaurantId = restaurantId, viewModel = viewModel)
+    }
+}
+
+/** 真正的評論 */
+@Composable
+fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
+    // 當頁面載入時，載入該餐廳的評論
+    LaunchedEffect(restaurantId) {
+        Log.d("ReviewList", "Loading reviews for restaurantId: $restaurantId")
+        viewModel.loadReviews(restaurantId)
+    }
+
+    val reviews by viewModel.reviewState.collectAsState()  // 觀察評論列表的資料變動
+    Log.d("ReviewList", "Loaded reviews: ${reviews.size}")
+
+    LazyColumn {
+        items(reviews) { review ->
+            // 顯示每條評論的UI
+            Text(text = review.content)
+            Log.d("ReviewList", "Review content: ${review.content}")
+        }
     }
 }
 

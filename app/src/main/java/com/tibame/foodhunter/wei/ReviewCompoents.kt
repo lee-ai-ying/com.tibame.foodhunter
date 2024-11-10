@@ -205,7 +205,7 @@ fun ReviewItems(review: Reviews) {
     ) {
         // 顯示頭像
         Image(
-            painter = painterResource(id = 0),
+            painter = painterResource(id = R.drawable.image),
             contentDescription = "Reviewer Avatar",
             modifier = Modifier
                 .size(40.dp)

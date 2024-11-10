@@ -77,6 +77,7 @@ import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.wei.ReviewDetail
 import com.tibame.foodhunter.wei.ReviewVM
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -168,6 +169,7 @@ fun Main(
     pChatVM: PrivateViewModel = viewModel(),
     postViewModel: PostViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
+    reviewVM: ReviewVM = viewModel(),
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -386,7 +388,15 @@ fun Main(
 
             composable(context.getString(R.string.restaurantDetail)){
                 RestaurantDetail(
-                    navController = navController, restaurantVM = SearchScreenVM(),reviewVM = ReviewVM()
+                    navController = navController,
+                    restaurantVM =searchVM,
+                    reviewVM = reviewVM
+                )
+            }
+
+            composable(context.getString(R.string.reviewDetail)){
+                ReviewDetail(
+                    navController = navController, reviewVM =reviewVM
                 )
             }
 

@@ -24,20 +24,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewDetail(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     reviewVM: ReviewVM = remember { ReviewVM() }
 ) {
+    val restaurantId = navController.previousBackStackEntry?.arguments?.getInt("restaurantId") ?: 0
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf("評論頁面") }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -61,21 +59,11 @@ fun ReviewDetail(
                     .padding(innerPadding)
                     .background(Color.White)
             ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = mainSceneName,
-                    modifier = Modifier.weight(1f)
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    composable(route = mainSceneName) {
-
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-
-                            verticalArrangement = Arrangement.spacedBy(15.dp)
-                        ) {
-                            ReviewInfoDetail(reviewVM = reviewVM)
-
-
+                    ReviewInfoDetail(reviewVM = reviewVM)
 
 //                            HorizontalDivider(
 //                                modifier = Modifier,
@@ -83,15 +71,13 @@ fun ReviewDetail(
 //                                color = FColor.Orange_1st
 //                            )
 
-                            DetailReviewZone(reviewVM = reviewVM)
+                    DetailReviewZone(reviewVM = reviewVM)
 
-                            HorizontalDivider(
-                                modifier = Modifier,
-                                thickness = 2.5.dp,
-                                color = FColor.Orange_1st
-                            )
-                        }
-                    }
+                    HorizontalDivider(
+                        modifier = Modifier,
+                        thickness = 2.5.dp,
+                        color = FColor.Orange_1st
+                    )
                 }
             }
         }

@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import com.tibame.foodhunter.zoe.DeleteResponse
 import com.tibame.foodhunter.zoe.PostResponse
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ReviewRepository {
-    private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
+
 
     private val _reviewList = MutableStateFlow<List<Review>>(emptyList())
     val reviewList: StateFlow<List<Review>> = _reviewList.asStateFlow()
@@ -50,12 +51,23 @@ class ReviewRepository {
     }
 
     // 根據餐廳ID獲取評論列表
-    suspend fun fetchReviewByRestId(): List<ReviewResponse?> {
-        val url = "${com.tibame.foodhunter.global.serverUrl}/review/preLoad"
+    suspend fun fetchReviewByRestId(restaurantId: Int): List<ReviewResponse?> {
+        val url = "${serverUrl}/review/preLoadController?restaurantId=$restaurantId"
+        // 加入請求前的日誌
+        Log.d("ReviewRepository", "Fetching reviews for restaurant ID: $restaurantId")
+        Log.d("ReviewRepository", "Request URL: $url")
         val result = CommonPost(url, "")
+        // 加入接收到回應的日誌
+        Log.d("ReviewRepository", "Received response: $result")
         val type = object : TypeToken<List<ReviewResponse>>() {}.type
-        return gson.fromJson(result, type)
+        return try {
+            gson.fromJson(result, type)
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error fetching reviews for restaurant $restaurantId", e)
+            emptyList() // 若發生錯誤，返回空列表
+        }
     }
+
 
     // 根據評論ID 獲取評論的詳細資料
     private suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {

@@ -65,7 +65,7 @@ fun ShowGoogleMap(
     val locationPermission = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(LatLng(25.04776, 121.517059)) }
     var newPosition by remember { mutableStateOf<LatLng?>(null) }
 
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
@@ -81,7 +81,9 @@ fun ShowGoogleMap(
 
         LaunchedEffect(locationPermission.status.isGranted) {
             fusedLocationClient.lastLocation.addOnSuccessListener{
-                location -> currentLocation = LatLng(location.latitude, location.longitude)
+                location ->
+                if (location==null) return@addOnSuccessListener
+                currentLocation = LatLng(location.latitude, location.longitude)
                 onLocationUpdate(currentLocation)
             }
         }

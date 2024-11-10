@@ -27,6 +27,8 @@ import androidx.compose.material3.TopAppBarDefaults
 
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -59,7 +62,9 @@ fun RestaurantDetail(
     reviewVM: ReviewVM
 
 ) {
-    val restNavController = rememberNavController()
+    val restaurantId =0
+
+
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -67,7 +72,11 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    val navController = rememberNavController()
+    val reviewVM: ReviewVM = viewModel()
+
+    LaunchedEffect(restaurantId) {
+        reviewVM.setRestaurantId(restaurantId)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -82,54 +91,47 @@ fun RestaurantDetail(
                     .padding(innerPadding)
                     .background(Color.White)
             ) {
-                NavHost(
-                    navController = restNavController,
-                    startDestination = mainSceneName,
-                    modifier = Modifier.weight(1f)
+
+
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    composable(route = mainSceneName) {
+                    Spacer(modifier = Modifier)
 
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(15.dp)
-                        ) {
-                            Spacer(modifier = Modifier)
+                    RestaurantInfoDetail(restaurantVM)
 
-                            RestaurantInfoDetail(restaurantVM)
+                    HorizontalDivider(
+                        modifier = Modifier,
+                        thickness = 1.5.dp,
+                        color = FColor.Orange_1st
+                    )
+                    Spacer(modifier = Modifier.size(20.dp))
 
-                            HorizontalDivider(
-                                modifier = Modifier,
-                                thickness = 1.5.dp,
-                                color = FColor.Orange_1st
-                            )
-                            Spacer(modifier = Modifier.size(20.dp))
+                    //社群預覽
 
-                            //社群預覽
-
-                            Text(
-                                text = "社群預覽  待修",
-                                fontSize = 18.sp
-                            )
-                            //RelatedPosts("")
+                    Text(
+                        text = "社群預覽  待修",
+                        fontSize = 18.sp
+                    )
 
 
-                            HorizontalDivider(
-                                modifier = Modifier,
-                                thickness = 1.5.dp,
-                                color = FColor.Orange_1st
-                            )
-                            Spacer(modifier = Modifier.size(10.dp))
 
-                            //評論顯示區
-                            Text(
-                                text = "評論(%評論數)",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            ReviewZone(navController = navController)
-                        }
-                    }
+                    HorizontalDivider(
+                        modifier = Modifier,
+                        thickness = 1.5.dp,
+                        color = FColor.Orange_1st
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+
+                    //評論顯示區
+                    Text(
+                        text = "評論(%評論數)",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    ReviewZone(navController = navController, reviewVM,restaurantId = restaurantId)
                 }
             }
         }
@@ -145,5 +147,9 @@ fun RestaurantDetailPreview() {
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
 
-    RestaurantDetail(navController = navController, restaurantVM = restaurantVM, reviewVM = reviewVM )
+    RestaurantDetail(
+        navController = navController,
+        restaurantVM = restaurantVM,
+        reviewVM = reviewVM
+    )
 }
