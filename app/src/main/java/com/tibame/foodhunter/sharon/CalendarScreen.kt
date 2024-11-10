@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -18,30 +20,44 @@ import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.data.Book
 import com.tibame.foodhunter.sharon.util.CalendarUiState
 import com.tibame.foodhunter.sharon.data.CardContentType
+import com.tibame.foodhunter.sharon.data.Group
+import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 import java.time.LocalDate
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     calendarVM: CalendarVM,
-    bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
-    userVM: UserViewModel
+    userVM: UserViewModel,
 ) {
     val uiState by calendarVM.uiState.collectAsState()
-    val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
+    val filteredItems by calendarVM.filteredItems.collectAsStateWithLifecycle()
+    val isLoading by calendarVM.isLoading.collectAsStateWithLifecycle()
+    val memberId by userVM.memberId.collectAsStateWithLifecycle()
 
-    // 初始化當天為選中日期
-    var selectedDate by remember {
-        mutableStateOf<CalendarUiState.Date?>(null) // 初始化為 null
+    // 初始化資料 取得用戶 ID 並初始化資料
+    LaunchedEffect(memberId) {
+        calendarVM.initUserData(memberId)
     }
 
-    // 在 LaunchedEffect 中設置初始日期
-    LaunchedEffect(Unit) {
-        if (selectedDate == null) {  // 只在 selectedDate 為 null 時設置
+// 選中日期的狀態
+    var selectedDate by remember {
+        mutableStateOf<CalendarUiState.Date?>(null)
+    }
+
+    // 當天要顯示的項目
+    var dayItems by remember {
+        mutableStateOf<List<Any>>(emptyList())
+    }
+
+    // 1. 設置初始日期為當天
+    LaunchedEffect(uiState.dates) {
+        if (selectedDate == null) {
             val today = LocalDate.now()
             selectedDate = uiState.dates.find { date ->
                 date.dayOfMonth == today.dayOfMonth.toString() &&
@@ -51,27 +67,38 @@ fun CalendarScreen(
         }
     }
 
-    var selectedBooks by remember {
-        mutableStateOf(emptyList<Book>())
-    }
-
-    // 當 selectedDate 改變時更新 selectedBooks
-    LaunchedEffect(selectedDate, books) {
-        selectedBooks = books.filter { book ->
-            selectedDate?.let { date ->
-                book.date.dayOfMonth.toString() == date.dayOfMonth &&
-                        book.date.monthValue == date.month &&
-                        book.date.year == date.year
-            } ?: false
+    // 2. 當日期被選中時，過濾出該天的項目
+    LaunchedEffect(selectedDate, filteredItems) {
+        dayItems = filteredItems.filter { item ->
+            when (item) {
+                is Note -> {
+                    selectedDate?.let { date ->
+                        val calendar = Calendar.getInstance().apply {
+                            time = item.selectedDate
+                        }
+                        calendar.get(Calendar.DAY_OF_MONTH).toString() == date.dayOfMonth &&
+                                (calendar.get(Calendar.MONTH) + 1) == date.month &&
+                                calendar.get(Calendar.YEAR) == date.year
+                    } ?: false
+                }
+                else -> false
+            }
         }
     }
 
-    Column(
-        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(5.dp)
-    ) {
-        // 更新日期列表，使得用戶選中的日期顯示選中狀態
+//    // 當 selectedDate 改變時更新 selectedBooks
+//    LaunchedEffect(selectedDate, books) {
+//        selectedBooks = books.filter { book ->
+//            selectedDate?.let { date ->
+//                book.date.dayOfMonth.toString() == date.dayOfMonth &&
+//                        book.date.monthValue == date.month &&
+//                        book.date.year == date.year
+//            } ?: false
+//        }
+//    }
+
+    Column {
+        // 日曆部分
         val updatedDates = uiState.dates.map { date ->
             date.copy(
                 isSelected = selectedDate?.let { selected ->
@@ -98,60 +125,88 @@ fun CalendarScreen(
             onDateClickListener = { date ->
                 selectedDate = date
             },
-
         )
-
-        LazyColumn(
+        // 載入提示
+        Box(
             modifier = Modifier
                 .background(Color.White)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        )
-        {
-            item {
-                NoteOrGroupCard(
-                    type = CardContentType.GROUP,
-                    date = "10/17",
-                    day = "星期四",
-                    title = "說好的減肥呢",
-                    restaurantName = "麥噹噹",
-                    restaurantAddress = "台北市中山區南京東路三段222號",
-                    headcount = 4,
-                    isPublic = false,
-                    onClick = {}
-                )
-            }
+                .fillMaxSize()
+        ) {
+            when {
+                isLoading && filteredItems.isEmpty() -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-            item {
-                NoteOrGroupCard(
-                    onClick = {},
-                    type = CardContentType.NOTE,
-                    date = "10/17",
-                    day = "星期四",
-                    title = "小巷中的咖啡廳",
-                    content = "這裡有各種美味的咖啡和小吃、環境乾淨...",
-                    imageResId = R.drawable.sushi_image_1
-                )
-            }
-
-            item {
-                NoteOrGroupCard(
-                    type = CardContentType.GROUP,
-                    date = "10/17",
-                    day = "星期四",
-                    title = "說好的減肥呢",
-                    restaurantName = "麥噹噹",
-                    restaurantAddress = "台北市中山區南京東路三段222號",
-                    headcount = 4,
-                    isPublic = true,
-                    onClick = {}
-                )
+                filteredItems.isEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("目前沒有資料")
+                    }
+                }
+                // 卡片列表部分
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        items(
+                            count = dayItems.size,
+                            key = { index ->
+                                when (val item = dayItems[index]) {
+                                    is Note -> "note_${item.noteId}"
+                                    else -> index.toString()
+                                }
+                            }
+                        ) { index ->
+                            when (val item = dayItems[index]) {
+                                is Note -> {
+                                    NoteOrGroupCard(
+                                        onClick = {
+                                            navController.navigate("note/edit/${item.noteId}")
+                                        },
+                                        type = item.type,
+                                        date = item.date,
+                                        day = item.day,
+                                        title = item.title,
+                                        content = item.content,
+                                        imageResId = item.imageResId,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 10.dp)
+                                    )
+                                }
+                                /* 之後加入揪團時解開註解
+                                is Group -> {
+                                    NoteOrGroupCard(
+                                        type = CardContentType.GROUP,
+                                        date = item.groupDate,
+                                        day = item.day,
+                                        title = item.groupName,
+                                        restaurantName = item.restaurantName,
+                                        restaurantAddress = item.restaurantAddress,
+                                        headcount = 4,  // 需要加入到 Group model
+                                        isPublic = item.isPublic == 1,
+                                        onClick = {}  // 揪團不需要點擊事件
+                                    )
+                                }
+                                */
+                                else -> {} // 處理其他可能的情況
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,9 +215,10 @@ fun CalendarScreen(
 fun CalendarScreenPreview() {
     val navController = rememberNavController()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-//    val calendarVM: CalendarVM = viewModel() // 取得 ViewModel
+    val calendarVM: CalendarVM = viewModel() // 取得 ViewModel
+    val userVM: UserViewModel = viewModel() // 取得 ViewModel
 
-//    CalendarScreen()
+    CalendarScreen(navController, calendarVM, userVM)
 
 }
 

@@ -404,8 +404,8 @@ fun ContentItem(
                 modifier = Modifier.padding(top = 4.dp)
             )
 
-            // 如果有書籍，顯示指示點
-            if (date.hasBook) {
+            // 如果有card，顯示指示點
+            if (date.hasCard) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(
                     modifier = Modifier,
@@ -423,18 +423,18 @@ fun ContentItem(
                                 shape = CircleShape
                             )
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .background(
-                                color = if (date.isSelected)
-                                    MaterialTheme.colorScheme.onPrimary
-                                else
-                                    MaterialTheme.colorScheme.outline,
-                                shape = CircleShape
-                            )
-                    )
+//                    Spacer(modifier = Modifier.width(4.dp))
+//                    Box(
+//                        modifier = Modifier
+//                            .size(4.dp)
+//                            .background(
+//                                color = if (date.isSelected)
+//                                    MaterialTheme.colorScheme.onPrimary
+//                                else
+//                                    MaterialTheme.colorScheme.outline,
+//                                shape = CircleShape
+//                            )
+//                    )
                 }
             }
 

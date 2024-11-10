@@ -60,8 +60,8 @@ data class CalendarUiState(
         val month: Int,             // 月份（1 代表一月，12 代表十二月）
         val year: Int,              // 年份
         val isSelected: Boolean,    // 標記此日期是否在 UI 中為選中狀態
-        val hasBook: Boolean = false,  // 若此日期有相關書籍則為 true
-        val books: List<Note> = emptyList()  // 該日期的書籍列表，若無則為空
+        val hasCard: Boolean = false,  // 若此日期有相關書籍則為 true
+        val items: List<Any> = emptyList()  // 改為可以存放 Note 和 Group
     ) {
         companion object {
             /**

@@ -66,7 +66,7 @@ fun PersonalToolsScreen(
     LaunchedEffect(Unit) {
         personalToolsVM.calendarSearchQuery.collect { query ->
             Log.d("PersonalToolsScreen", "收到 Calendar 搜尋事件: $query")
-            calendarVM.handleSearch(query)
+            calendarVM.searchItems(query)
         }
     }
 
