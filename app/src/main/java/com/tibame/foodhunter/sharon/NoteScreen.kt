@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 
@@ -32,11 +34,24 @@ import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 fun NoteScreen(
     navController: NavHostController,
     noteVM: NoteVM,
-
+    userVM: UserViewModel,
 ) {
     val filteredNotes by noteVM.filteredNotes.collectAsStateWithLifecycle()
     val isLoading by noteVM.isLoading.collectAsStateWithLifecycle()
     val lazyListState = rememberLazyListState()
+    val memberId by userVM.memberId.collectAsStateWithLifecycle()
+
+    // 當畫面初始化時，設置用戶ID
+    LaunchedEffect(memberId) {
+        noteVM.setMemberId(memberId)
+    }
+
+    Box {
+        Text(text = memberId.toString())
+        Text(text = memberId.toString())
+
+    }
+
 
     // 當筆記列表更新時，自動滾動到頂部
     LaunchedEffect(filteredNotes.size) {
@@ -44,8 +59,6 @@ fun NoteScreen(
             lazyListState.animateScrollToItem(0)
         }
     }
-
-
 
     Box(
         modifier = Modifier
@@ -121,8 +134,7 @@ fun NoteScreen(
 @Preview(showBackground = true)
 @Composable
 fun NoteScreenPreview() {
-    val mockNavController = rememberNavController()
-    NoteScreen(navController = mockNavController, noteVM = NoteVM())
+
 }
 
 

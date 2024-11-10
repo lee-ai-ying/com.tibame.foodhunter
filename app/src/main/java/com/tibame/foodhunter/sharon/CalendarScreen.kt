@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.data.Book
 import com.tibame.foodhunter.sharon.util.CalendarUiState
@@ -28,14 +29,14 @@ fun CalendarScreen(
     navController: NavHostController = rememberNavController(),
     calendarVM: CalendarVM,
     bookViewModel: BookViewModel = viewModel(), // 書籍 ViewModel
-
+    userVM: UserViewModel
 ) {
     val uiState by calendarVM.uiState.collectAsState()
     val books by bookViewModel.bookState.collectAsState() // 取得書籍狀態
 
     // 初始化當天為選中日期
     var selectedDate by remember {
-        mutableStateOf<CalendarUiState.Date?>(null)  // 初始化為 null
+        mutableStateOf<CalendarUiState.Date?>(null) // 初始化為 null
     }
 
     // 在 LaunchedEffect 中設置初始日期

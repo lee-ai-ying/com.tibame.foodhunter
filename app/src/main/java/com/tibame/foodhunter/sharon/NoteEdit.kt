@@ -76,6 +76,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.andysearch.ShowGoogleMap
 import com.tibame.foodhunter.andysearch.ShowRestaurantLists
@@ -133,6 +134,7 @@ fun NoteEditRoute(
     navController: NavHostController,
     navigation: NoteEditNavigation,
     noteEditVM: NoteEditVM = viewModel(),
+    userVM: UserViewModel
 ) {
     // when 表達式用於處理不同的導航類型
     when (navigation) {
@@ -179,7 +181,7 @@ fun NoteEditRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEdit(
-    navController: NavHostController = rememberNavController(), // 這裡創建或接收 NavController，用於控制導航
+    navController: NavHostController = rememberNavController(),
     noteEditVM: NoteEditVM,
     isNewNote: Boolean,
 ) {
@@ -213,7 +215,7 @@ fun NoteEdit(
     if (!isNewNote && uiState.title.isEmpty()) {
         Log.d("NoteEdit", "等待內容載入...")
         // 可以顯示載入指示器
-        return
+
     }
 
     Scaffold(
@@ -241,9 +243,8 @@ fun NoteEdit(
             Box(  // 輸入標題
                 modifier = Modifier
                     .height(44.dp)
-                    .padding(bottom = 2.dp), // 設置 Box 的最小高度
-
-                contentAlignment = Alignment.TopStart // 將所有內容左下對齊
+                    .padding(bottom = 2.dp),
+                contentAlignment = Alignment.TopStart
             ) {
                 BasicTextField(
                     value = uiState.title,
@@ -297,14 +298,14 @@ fun NoteEdit(
 //                    VerticalLine()
 //                }
 
-                // 日期顯示保持不變
+                // 日期顯示
                 DisplayDateChip(
+                    initialDate = uiState.selectedDate,
                     onDateSelected = { selectedDate ->
                         noteEditVM.onEvent(NoteEditEvent.UpdateDate(selectedDate))
                     }
                 )
             }
-
             Box(  // 輸入內文
                 modifier = Modifier
                     .heightIn(min = 24.dp)
@@ -372,10 +373,11 @@ fun VerticalLine() {
 @Composable
 fun DisplayDateChip(
     initialDate: Date = Date(),
-    onDateSelected: (Date) -> Unit = {} // 回調也改用 Date
+    onDateSelected: (Date) -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var currentDate by remember { mutableStateOf(initialDate) }
+
 
     // 日期格式化
     val displayFormatter = remember {
@@ -384,7 +386,7 @@ fun DisplayDateChip(
 
     // 設置 DatePicker 的初始狀態
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = currentDate.time,  // 直接使用 Date 的 time
+        initialSelectedDateMillis = currentDate.time,  // 使用 time 符合毫秒
         initialDisplayMode = DisplayMode.Picker
     )
 
@@ -410,9 +412,7 @@ fun DisplayDateChip(
                         }
                         showDatePicker = false
                     }
-                ) {
-                    Text("確認")
-                }
+                ) { Text("確認") }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {

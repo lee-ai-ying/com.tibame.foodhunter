@@ -32,6 +32,7 @@ import com.tibame.foodhunter.sharon.components.TabBarComponent
 import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.components.topbar.CalendarTopBar
 import com.tibame.foodhunter.sharon.components.topbar.NoteTopBar
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
@@ -42,10 +43,10 @@ import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 @Composable
 fun PersonalToolsScreen(
     navController: NavHostController,
+    userVM: UserViewModel,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    // 創建共享的 ViewModel 實例
     val noteVM: NoteVM = viewModel()
     val calendarVM: CalendarVM = viewModel()
 
@@ -68,7 +69,6 @@ fun PersonalToolsScreen(
             calendarVM.handleSearch(query)
         }
     }
-
 
 
     Scaffold(
@@ -122,7 +122,8 @@ fun PersonalToolsScreen(
                 TabConstants.CALENDAR -> {
                     CalendarScreen(
                         navController = navController,
-                        calendarVM = calendarVM
+                        calendarVM = calendarVM,
+                        userVM = userVM
                     )
                 }
 
@@ -130,7 +131,7 @@ fun PersonalToolsScreen(
                     NoteScreen(
                         navController = navController,
                         noteVM = noteVM,
-//                        personalToolsVM = viewModel()
+                        userVM = userVM,
                     )
                 }
             }
@@ -145,8 +146,10 @@ fun TabMainScreenPreview() {
     // 使用 rememberNavController() 創建一個模擬的 NavController
     val mockNavController = rememberNavController()
     FoodHunterTheme {
-        // 調用你要預覽的 UI 函數
-        PersonalToolsScreen(navController = mockNavController)
+        PersonalToolsScreen(
+            navController = mockNavController,
+            userVM = UserViewModel()
+        )
     }
 }
 
