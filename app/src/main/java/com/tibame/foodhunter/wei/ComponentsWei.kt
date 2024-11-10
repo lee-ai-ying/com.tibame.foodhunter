@@ -1,13 +1,17 @@
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -46,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +75,9 @@ import com.tibame.foodhunter.sharon.components.NiaTabRow
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 import com.tibame.foodhunter.zoe.FilterChips
+import com.tibame.foodhunter.zoe.ImageDisplay
+import com.tibame.foodhunter.zoe.ImageSource
+import com.tibame.foodhunter.zoe.Post
 
 
 @Preview
@@ -200,6 +211,7 @@ fun RestaurantInfoDetail(
             }
         }
     }
+
     var selectedTab by remember { mutableIntStateOf(-1) }
     val titles = listOf("營業時間", "電話", "地址")
     NiaTabRow(selectedTabIndex = if (selectedTab == -1) 0 else selectedTab,
@@ -255,79 +267,48 @@ fun RestaurantInfoDetail(
     }
 }
 
-
-
 /**相關貼文*/
-//@Composable
-//fun RelatedPost(posts: List<Post>) {
-//    LazyRow(
-//        modifier = Modifier
-//            .padding(4.dp)
-//    ) {
-//        items(posts) { post ->
-//            PostItems(Post = RelatedPost)
-//            Spacer(modifier = Modifier.size(8.dp)) // 每筆貼文間的間距
-//        }
-//    }
-//}
-
 @Composable
-fun PostItems(
-) {
+fun RelatedPost(posts: List<Post>) {
+    Log.d("RelatedPost", posts.toString())
+    val postListSize = posts.size
+    val pagerState = rememberPagerState(pageCount = {postListSize})
 
-    Card(
+    val mainDp = 160.dp
+    HorizontalPager(
+        pageSize = PageSize.Fixed(200.dp),
+        beyondViewportPageCount = 3,
+        state = pagerState, // 控制左右間距
         modifier = Modifier
-            .size(150.dp)
-            .padding(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Row {
-                Image(
-                    painter = painterResource(id = R.drawable.account_circle),
-                    contentDescription = "發文者",
-                    modifier = Modifier
-                        .size(30.dp)
-                        .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
-                        .clip(RoundedCornerShape(12)),
-                    contentScale = ContentScale.Crop
-                )
-                Text(
-                    text = "發文者",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Image(
-                painter = painterResource(id = R.drawable.steak_image),
-                contentDescription = "貼文圖片",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "發文內容", maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { /*導航到檢視貼文*/ },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.arrow_right),
-                    contentDescription = "前往貼文頁面",
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            .fillMaxWidth()
+            .height(200.dp)
+            .padding(vertical = 8.dp) // 上下間距
+            .background(FColor.Orange_6th), // 背景色
+        pageSpacing = 4.dp,
+        verticalAlignment = Alignment.CenterVertically
+    ) { page ->
+        // 設定每個色塊的縮放效果
+        val width = when (page) {
+            pagerState.currentPage -> 180.dp // 大項目寬度（或用戶設定）
+            pagerState.currentPage + 1 ->  (180*0.7f).dp// 中等項目寬度
+            else -> (180*0.2f).dp // 小項目寬度
+        }
+        val leftdp = when (page) {
+            pagerState.currentPage -> 16.dp
+            else -> 8.dp // 小項目寬度
+        }
+        Column(modifier = Modifier
+            .background(Color.White)
+            .width(width)
+            .height(184.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            ImageDisplay(imageSource = ImageSource.CarouselSource(posts[page].carouselItems),
+                modifier = Modifier.padding(4.dp))
         }
     }
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

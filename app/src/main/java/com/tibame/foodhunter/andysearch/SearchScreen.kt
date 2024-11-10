@@ -88,7 +88,7 @@ fun SearchScreen(
 
     // 使用 LaunchedEffect 做延遲控制
     LaunchedEffect(Unit) {
-        delay(1000) // 延遲 2 秒鐘
+        delay(500) // 延遲 2 秒鐘
         delayScreen = false // 2 秒後切換到主頁面顯示
     }
 
@@ -155,25 +155,24 @@ fun ShowSearchBar(
     val cityText by searchTextVM.cityText.collectAsState()
     val inputSearch by searchTextVM.searchText.collectAsState()
 
-    val showSearchText by searchTextVM.showSearchText.collectAsState()
+
     val finalSearchText by searchTextVM.finalSearchText.collectAsState()
     SearchBar(
-        query = showSearchText,
+        query = inputSearch,
         onQueryChange = {
             searchTextVM.updateSearchText(it)
-            searchTextVM.loadShowSearchText()
         },
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 12.dp, top = 12.dp)
             .heightIn(min = 40.dp)
             .background(
-                color = if (showSearchText.isNotEmpty()) Color.White else FColor.Gary_20,
+                color = if (inputSearch.isNotEmpty()) Color.White else FColor.Gary_20,
                 shape = RoundedCornerShape(12.dp)
             )
             .border(
                 width = 1.dp,
-                color = if (showSearchText.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                color = if (inputSearch.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
                 shape = RoundedCornerShape(12.dp)
             ),
 //        windowInsets =if (isActive) SearchBarDefaults.windowInsets else WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
@@ -236,7 +235,7 @@ fun ShowSearchBar(
             }
         },
         colors = SearchBarDefaults.colors(
-            containerColor = if (showSearchText.isNotEmpty()) Color.White else FColor.Gary_20
+            containerColor = if (inputSearch.isNotEmpty()) Color.White else FColor.Gary_20
         ),
         content = { SearchBerContent(cities, searchTextVM) }
     )
@@ -286,7 +285,7 @@ fun ShowRestaurantLists(
                     }
                     .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(R.color.orange_3rd)),
+                    .background(colorResource(R.color.orange_5th)),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -439,19 +438,24 @@ fun RestCard(
                         }
                     )
                     Spacer(modifier = Modifier.padding(4.dp))
-                    if (IsOpenNow(restaurant.opening_hours)) {
-                        Text(
-                            text = "營業中", style = TextStyle(
-                                color = colorResource(R.color.teal_700), fontSize = 16.sp
-                            )
+                    Text(
+                        text = "營業中", style = TextStyle(
+                            color = colorResource(R.color.teal_700), fontSize = 16.sp
                         )
-                    } else {
-                        Text(
-                            text = "休息中", style = TextStyle(
-                                color = Color.Gray, fontSize = 16.sp
-                            )
-                        )
-                    }
+                    )
+//                    if (IsOpenNow(restaurant.opening_hours)) {
+//                        Text(
+//                            text = "營業中", style = TextStyle(
+//                                color = colorResource(R.color.teal_700), fontSize = 16.sp
+//                            )
+//                        )
+//                    } else {
+//                        Text(
+//                            text = "休息中", style = TextStyle(
+//                                color = Color.Gray, fontSize = 16.sp
+//                            )
+//                        )
+//                    }
                     Spacer(modifier = Modifier.padding(4.dp))
                     trailingIcon()
                 }

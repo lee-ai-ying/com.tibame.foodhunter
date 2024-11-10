@@ -243,7 +243,6 @@ fun RandomFood(
                         onClick = {
                             searchTextVM.updateSearchText(selectedOption)
                             randomScope.launch { searchTextVM.updateSearchRest(selectedOption) }
-                            searchTextVM.loadShowSearchText()
                             navController.navigate(context.getString(R.string.SearchToGoogleMap))
                         }, // 點擊確定按鈕，關閉對話框
                         colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)

@@ -2,6 +2,7 @@
 
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import com.tibame.foodhunter.R
 
 
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -32,6 +35,8 @@ import androidx.compose.material3.TopAppBarDefaults
 
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -58,6 +64,8 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterTheme
+import com.tibame.foodhunter.zoe.PostRepository
+import com.tibame.foodhunter.zoe.PostViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +82,11 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
+    val postVM: PostViewModel = viewModel()
+    val relatedPosts by postVM.restRelatedPosts.collectAsState()
+    val restaurant by restaurantVM.choiceOneRest.collectAsState()
+    LaunchedEffect (restaurant){ postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)}
+//    Log.d(relatedPosts, )
 
     Column(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -102,20 +115,20 @@ fun RestaurantDetail(
                         Column(
                             modifier = Modifier.padding(horizontal = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(15.dp)
+
                         ) {
                             Spacer(modifier = Modifier)
 
                             RestaurantInfoDetail(snackbarHostState = snackbarHostState, restaurantVM)
 
-                            HorizontalDivider(
-                                modifier = Modifier,
-                                thickness = 1.5.dp,
-                                color = FColor.Orange_1st
-                            )
-                            Spacer(modifier = Modifier.size(20.dp))
+//                            HorizontalDivider(
+//                                modifier = Modifier,
+//                                thickness = 1.5.dp,
+//                                color = FColor.Orange_1st
+//                            )
 
                             //社群預覽
-
+                            RelatedPost(relatedPosts)
 //                            Text(
 //                                text = "社群預覽  待修",
 //                                fontSize = 18.sp
