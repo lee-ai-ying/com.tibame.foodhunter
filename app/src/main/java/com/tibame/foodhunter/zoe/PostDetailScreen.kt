@@ -52,7 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.a871208s.UserViewModel
@@ -71,7 +70,7 @@ fun PostDetailScreen(
     userVM: UserViewModel
 ) {
     val post = postId?.let { postViewModel.getPostById(it).collectAsState().value }
-    val memberId by userVM.memberId.collectAsState() // 使用 collectAsState() 收集 memberId
+    val memberId by userVM.memberId.collectAsState()
 
 
     post?.let { nonNullPost ->
@@ -379,36 +378,34 @@ fun EditSheet(
             .fillMaxHeight(0.4f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        OutlinedButton(
+        Button(
             onClick = {
                 navController.navigate("${context.getString(R.string.str_post)}/edit/${post.postId}")
                 onConfirm()
             },
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
-            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)),
+            colors = ButtonDefaults.buttonColors(
+                colorResource(id = R.color.orange_2nd)
+            ),
             modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
+                .fillMaxWidth(0.8f)
         ) {
             Text(
-                text = stringResource(id = R.string.edit),
-                color = colorResource(id = R.color.orange_1st)
+                text = stringResource(id = R.string.edit)
             )
         }
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        OutlinedButton(
+        Button(
             onClick = { showDialog = true },
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
-            border = BorderStroke(1.dp, colorResource(id = R.color.orange_1st)),
+            colors = ButtonDefaults.buttonColors(
+                colorResource(id = R.color.orange_2nd)
+            ),
             modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
+                .fillMaxWidth(0.8f)
         ) {
             Text(
-                text = stringResource(id = R.string.delete),
-                color = colorResource(id = R.color.orange_1st)
+                text = stringResource(id = R.string.delete)
             )
         }
     }

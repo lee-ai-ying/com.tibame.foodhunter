@@ -13,7 +13,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,23 +23,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -106,10 +108,12 @@ fun RandomFood(
     var selectedOption by remember { mutableStateOf("") }
 
     val randomScope = rememberCoroutineScope()
+    val choiceCity by randomFoodVM.choiceCity.collectAsState()
+    val searchText by searchTextVM.searchText.collectAsState()
     val onRandomFood: (rotated: Boolean) -> Unit = {
         if (rotated) {
             randomScope.launch {
-                delay(2500)
+                delay(2000)
                 selectedOption = options.random()
                 rotated = false
                 showDialog = true
@@ -127,13 +131,11 @@ fun RandomFood(
     ) {
         Button(
             modifier = Modifier
-                .size(200.dp, 100.dp)
                 .padding(16.dp),
-            onClick = {showCitySettingDialog = !showCitySettingDialog},
+            onClick = { showCitySettingDialog = !showCitySettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
-            Text(text = "台北市", color = FColor.Dark)
-            Text(text = "大安區", color = FColor.Dark)
+            Text(text = choiceCity, style = MaterialTheme.typography.titleLarge)
         }
 
 
@@ -217,21 +219,26 @@ fun RandomFood(
                 Text(text = "開始", color = FColor.Dark)
             }
             if (showSettingDialog) {
-                SettingDialog(onDismiss = { showSettingDialog = false }, randomFoodVM)
+                SettingDialog(onDismiss = {
+                    showSettingDialog = false
+                    showCitySettingDialog = false
+                }, randomFoodVM)
             }
-            if (showCitySettingDialog){
-                CityDialog(onDismiss = { showSettingDialog = false })
+            if (showCitySettingDialog) {
+                CityDialog(onDismiss = {
+                    showCitySettingDialog = false
+                    showSettingDialog = false
+                }, randomFoodVM)
             }
         }
 
         Button(
             modifier = Modifier
-                .size(200.dp, 100.dp)
                 .padding(16.dp),
-            onClick = { showSettingDialog = true },
+            onClick = { showSettingDialog = !showSettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
-            Text(text = "設定轉盤", color = FColor.Dark)
+            Text(text = "設定轉盤", style = MaterialTheme.typography.titleLarge)
         }
 
         if (showDialog) {
@@ -241,8 +248,8 @@ fun RandomFood(
                 confirmButton = {
                     Button(
                         onClick = {
-                            searchTextVM.updateSearchText(selectedOption)
-                            randomScope.launch { searchTextVM.updateSearchRest(selectedOption) }
+                            searchTextVM.updateSearchText("$choiceCity $selectedOption")
+                            randomScope.launch { searchTextVM.updateSearchRest("$choiceCity $selectedOption") }
                             navController.navigate(context.getString(R.string.SearchToGoogleMap))
                         }, // 點擊確定按鈕，關閉對話框
                         colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
@@ -256,13 +263,12 @@ fun RandomFood(
 }
 
 @Composable
-fun CityDialog(onDismiss:()->Unit) {
-    var selectedCity by remember { mutableStateOf<String?>(null) }
-    var selectedCityIndex by remember { mutableStateOf(0) }
-    var citySet by remember { mutableStateOf(false) }
+fun CityDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
+
+    val choiceCity by randomFoodVM.choiceCity.collectAsState()
+    var citySet by remember { mutableStateOf(true) }
     val context = LocalContext.current
     val cities = remember { parseCityJson(context, "taiwan_districts.json") }
-    var districtExpand by remember { mutableStateOf(false) }
     AnimatedVisibility(
         visible = true,
         enter = fadeIn(animationSpec = tween(300)) + expandVertically(),
@@ -270,46 +276,42 @@ fun CityDialog(onDismiss:()->Unit) {
     ) {
         Box(
             modifier = Modifier
-                .width(300.dp)
-                .height(500.dp)
+                .fillMaxSize()
                 .shadow(elevation = 32.dp, shape = RectangleShape) // 添加陰影
-                .clip(RectangleShape) // 將陰影範圍限制在對話框邊界內
-                .background(FColor.Yellow_2)
+                .clip(RoundedCornerShape(12.dp)) // 將陰影範圍限制在對話框邊界內
+                .background(Color.White)
                 .padding(16.dp)
         ) {
 
-            Row(modifier = Modifier.align(Alignment.TopStart)) {
-                LazyColumn(modifier = Modifier.padding(start = 16.dp)) {
-                    itemsIndexed(cities) { index, city ->
-                        val textColor = if (selectedCity == city.name) Color.Blue else Color.Black
+            Column {
 
-                        Text(text = city.name, color = textColor,
-                            modifier = Modifier
-                                .clickable {
-                                    districtExpand = !districtExpand
-                                    selectedCity =
-                                        if (selectedCity == city.name) null else city.name
-                                    selectedCityIndex = index
-                                }
-                        )
-                    }
+                Button(
+                    onClick = { citySet = !citySet },
+                    colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
+                ) {
+                    Text(choiceCity, style = MaterialTheme.typography.bodyLarge)
                 }
-                VerticalDivider(
-                    modifier = Modifier.padding(start = 16.dp),
-                    thickness = 5.dp,
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                    thickness = 2.dp,
                     color = Color.Black
                 )
 
 
-//                Spacer(modifier = Modifier.width(16.dp)) // 使用 Spacer 代替 VerticalDivider
-//
-//                foodLabel("restaurant_tags", randomFoodVM)
-                Column {
-                    if (districtExpand) {
-                        DistrictLabel(selectedCityIndex, cities, onDismiss)
-                    }
+                if (citySet) {
+                    CityLabel(cities, randomFoodVM, onDismiss)
                 }
             }
+            IconButton(
+                modifier = Modifier.align(Alignment.TopEnd),
+                onClick = onDismiss
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_close_24),
+                    contentDescription = "Close"
+                )
+            }
+
         }
     }
 }
@@ -325,25 +327,40 @@ fun SettingDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
     ) {
         Box(
             modifier = Modifier
-                .width(300.dp)
-                .height(500.dp)
+                .fillMaxSize()
                 .shadow(elevation = 32.dp, shape = RectangleShape) // 添加陰影
-                .clip(RectangleShape) // 將陰影範圍限制在對話框邊界內
-                .background(FColor.Yellow_2)
+                .clip(RoundedCornerShape(12.dp)) // 將陰影範圍限制在對話框邊界內
+                .background(Color.White)
                 .padding(16.dp)
         ) {
 
-            Row(modifier = Modifier.align(Alignment.TopStart)) {
-                Column {
-                    Text("餐廳種類",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.clickable { restSet = !restSet })
-                    Text("食物種類", style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.clickable { foodSet = !foodSet })
+            Column {
+                Row {
+                    Button(
+                        onClick = {
+                            restSet = !restSet
+                            foodSet = false
+                        },
+                        colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
+                    ) {
+                        Text("餐廳種類", style = MaterialTheme.typography.titleLarge)
+                    }
+
+                    Button(
+                        onClick = {
+                            foodSet = !foodSet
+                            restSet = false
+                        },
+                        colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
+                    ) {
+                        Text("食物種類", style = MaterialTheme.typography.titleLarge)
+                    }
                 }
-                VerticalDivider(
-                    modifier = Modifier.padding(start = 16.dp),
-                    thickness = 5.dp,
+
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                    thickness = 2.dp,
                     color = Color.Black
                 )
 
@@ -351,25 +368,27 @@ fun SettingDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
 //                Spacer(modifier = Modifier.width(16.dp)) // 使用 Spacer 代替 VerticalDivider
 //
 //                foodLabel("restaurant_tags", randomFoodVM)
-                Column {
-                    if (restSet) {
-                        FoodLabel("restaurant_tags", randomFoodVM)
-                    }
-                    if (foodSet) {
-                        FoodLabel("food_tags", randomFoodVM)
-                    }
+
+                if (restSet) {
+                    FoodLabel("restaurant_tags", randomFoodVM)
+                }
+                if (foodSet) {
+                    FoodLabel("food_tags", randomFoodVM)
                 }
             }
 
-            Button(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
+            IconButton(
+                modifier = Modifier.align(Alignment.TopEnd),
+                onClick = onDismiss
             ) {
-                Text("確認", color = FColor.Dark)
+                Icon(
+                    painter = painterResource(R.drawable.baseline_close_24),
+                    contentDescription = "Close"
+                )
             }
-
         }
+
+
     }
 }
 
@@ -381,11 +400,10 @@ fun FoodLabel(selectLabel: String, randomFoodVM: RandomFoodVM) {
     }
     val foodLabel by randomFoodVM.foodLabel.collectAsState()
     val selectedItems = remember { mutableStateListOf<String>() }
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 60.dp),
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 4.dp)
+            .padding(4.dp)
     ) {
         items(foodLabel[selectLabel] ?: emptyList()) { filter ->
             var selected by remember { mutableStateOf(false) }
@@ -401,7 +419,16 @@ fun FoodLabel(selectLabel: String, randomFoodVM: RandomFoodVM) {
                     // 更新 ViewModel 中的設定隨機食物列表
                     randomFoodVM.updateSettingRandomFood(selectedItems)
                 },
-                label = { Text(filter) },
+                label = {
+                    Text(
+                        text = filter,
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                    )
+                },
                 colors =
                 FilterChipDefaults.filterChipColors(
                     containerColor = Color.White,
@@ -409,35 +436,75 @@ fun FoodLabel(selectLabel: String, randomFoodVM: RandomFoodVM) {
                     selectedLabelColor = FColor.Orange_3rd
 
                 ),
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier
+                    .padding(4.dp)
+                    .wrapContentSize()
             )
         }
     }
 }
 
 @Composable
-fun DistrictLabel(cityIndex: Int, cities: List<City>, onDismiss:() -> Unit){
-    val context = LocalContext.current
-    val selectedItems = remember { mutableStateListOf<String>() }
-    val city = cities[cityIndex]
-    LazyColumn (
+fun CityLabel(
+    cities: List<City>, randomFoodVM: RandomFoodVM, onDismiss: () -> Unit
+) {
+    var districtExpend by remember { mutableStateOf(false) }
+    var cityExpend by remember { mutableStateOf(true) }
+    var choiceCity by remember { mutableStateOf("") }
+    LazyColumn(
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(city.districts) { districts ->
-            var selected by remember { mutableStateOf(false) }
-            FilterChip(
-                selected = selected,
-                onClick = {onDismiss()},
-                label = { Text(districts.name) },
-                colors =
-                FilterChipDefaults.filterChipColors(
-                    containerColor = Color.White,
-                    selectedContainerColor = (colorResource(R.color.orange_5th)),
-                    selectedLabelColor = FColor.Orange_3rd
-
-                ),
-                modifier = Modifier.padding(4.dp)
-            )
+        items(cities) { city ->
+            if (cityExpend) {
+                Button(
+                    onClick = {
+                        districtExpend = true
+                        cityExpend = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FColor.Orange_5th,
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .wrapContentSize()
+                ) {
+                    Text(
+                        text = city.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                    )
+                }
+            }
+            if (districtExpend) {
+                city.districts.forEach { district ->
+                    Button(
+                        onClick = {
+                            randomFoodVM.updateChoiceCity("${city.name}${district.name}")
+                            onDismiss()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FColor.Orange_5th,
+                            contentColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .wrapContentSize()
+                    ) {
+                        Text(
+                            text = district.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                        )
+                    }
+                }
+            }
         }
     }
 }

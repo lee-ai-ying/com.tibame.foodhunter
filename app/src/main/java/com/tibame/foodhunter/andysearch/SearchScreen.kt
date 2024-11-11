@@ -27,14 +27,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,11 +69,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 
 @Composable
-fun ControllerScreen(){
+fun ControllerScreen() {
 
 }
 
@@ -157,6 +160,14 @@ fun ShowSearchBar(
 
 
     val finalSearchText by searchTextVM.finalSearchText.collectAsState()
+
+    LaunchedEffect(finalSearchText) {
+        Log.d("buildSearch", finalSearchText)
+        if (finalSearchText.isNotBlank()) {
+            searchTextVM.updateSearchRest(finalSearchText)
+        }
+    }
+
     SearchBar(
         query = inputSearch,
         onQueryChange = {
@@ -176,16 +187,10 @@ fun ShowSearchBar(
                 shape = RoundedCornerShape(12.dp)
             ),
 //        windowInsets =if (isActive) SearchBarDefaults.windowInsets else WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp),
-        windowInsets = WindowInsets(top = (-8).dp, left = 0.dp, right = 0.dp),
+        windowInsets = WindowInsets(top = 0.dp, left = 0.dp, right = 0.dp),
         onSearch = {
             isActive = false
-            searchTextVM.updateSearchText(it)
             searchTextVM.buildSearch()
-            if (finalSearchText.isNotBlank()) {
-                coroutineScope.launch {
-                    searchTextVM.updateSearchRest(finalSearchText)
-                }
-            }
             searchTextVM.clearChoiceRest() // 清空選擇餐廳
             if (state) {
                 navController.navigate(context.getString(R.string.SearchToGoogleMap))
@@ -251,15 +256,17 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    Log.d("Restaurant", "$restaurants")
+
     val sortedRestaurants = restaurants.sortedBy { restaurant ->
         currentLocation?.let { location ->
             haversine(
                 location.latitude, location.longitude,
-                restaurant.latitude, restaurant.longitude
+                restaurant!!.latitude, restaurant.longitude
             )
-        } ?: restaurant.restaurant_id.toString()
+        } ?: restaurant!!.restaurant_id.toString()
     }
-    Log.d("Restaurant", "1")
     if (state) {
         Row(
             modifier = Modifier
@@ -269,42 +276,37 @@ fun ShowRestaurantLists(
         ) {
 
             Text(
-                text = "", style = TextStyle(
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                text = "附近美食", style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 16.dp)
             )
 
             Spacer(modifier = Modifier.weight(0.6f))
-            Row(
+            Button(
                 modifier = Modifier
-                    .clickable {
-                        navController.navigate(route = context.getString(R.string.randomFood))
-                    }
-                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(R.color.orange_5th)),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .clip(RoundedCornerShape(10.dp)),
+                onClick = { navController.navigate(route = context.getString(R.string.randomFood)) },
+                colors = ButtonColors(
+                    contentColor = Color.White,
+                    containerColor = FColor.Orange_3rd,
+                    disabledContentColor = Color.White,
+                    disabledContainerColor = FColor.Orange_3rd
+                )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.random_food_icon),
+                    painterResource(R.drawable.random_food_icon),
                     contentDescription = "Go to Map",
                     modifier = Modifier
                         .clickable {
                             navController.navigate(route = context.getString(R.string.randomFood))
                         }
-                        .size(40.dp, 40.dp)
-                        .padding(start = 8.dp, end = 4.dp)
+//                        .padding(start = 8.dp, end = 4.dp)
                 )
                 Text(
                     text = "美食轉盤", style = TextStyle(
-                        color = Color.Black,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.W300
-                    )
+                    ),
+                    modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
 
@@ -319,7 +321,7 @@ fun ShowRestaurantLists(
             items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
-                    restaurant = restaurant,
+                    restaurant = restaurant!!,
                     navController = navController,
                     currentLocation = currentLocation,
                     cardClick = null,
@@ -345,7 +347,7 @@ fun ShowRestaurantLists(
             items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
-                    restaurant = restaurant,
+                    restaurant = restaurant!!,
                     navController = navController,
                     currentLocation = currentLocation,
                     cardClick = cardClick,
@@ -373,7 +375,7 @@ fun RestCard(
     currentLocation: LatLng?,  //傳入當前位子
     cardClick: ((Restaurant) -> Unit)?, // 對這個Card點擊要做的動作 沒有的話會到餐廳詳細的頁面
     trailingIcon: @Composable () -> Unit = {},
-    cardPadding: Dp = 16.dp
+    cardPadding: Dp = 8.dp
 ) {
     val distance = currentLocation?.let { location ->
         haversine(
@@ -412,14 +414,33 @@ fun RestCard(
                         )
                         Icon(
                             painter = painterResource(R.drawable.baseline_location_pin_24),
-                            contentDescription = "calculator KM"
+                            contentDescription = "calculator KM",
+                            modifier = Modifier.size(20.dp)
                         )
+
+                        val averageScore = if (restaurant.total_review != 0) {
+                            restaurant.total_scores.toDouble() / restaurant.total_review
+                        } else {
+                            0.0
+                        }
+                        Log.d("rating", "$restaurant, ${restaurant.total_review}, ${restaurant.total_review}")
+                        val formattedAverageScore = String.format("%.1f", averageScore)
+                        val text = formattedAverageScore
+                        Text(
+                            text = text,
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_star),
+                            contentDescription = "rating",
+                            modifier = Modifier.size(20.dp)
+                        )
+
                     }
                     Text(
-                        text = extractCityArea(restaurant.address) ?: "",
-                        modifier = Modifier.widthIn(min = 100.dp, max = 150.dp), // 限制宽度
+                        text = extractAddressPart(restaurant.address) ?: "",
+                        modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Visible
                     )
                 }
             },
@@ -440,7 +461,7 @@ fun RestCard(
                     Spacer(modifier = Modifier.padding(4.dp))
                     Text(
                         text = "營業中", style = TextStyle(
-                            color = colorResource(R.color.teal_700), fontSize = 16.sp
+                            color = colorResource(R.color.teal_700), fontSize = 12.sp
                         )
                     )
 //                    if (IsOpenNow(restaurant.opening_hours)) {

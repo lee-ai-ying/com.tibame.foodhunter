@@ -1,5 +1,6 @@
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,19 +49,17 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
-import com.tibame.foodhunter.ui.theme.FoodHunterTheme
+import com.tibame.foodhunter.zoe.CarouselItem
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
 import com.tibame.foodhunter.zoe.PostEditorViewModel
@@ -77,35 +76,62 @@ enum class NewPostSheetContent {
     TAGS,
     LOCATION
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewPost(
     navController: NavHostController,
     postViewModel: PostViewModel = viewModel(),
-    testVM: SearchScreenVM = viewModel(),
-    PostEditorViewModel: PostEditorViewModel = viewModel(),
+    searchScreenVM: SearchScreenVM = viewModel(),
+    postEditorViewModel: PostEditorViewModel = viewModel(),
     userVM: UserViewModel,
     postId: Int? = null
 ) {
-
-    val choiceRest by testVM.choiceOneRest.collectAsState()
+    // State declarations
+    val choiceRest by searchScreenVM.choiceOneRest.collectAsState()
     var selectedTag by remember { mutableStateOf("") }
-    val selectedLocation by PostEditorViewModel.selectedLocation.collectAsState()
+    val selectedLocation by postEditorViewModel.selectedLocation.collectAsState()
     var text by remember { mutableStateOf(TextFieldValue("")) }
     var currentSheet by remember { mutableStateOf(NewPostSheetContent.NONE) }
     var showBottomSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var selectedCarouselItems by remember { mutableStateOf<List<CarouselItem>>(emptyList()) }
     var isEditing by remember { mutableStateOf(false) }
-    // 收集貼文數據
+
+    LaunchedEffect(choiceRest) {
+        choiceRest?.let { restaurant ->
+            Log.d("LocationSelection", "更新貼文位置: restaurantId = ${restaurant.restaurant_id}, name = ${restaurant.name}")
+            postEditorViewModel.updateLocation(restaurant.restaurant_id, restaurant.name)
+        }
+    }
+
+    // User and post data
+    val membernameState = remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
     val post = if (postId != null) {
         postViewModel.getPostById(postId).collectAsState().value
     } else {
         null
     }
-    val membernameState = remember { mutableStateOf(0) }
-    val coroutineScope = rememberCoroutineScope()
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(),
+        onResult = { uris: List<Uri> ->
+            selectedImageUris = uris
+            // 清除旧的 CarouselItems
+            selectedCarouselItems = emptyList()
+            // 更新 ViewModel
+            postEditorViewModel.updatePhotos(context, uris)
+            // 如果在编辑模式，切换回普通模式显示新选择的图片
+            isEditing = false
+        }
+    )
+
+
+    // Effects
+    LaunchedEffect(postId) {
+        postEditorViewModel.initializeEditor(postId)
+    }
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -116,42 +142,26 @@ fun NewPost(
         }
     }
 
-
-    // 監聽貼文數據變化並更新 UI
     LaunchedEffect(post) {
         post?.let {
             isEditing = true
             text = TextFieldValue(it.content)
             selectedTag = it.postTag
-            // 這裡可以添加圖片 URI 的處理
-            PostEditorViewModel.apply {
+            selectedCarouselItems = it.carouselItems
+            postEditorViewModel.apply {
                 updateInputData(content = it.content)
                 updateTags(setOf(it.postTag))
                 updateLocation(0, it.location)
-                // 如果有需要，這裡可以設置原有的圖片
             }
         }
     }
 
-
-
-    // 更新圖片選擇器
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(),
-        onResult = { uris: List<Uri> ->
-            selectedImageUris = uris
-            PostEditorViewModel.updatePhotos(context, uris)
-        }
-    )
-
-    // 標籤列表
+    // Available tags
     val availableTags = remember {
-        listOf(
-            "早午餐", "午餐", "晚餐", "下午茶",
-            "宵夜", "甜點", "飲料"
-        )
+        listOf("早午餐", "午餐", "晚餐", "下午茶", "宵夜", "甜點", "飲料")
     }
 
+    // Bottom sheet content
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -160,7 +170,7 @@ fun NewPost(
             },
             containerColor = Color.White,
             sheetMaxWidth = Dp.Unspecified,
-            windowInsets = WindowInsets(0),
+            windowInsets = WindowInsets(0)
         ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(
@@ -168,27 +178,22 @@ fun NewPost(
                     selectedTags = selectedTag,
                     onFilterChange = { newTag ->
                         selectedTag = newTag
-                        // 將單個標籤包裝為 Set 後更新
-                        PostEditorViewModel.updateTags(setOf(newTag))
+                        postEditorViewModel.updateTags(setOf(newTag))
                     },
-                    onConfirm = {
-                        showBottomSheet = false
-                    }
+                    onConfirm = { showBottomSheet = false }
                 )
                 NewPostSheetContent.LOCATION -> LocationSelectionSheet(
                     onLocationSelected = { restaurantId ->
-                        choiceRest?.let { restaurant ->
-                            PostEditorViewModel.updateLocation(restaurantId, restaurant.name)
-                        }
                         showBottomSheet = false
                     },
-                    testVM = testVM
+                    testVM = searchScreenVM
                 )
                 NewPostSheetContent.NONE -> {}
             }
         }
     }
 
+    // Main content
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -196,7 +201,7 @@ fun NewPost(
             .fillMaxSize()
             .padding(10.dp)
     ) {
-        // 圖片顯示區域
+        // Image display area
         item {
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -206,28 +211,36 @@ fun NewPost(
                     .height(300.dp)
                     .padding(16.dp)
             ) {
-                if (selectedImageUris.isNotEmpty()) {
-                    ImageDisplay(
-                        imageSource = ImageSource.UriSource(selectedImageUris),
-                        modifier = Modifier.fillMaxSize()
-                    )
+                when {
+                    selectedImageUris.isNotEmpty() -> {
+                        ImageDisplay(
+                            imageSource = ImageSource.UriSource(selectedImageUris),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    selectedCarouselItems.isNotEmpty() -> {
+                        ImageDisplay(
+                            imageSource = ImageSource.CarouselSource(selectedCarouselItems),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }
 
-        // 輸入區域
+        // Input area
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
-                // 文字輸入框
+                // Content TextField
                 TextField(
                     value = text,
                     onValueChange = { newText ->
                         text = newText
-                        PostEditorViewModel.updateInputData(content = newText.text)
+                        postEditorViewModel.updateInputData(content = newText.text)
                     },
                     label = { Text("貼文內容") },
                     modifier = Modifier
@@ -249,19 +262,20 @@ fun NewPost(
                     )
                 )
 
-                // 圖片選擇按鈕
+                // Image selection button
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = Color.Black
+                        contentColor = if (isEditing) Color.Gray else Color.Black
                     ),
                     onClick = {
-                        pickImageLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                        if (!isEditing) {
+                            pickImageLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
-                        )
+                        }
                     },
+                    enabled = !isEditing
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -274,20 +288,28 @@ fun NewPost(
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = stringResource(id = R.string.select_picture))
+                        Text(
+                            text = if (isEditing)
+                                "編輯模式下無法更改圖片"
+                            else
+                                stringResource(id = R.string.select_picture)
+                        )
                     }
                 }
 
-                // 位置選擇按鈕
+                // Location selection button
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = Color.Black
+                        contentColor = if (isEditing) Color.Gray else Color.Black
                     ),
                     onClick = {
-                        currentSheet = NewPostSheetContent.LOCATION
-                        showBottomSheet = true
+                        if (!isEditing) {
+                            currentSheet = NewPostSheetContent.LOCATION
+                            showBottomSheet = true
+                        }
                     },
+                    enabled = !isEditing
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -296,18 +318,23 @@ fun NewPost(
                     ) {
                         Icon(
                             Icons.Outlined.LocationOn,
-                            contentDescription = "location"
+                            contentDescription = "location",
+                            tint = if (isEditing) Color.Gray else Color.Black
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = if (selectedLocation.isEmpty())
-                            stringResource(id = R.string.restaurant_location)
-                        else
-                            selectedLocation
+                        Text(
+                            text = if (selectedLocation.isEmpty()) {
+                                if (isEditing) {
+                                    post?.location ?: stringResource(id = R.string.restaurant_location)
+                                } else {
+                                    stringResource(id = R.string.restaurant_location)
+                                }
+                            } else selectedLocation
                         )
                     }
                 }
 
-                // 標籤選擇按鈕
+                // Tag selection button
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -331,23 +358,22 @@ fun NewPost(
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(text = if (selectedTag.isEmpty())
                             stringResource(id = R.string.Select_tag)
-                        else
-                            selectedTag
+                        else selectedTag
                         )
                     }
                 }
 
-                // 發布按鈕
+                // Submit button
                 Button(
                     onClick = {
-                        PostEditorViewModel.updatePublisher(membernameState.value)
-                        PostEditorViewModel.submitPost(context)
+                        postEditorViewModel.updatePublisher(membernameState.value)
+                        postEditorViewModel.submitPost(context)
                         navController.navigate(context.getString(R.string.str_Recommended_posts))
                     },
                     colors = ButtonDefaults.buttonColors(
                         colorResource(id = R.color.orange_2nd)
                     ),
-                    modifier = Modifier.fillMaxWidth(0.8f),
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(text = stringResource(id = R.string.str_post))
                 }
@@ -372,6 +398,8 @@ fun LocationSelectionSheet(
         )
 
         val testRestaurant by testVM.selectRestList.collectAsState()
+        Log.d("LocationSelection", "載入餐廳列表: ${testRestaurant.size} 筆資料")
+
         val scope = rememberCoroutineScope()
         var searchQuery by remember { mutableStateOf("") }
         var isActive by remember { mutableStateOf(false) }
@@ -390,24 +418,25 @@ fun LocationSelectionSheet(
             onActiveChange = { isActive = it },
             modifier = Modifier.padding(horizontal = 16.dp),
             onSearch = {
-                scope.launch { testVM.updateSearchRest(searchQuery) }
+                scope.launch {
+                    Log.d("LocationSelection", "執行搜尋: query = $searchQuery")
+                    testVM.updateSearchRest(searchQuery)
+                }
             }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 使用現有的 RestaurantList
         RestaurantList(
             restaurants = testRestaurant,
             onRestaurantSelected = { restaurantId ->
-                // 找到被選中的餐廳
                 testRestaurant.find { it.restaurant_id == restaurantId }?.let { restaurant ->
-                    // 更新 ViewModel 中選擇的餐廳
+                    Log.d("LocationSelection", "選擇餐廳: id = $restaurantId, name = ${restaurant.name}")
                     scope.launch {
                         testVM.updateChoiceOneRest(restaurant)
+                        Log.d("LocationSelection", "更新已選擇餐廳完成")
                     }
                 }
-                // 呼叫回調函數
                 onLocationSelected(restaurantId)
             },
             modifier = Modifier.fillMaxWidth()
@@ -478,12 +507,3 @@ fun TagSelectionSheet(
 
 
 
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun PostPreview() {
-//
-//    FoodHunterTheme {
-//        NewPost(rememberNavController())
-//    }
-//}

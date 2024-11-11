@@ -126,12 +126,10 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
     val reviews by viewModel.reviewState.collectAsState()  // 觀察評論列表的資料變動
     Log.d("ReviewList", "Loaded reviews: ${reviews.size}")
 
-    LazyColumn {
-        items(reviews) { review ->
-            // 顯示每條評論的UI
-            Text(text = review.content)
-
-            Log.d("ReviewList", "Review content: ${review.content}")
+    Column{
+        reviews.forEach { review ->
+            ReviewItem(review)
+            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
         }
     }
 }
@@ -156,7 +154,7 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
 //}
 /**評論範例資料*/
 @Composable
-fun ReviewItem(review: Review) {
+fun ReviewItem(review: Reviews) {
     var rememberRating by remember { mutableStateOf(review.rating) }
     var likeCount by remember { mutableStateOf(0) }
     var dislikeCount by remember { mutableStateOf(0) }
@@ -182,7 +180,7 @@ fun ReviewItem(review: Review) {
         ) {
             Spacer(modifier = Modifier.size(8.dp))
             Text(
-                text = review.username,
+                text = review.reviewer.name,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -392,4 +390,3 @@ fun CommentDialog(
         }
     }
 }
-

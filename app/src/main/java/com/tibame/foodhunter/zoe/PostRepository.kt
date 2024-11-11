@@ -143,45 +143,6 @@ class PostRepository {
 
         Log.d("PostRepository", "成功處理 ${carouselItems.size} 張貼文照片")
 
-        // 評論處理
-        Log.d("PostRepository", "開始處理貼文 $postId 的評論")
-        val comments = fetchComments(this.postId).map { commentResponse ->
-            Log.d("PostRepository", """
-            處理評論:
-            Comment ID: ${commentResponse.messageId}
-            Commenter ID: ${commentResponse.memberId}
-            Commenter Name: ${commentResponse.memberNickname}
-            Profile Image 是否存在: ${!commentResponse.profileImage.isNullOrEmpty()}
-        """.trimIndent())
-
-            val commentProfileImage = if (!commentResponse.profileImage.isNullOrEmpty()) {
-                try {
-                    val bitmap = processBase64Image(commentResponse.profileImage, commentResponse.memberId)
-                    Log.d("PostRepository", "評論者 ${commentResponse.memberId} 的頭像處理${if (bitmap != null) "成功" else "失敗"}")
-                    bitmap
-                } catch (e: Exception) {
-                    Log.e("PostRepository", "處理評論者頭像時發生錯誤", e)
-                    null
-                }
-            } else {
-                Log.d("PostRepository", "評論者 ${commentResponse.memberId} 沒有頭像數據")
-                null
-            }
-
-            Comment(
-                id = commentResponse.messageId,
-                commenter = Commenter(
-                    id = commentResponse.memberId,
-                    name = commentResponse.memberNickname,
-                    avatarBitmap = commentProfileImage
-                ),
-                content = commentResponse.content,
-                timestamp = commentResponse.messageTime
-            )
-        }
-
-        Log.d("PostRepository", "成功處理 ${comments.size} 條評論")
-
         // 處理發布者頭像
         Log.d("PostRepository", "開始處理發布者 $publisher 的頭像")
         val publisherProfileBitmap = if (!publisherProfileImage.isNullOrEmpty()) {
@@ -198,7 +159,8 @@ class PostRepository {
             null
         }
 
-        val post = Post(
+        // Initialize post without comments
+        return Post(
             postId = this.postId,
             publisher = Publisher(
                 id = this.publisher,
@@ -210,20 +172,64 @@ class PostRepository {
             timestamp = this.postTime,
             postTag = this.postTag,
             carouselItems = carouselItems,
-            comments = comments,
+            comments = emptyList(),  // Initialize with empty comments
             isFavorited = false
         )
+    }
+    suspend fun loadCommentsForPost(postId: Int) {
+        try {
+            Log.d("PostRepository", "開始載入貼文 $postId 的評論")
+            val commentResponses = fetchComments(postId)
+            val comments = commentResponses.map { commentResponse ->
+                Log.d("PostRepository", """
+                處理評論:
+                Comment ID: ${commentResponse.messageId}
+                Commenter ID: ${commentResponse.memberId}
+                Commenter Name: ${commentResponse.memberNickname}
+                Profile Image 是否存在: ${!commentResponse.profileImage.isNullOrEmpty()}
+                """.trimIndent())
 
-        Log.d("PostRepository", """
-        貼文處理完成:
-        Post ID: ${post.postId}
-        Publisher: ${post.publisher.name} (ID: ${post.publisher.id})
-        Has Publisher Avatar: ${post.publisher.avatarBitmap != null}
-        Photos Count: ${post.carouselItems.size}
-        Comments Count: ${post.comments.size}
-    """.trimIndent())
+                val commentProfileImage = if (!commentResponse.profileImage.isNullOrEmpty()) {
+                    try {
+                        val bitmap = processBase64Image(commentResponse.profileImage, commentResponse.memberId)
+                        Log.d("PostRepository", "評論者 ${commentResponse.memberId} 的頭像處理${if (bitmap != null) "成功" else "失敗"}")
+                        bitmap
+                    } catch (e: Exception) {
+                        Log.e("PostRepository", "處理評論者頭像時發生錯誤", e)
+                        null
+                    }
+                } else {
+                    Log.d("PostRepository", "評論者 ${commentResponse.memberId} 沒有頭像數據")
+                    null
+                }
 
-        return post
+                Comment(
+                    id = commentResponse.messageId,
+                    commenter = Commenter(
+                        id = commentResponse.memberId,
+                        name = commentResponse.memberNickname,
+                        avatarBitmap = commentProfileImage
+                    ),
+                    content = commentResponse.content,
+                    timestamp = commentResponse.messageTime
+                )
+            }
+
+            // Update the post with loaded comments
+            _postList.update { currentPosts ->
+                currentPosts.map { post ->
+                    if (post.postId == postId) {
+                        post.copy(comments = comments)
+                    } else {
+                        post
+                    }
+                }
+            }
+
+            Log.d("PostRepository", "成功載入 ${comments.size} 條評論")
+        } catch (e: Exception) {
+            Log.e("PostRepository", "載入評論時發生錯誤", e)
+        }
     }
 
     private inner class ImageProcessor {
@@ -397,29 +403,46 @@ class PostRepository {
 
     suspend fun updatePost(postId: Int, postData: PostCreateData): Boolean {
         val url = "${serverUrl}/post/update"
+
         return try {
+            Log.d("UpdatePost", "開始更新貼文流程 - ID: $postId")
+            Log.d("UpdatePost", "更新內容 - " +
+                    "Content: ${postData.content}, " +
+                    "Tag: ${postData.postTag}, " +
+                    "Photos: ${postData.photos.size}")
+
             val updateRequest = mapOf(
                 "postId" to postId,
+                "publisher" to postData.publisher,
                 "content" to postData.content,
                 "postTag" to postData.postTag,
                 "restaurantId" to postData.restaurantId,
-                "photos" to postData.photos
+                "photos" to postData.photos.map { photo ->
+                    mapOf(
+                        "imgBase64Str" to photo.imgBase64Str
+                    )
+                }
             )
+
             val json = gson.toJson(updateRequest)
-            Log.d("UpdatePost", "Request: $json")
+            Log.d("UpdatePost", "發送更新請求")
 
             val result = CommonPost(url, json)
-            val response = gson.fromJson(result, UpdateResponse::class.java)
+            Log.d("UpdatePost", "收到伺服器回應: $result")
 
-            if (response.success) {
+            if (result.contains("貼文更新成功")) {
+                // 成功的情況
+                Log.d("UpdatePost", "更新成功: $result")
                 loadPosts() // 重新載入貼文列表
-                true
+                true  // 返回 true 表示成功
             } else {
-                Log.e("UpdatePost", "Update failed: ${response.message}")
+                // 失敗的情況
+                Log.e("UpdatePost", "更新失敗，回應: $result")
                 false
             }
         } catch (e: Exception) {
-            Log.e("UpdatePost", "Error updating post", e)
+            Log.e("UpdatePost", "更新過程發生錯誤: ${e.message}")
+            e.printStackTrace()
             false
         }
     }

@@ -22,6 +22,7 @@ import java.io.InputStream
 
 class UserViewModel : ViewModel() {
     var username = mutableStateOf("")
+    var emailFindPassword = mutableStateOf("")
     // 登入
 // 添加 memberId 的 StateFlow
     private val _memberId = MutableStateFlow(0)
@@ -319,6 +320,85 @@ class UserViewModel : ViewModel() {
         }
 
     }
+
+    suspend fun getEmailInfo(email: String): User? {
+        return try {
+            val url = "${serverUrl}/member/getEmailInfo"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("email", email)
+
+            val result = CommonPost(url, jsonObject.toString())
+            Log.e("Response", result) // 输出响应结果
+
+            // 使用 TypeToken 获取 User 的类型
+            val userType = object : TypeToken<User>() {}.type
+            val user = gson.fromJson<User>(result, userType) // 显式指定类型
+
+            user
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "获取用户信息时出错: ${e.message}")
+            null
+        }
+
+
+    }
+    suspend fun saveNewPassword(
+        email: String,
+        password: String,
+    ): Boolean {
+        try {
+            // server URL
+            val url = "${serverUrl}/member/saveNewPassword"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+
+            // 將註冊資料轉成 JSON
+            jsonObject.addProperty("email", email)
+            jsonObject.addProperty("password", password)
+            // 發出 POST 請求，取得註冊結果
+            val result = CommonPost(url, jsonObject.toString())
+            val responseJson = gson.fromJson(result, JsonObject::class.java)
+
+            // 根據響應中的 logged 屬性來判斷是否註冊成功
+            return responseJson.get("save").asBoolean
+        } catch (e: Exception) {
+            return false
+        }
+    }
+    suspend fun getMemberUsername(memberId: Int): String? {
+        return try {
+            Log.d("UserViewModel", "=== 開始獲取 username ===")
+
+            // 檢查 URL 和請求內容
+            val url = "${serverUrl}/post/GetUsername"  // 注意這裡改成跟其他 API 一樣的路徑格式
+            val jsonObject = JsonObject().apply {
+                addProperty("memberId", memberId)
+            }
+
+            Log.d("UserViewModel", "請求 URL: $url")
+            Log.d("UserViewModel", "請求內容: ${jsonObject}")
+
+            // 使用 CommonPost 發送請求
+            val result = CommonPost(url, jsonObject.toString())
+            Log.d("UserViewModel", "API 回應: $result")
+
+            if (result.isNotEmpty()) {
+                val gson = Gson()
+                val response = gson.fromJson(result, JsonObject::class.java)
+                val username = response.get("username")?.asString
+                Log.d("UserViewModel", "解析得到的 username: $username")
+                username
+            } else {
+                Log.e("UserViewModel", "API 回應為空")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "獲取 username 失敗", e)
+            null
+        }
+    }
+
 }
 
 

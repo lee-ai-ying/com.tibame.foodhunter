@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
+import androidx.benchmark.UserInfo.currentUserId
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -73,6 +74,7 @@ fun FriendManagementScreen(
         scope.launch {
             // 確保在畫面初次顯示時抓取好友資料
             friendVM.refreshFriends(userVM.username.value)
+            friendVM.refreshFriends2(userVM.username.value)
         }
     }
 
@@ -130,7 +132,7 @@ fun FriendManagementScreen(
                 scope.launch {
                     snackbarHostState.showSnackbar(friend.nickname,withDismissAction = true)
                 }
-            },userVM=userVM, friendVM = friendVM) // 传递 friendVM
+            },userVM=userVM, friendVM = friendVM,navController) // 传递 friendVM
         }
 
         item {
@@ -150,13 +152,13 @@ fun FriendManagementScreen(
                 scope.launch {
                     snackbarHostState.showSnackbar(friend.nickname, withDismissAction = true)
                 }
-            },userVM=userVM, friendVM = friendVM) // 传递 friendVM
+            },userVM=userVM, friendVM = friendVM,navController) // 传递 friendVM
         }
     }
 }
 
 @Composable
-fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel,friendVM: FriendViewModel) {
+fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel,friendVM: FriendViewModel,navController: NavHostController) {
     var showDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     if (showDialog) {
@@ -169,6 +171,7 @@ fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel
                         Log.e("Response","Response2: friendDel: $friendDel")
                         if (friendDel) {
                             // 追蹤成功後刷新好友列表
+                            friendVM.refreshFriends2(userVM.username.value)
                             friendVM.refreshFriends(userVM.username.value)
                         }
                         // 隱藏對話框
@@ -183,7 +186,7 @@ fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel
     }
 
     ListItem(
-        modifier = Modifier.clickable(onClick = onItemClick),
+        modifier = Modifier.clickable(onClick = {navController.navigate("person_homepage/${friend.member_id}")}),
         headlineContent = { Text(friend.nickname) },
         leadingContent = {
             val imageBitmap = friend.profileImageBase64?.let { base64ToBitmap(it) }
@@ -215,15 +218,15 @@ fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel
                 Icon(Icons.Filled.Delete, contentDescription = "delete")
             }
         }
+
     )
 }
 
 
 @Composable
-fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel,friendVM: FriendViewModel) {
+fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel,friendVM: FriendViewModel,navController: NavHostController) {
     var showDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -232,6 +235,7 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewMode
                 Button(onClick = { coroutineScope.launch {val friendAdd = friendVM.friendAdd(userVM.username.value,friend.username)
                     if (friendAdd) {
                         // 追蹤成功後刷新好友列表
+                        friendVM.refreshFriends2(userVM.username.value)
                         friendVM.refreshFriends(userVM.username.value)
                     }
                     // 隱藏對話框
@@ -244,9 +248,8 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewMode
             }
         )
     }
-
     ListItem(
-        modifier = Modifier.clickable(onClick = onItemClick),
+        modifier = Modifier.clickable(onClick = {navController.navigate("person_homepage/${friend.member_id}")}),
         headlineContent = { Text(friend.nickname) },
         leadingContent = {
             val imageBitmap = friend.profileImageBase64?.let { base64ToBitmap(it) }
