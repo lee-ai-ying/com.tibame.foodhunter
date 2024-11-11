@@ -1,8 +1,10 @@
 package com.tibame.foodhunter.sharon
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,9 +42,19 @@ fun CalendarScreen(
     val isLoading by calendarVM.isLoading.collectAsStateWithLifecycle()
     val memberId by userVM.memberId.collectAsStateWithLifecycle()
 
+    val lazyListState = rememberLazyListState()
+
     // 初始化資料 取得用戶 ID 並初始化資料
     LaunchedEffect(memberId) {
         calendarVM.initUserData(memberId)
+
+    }
+
+    // 當筆記列表更新時，自動滾動到頂部
+    LaunchedEffect(filteredItems.size) {
+        if (filteredItems.isNotEmpty()) {
+            lazyListState.animateScrollToItem(0)
+        }
     }
 
 // 選中日期的狀態
@@ -67,35 +79,36 @@ fun CalendarScreen(
         }
     }
 
-    // 2. 當日期被選中時，過濾出該天的項目
     LaunchedEffect(selectedDate, filteredItems) {
-        dayItems = filteredItems.filter { item ->
-            when (item) {
-                is Note -> {
-                    selectedDate?.let { date ->
+        selectedDate?.let { date ->
+            dayItems = filteredItems.filter { item ->
+                when (item) {
+                    is Note -> {
                         val calendar = Calendar.getInstance().apply {
                             time = item.selectedDate
                         }
                         calendar.get(Calendar.DAY_OF_MONTH).toString() == date.dayOfMonth &&
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.YEAR) == date.year
-                    } ?: false
+                    }
+                    is Group -> {
+                        val calendar = Calendar.getInstance().apply {
+                            time = item.groupDate
+                        }
+                        calendar.get(Calendar.DAY_OF_MONTH).toString() == date.dayOfMonth &&
+                                (calendar.get(Calendar.MONTH) + 1) == date.month &&
+                                calendar.get(Calendar.YEAR) == date.year
+                    }
+                    else -> false
                 }
-                else -> false
             }
+        } ?: run {
+            // 如果 selectedDate 為空，則清空 dayItems，避免不必要的計算
+            dayItems = emptyList()
         }
-    }
 
-//    // 當 selectedDate 改變時更新 selectedBooks
-//    LaunchedEffect(selectedDate, books) {
-//        selectedBooks = books.filter { book ->
-//            selectedDate?.let { date ->
-//                book.date.dayOfMonth.toString() == date.dayOfMonth &&
-//                        book.date.monthValue == date.month &&
-//                        book.date.year == date.year
-//            } ?: false
-//        }
-//    }
+        Log.d("CalendarScreen", "過濾後項目數量: ${dayItems.size}")
+    }
 
     Column {
         // 日曆部分
@@ -123,7 +136,7 @@ fun CalendarScreen(
             },
             // 點擊日期時更新選擇的日期和顯示的書籍
             onDateClickListener = { date ->
-                selectedDate = date
+                selectedDate = date ?: return@CalendarWidget // 確保 selectedDate 不為空
             },
         )
         // 載入提示
@@ -162,6 +175,7 @@ fun CalendarScreen(
                             key = { index ->
                                 when (val item = dayItems[index]) {
                                     is Note -> "note_${item.noteId}"
+                                    is Group -> "group_${item.memberId}_${item.groupDate.time}"
                                     else -> index.toString()
                                 }
                             }
@@ -183,21 +197,23 @@ fun CalendarScreen(
                                             .padding(horizontal = 10.dp)
                                     )
                                 }
-                                /* 之後加入揪團時解開註解
+
                                 is Group -> {
                                     NoteOrGroupCard(
                                         type = CardContentType.GROUP,
-                                        date = item.groupDate,
-                                        day = item.day,
+                                        date = item.date,         // 使用格式化後的日期
+                                        day = item.day,           // 使用格式化後的星期
                                         title = item.groupName,
                                         restaurantName = item.restaurantName,
                                         restaurantAddress = item.restaurantAddress,
-                                        headcount = 4,  // 需要加入到 Group model
                                         isPublic = item.isPublic == 1,
-                                        onClick = {}  // 揪團不需要點擊事件
+                                        onClick = {},
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 10.dp)
                                     )
                                 }
-                                */
+
                                 else -> {} // 處理其他可能的情況
                             }
                         }

@@ -26,9 +26,9 @@ class NoteVM : ViewModel() {
     private val repository = NoteRepository.instance
     val notes: StateFlow<List<Note>> = repository.notes
 
-    // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
-    private val _note = MutableStateFlow<Note?>(null)
-    val note: StateFlow<Note?> = _note.asStateFlow()
+//    // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
+//    private val _note = MutableStateFlow<Note?>(null)
+//    val note: StateFlow<Note?> = _note.asStateFlow()
 
     // 所有筆記的完整列表
     private val _allNotes = MutableStateFlow<List<Note>>(emptyList())
@@ -42,8 +42,8 @@ class NoteVM : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
 
-    private var memberId: Int? = null
 
+    private var memberId: Int? = null
 
     fun setMemberId(memberId: Int) {
         this.memberId = memberId
@@ -92,10 +92,10 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 設置搜尋流
+     * 1. 搜尋流程設置
      * 使用 Flow 處理搜尋邏輯，包含：
-     * 1. 防抖（debounce）：避免過於頻繁的搜尋
-     * 2. 即時過濾：搜尋條件改變時自動更新結果
+     * 1.1. 防抖（debounce）：避免過於頻繁的搜尋
+     * 1.2. 即時過濾：搜尋條件改變時自動更新結果
      *  這裡使用 Flow 的特性自動處理狀態更新
      */
     @OptIn(FlowPreview::class)
@@ -111,7 +111,7 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 處理搜尋邏輯
+     * 2. 接收搜尋請求
      */
     fun searchNotes(query: String) {
         Log.d(TAG, "[searchNotes] 接收搜尋請求: $query")
@@ -122,7 +122,7 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 搜尋邏輯
+     * 3. 搜尋結果更新
      */
     private fun updateSearchResults(query: String) {
         Log.d(TAG, "[updateSearchResults] 開始更新搜尋結果")
@@ -141,7 +141,6 @@ class NoteVM : ViewModel() {
         Log.d(TAG, "[updateSearchResults] 過濾後結果數量: ${result.size}")
         _filteredNotes.value = result
         Log.d(TAG, "_filteredNotes value: ${_filteredNotes.value}")
-
     }
 
 
@@ -162,19 +161,6 @@ class NoteVM : ViewModel() {
         // 預留給未來實作篩選功能
     }
 
-    // 當用戶點選某個筆記時
-    fun getNoteById(noteId: Int) {
-        viewModelScope.launch {
-            try {
-                val result = repository.getNoteById(noteId)
-                // 更新選中的筆記
-                _note.value = result
-                Log.d("NoteVM", "Note received: $result")
-            } catch (e: Exception) {
-                Log.e("NoteVM", "Error getting note: ${e.message}")
-            }
-        }
-    }
 
     /**
      * 資源清理

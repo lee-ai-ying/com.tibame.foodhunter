@@ -10,24 +10,21 @@ import com.tibame.foodhunter.sharon.data.Group
 import com.tibame.foodhunter.sharon.data.GroupRepository
 import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.data.NoteRepository
+import com.tibame.foodhunter.sharon.event.CalendarEvent
 import com.tibame.foodhunter.sharon.util.CalendarDataSource
 import com.tibame.foodhunter.sharon.util.CalendarUiState
+import com.tibame.foodhunter.sharon.viewmodel.NoteVM.Companion
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Calendar
-import java.util.Date
 
-//// 統一日曆項目介面
-//interface CalendarItem {
-//    val date: Date
-//    val title: String
-//    val type: CardContentType
-//}
 
 class CalendarVM : ViewModel() {
     companion object {
@@ -35,9 +32,12 @@ class CalendarVM : ViewModel() {
         private const val SEARCH_DEBOUNCE_TIME = 300L  // 搜尋延遲時間
     }
 
-    // 新增Repository
-    private val noteRepository = NoteRepository.instance  // 手札Repository
-    private val groupRepository = GroupRepository.instance // 揪團Repository
+    private val noteRepository = NoteRepository.instance
+    private val groupRepository = GroupRepository.instance
+
+    val notes: StateFlow<List<Note>> = noteRepository.notes
+    val groups: StateFlow<List<Group>> = groupRepository.groups
+
 
     /**
      * 資料狀態
@@ -65,47 +65,57 @@ class CalendarVM : ViewModel() {
 
     private var memberId: Int? = null
 
-    /**
-     * 設置會員ID並載入資料
-     * @param id 會員ID
-     */
-    fun setMemberId(id: Int) {
-        memberId = id
-        loadItems()
+
+    fun setMemberId(memberId: Int) {
+        this.memberId = memberId
+        loadItems(memberId)
+    }
+
+    init {
+        viewModelScope.launch {
+            // 監聽重整觸發器
+            CalendarEvent.refreshTrigger.collect { needRefresh ->
+                if (needRefresh && memberId != null) {
+                    loadItems(memberId!!)
+                    CalendarEvent.resetTrigger()
+                }
+            }
+        }
+        setupSearchFlow()
     }
 
     /**
      * 載入會員的所有項目（手札和揪團）
      */
-    private fun loadItems() {
+    private fun loadItems(memberId: Int) {
         viewModelScope.launch {
             try {
                 Log.d(TAG, "開始載入資料")
                 _isLoading.value = true
 
-                // 檢查memberId
-                val currentMemberId = memberId
-                if (currentMemberId == null) {
-                    Log.e(TAG, "memberId為null，無法載入資料")
-                    return@launch
-                }
+                // 並行載入數據
+//                Log.d(TAG, "呼叫 repository.getNotes()")
+//                launch { noteRepository.getNotes(memberId) }
+//
+//                Log.d(TAG, "呼叫 repository.getGroups()")
+//                launch { groupRepository.getGroups(memberId) }
 
-                // 1. 先載入手札資料
-                noteRepository.getNotes(currentMemberId)
-                val notes = noteRepository.notes.value
+                // 確保所有資料在載入後再繼續
+                val notesDeferred = async { noteRepository.getNotes(memberId) }
+                val groupsDeferred = async { groupRepository.getGroups(memberId) }
+                awaitAll(notesDeferred, groupsDeferred)
 
-                /* 之後要加入揪團資料時:
-                groupRepository.getGroups(currentMemberId)
-                val groups = groupRepository.groups.value
+
+                // 等待數據載入完成
+                val notes = notes.first()
+                val groups = groups.first()
+
                 _allItems.value = notes + groups
-                */
+                _filteredItems.value = _allItems.value
 
-                // 2. 更新資料和視圖
-                Log.d(TAG, "資料載入完成，共 ${notes.size} 筆")
-                _allItems.value = notes
-                applyFilters()
+                Log.d(TAG, "資料載入完成，手札: ${notes.size} 筆，揪團: ${groups.size} 筆")
+
                 updateCalendarView()
-
             } catch (e: Exception) {
                 Log.e(TAG, "載入資料過程發生錯誤", e)
             } finally {
@@ -115,15 +125,10 @@ class CalendarVM : ViewModel() {
         }
     }
 
-    // 初始化時設置搜尋流
-    init {
-        setupSearchFlow()
-    }
 
     // LaunchedEffect 會在 CalendarScreen 中呼叫這個方法
     fun initUserData(memberId: Int) {
         setMemberId(memberId)
-        loadItems()  // 載入資料
     }
 
     /**
@@ -271,23 +276,33 @@ class CalendarVM : ViewModel() {
     // 更新日期列表，根據月份和書籍資訊
     private fun updateCalendarDates(yearMonth: YearMonth): List<CalendarUiState.Date> {
         val dates = dataSource.getDates(yearMonth)
-
         return dates.map { date ->
+            Log.d(TAG, "Processing date: ${date.year}-${date.month}-${date.dayOfMonth}")
+
             // 找出該日期的所有項目
             val dateItems = _filteredItems.value.filter { item ->
                 when (item) {
-                    is Note -> {
-                        val calendar = Calendar.getInstance().apply {
-                            time = item.selectedDate
-                        }
-                        calendar.get(Calendar.YEAR) == date.year &&
+                    is Note -> item.selectedDate?.let { selectedDate ->
+                        val calendar = Calendar.getInstance().apply { time = selectedDate }
+                        val matches = calendar.get(Calendar.YEAR) == date.year &&
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.DAY_OF_MONTH).toString() == date.dayOfMonth
-                    }
-                    is Group -> false  // 之後加入揪團時再修改
+                        Log.d(TAG, "Note on ${selectedDate}: Match - $matches")
+                        matches
+                    } ?: false
+                    is Group -> item.groupDate?.let { groupDate ->
+                        val calendar = Calendar.getInstance().apply { time = groupDate }
+                        val matches = calendar.get(Calendar.YEAR) == date.year &&
+                                (calendar.get(Calendar.MONTH) + 1) == date.month &&
+                                calendar.get(Calendar.DAY_OF_MONTH).toString() == date.dayOfMonth
+                        Log.d(TAG, "Group on ${groupDate}: Match - $matches")
+                        matches
+                    } ?: false
                     else -> false
                 }
             }
+
+            Log.d(TAG, "Items found for date ${date.year}-${date.month}-${date.dayOfMonth}: ${dateItems.size}")
 
             date.copy(
                 hasCard = dateItems.isNotEmpty(),  // 如果有項目就顯示指示點
@@ -319,7 +334,6 @@ class CalendarVM : ViewModel() {
             }
         }
     }
-
 }
 
 

@@ -17,13 +17,15 @@ data class Note(
 )
 
 data class Group(
+    val groupName: String,
+    val restaurantName: String? = null,
+    val restaurantAddress: String? = null,
+    val isPublic: Int,
+    val groupDate: Date = Date(),
     val type: CardContentType,
-    val groupName: String, // fk group_id -> restaurant_name
-    val restaurantName: String? = null, // fk restaurant_id -> restaurant_name
-    val restaurantAddress: String? = null, // fk restaurant_id -> address
-    val isPublic: Int, // fk group_id -> is_public
-    val groupDate: Date = Date(), // fk group_id -> time
-    val memberId: Int //  member_id
+    val date: String,        // MM/dd 格式
+    val day: String,         // 星期幾
+    val memberId: Int
 )
 
 // 定義內容類型的枚舉

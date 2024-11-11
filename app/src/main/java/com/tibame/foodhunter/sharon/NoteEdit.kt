@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -133,8 +134,16 @@ fun NoteEditRoute(
     navController: NavHostController,
     navigation: NoteEditNavigation,
     noteEditVM: NoteEditVM = viewModel(),
-    userVM: UserViewModel
+    userVM: UserViewModel,
+    noteId: Int? = null
 ) {
+    val memberId by userVM.memberId.collectAsStateWithLifecycle()
+
+    // 設置會員ID
+    LaunchedEffect(memberId) {
+        noteEditVM.setMemberId(memberId)
+    }
+
     // 處理不同的導航類型
     when (navigation) {
         // 新增模式，顯示空白頁面

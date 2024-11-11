@@ -45,13 +45,11 @@ fun NoteScreen(
     LaunchedEffect(memberId) {
         noteVM.setMemberId(memberId)
     }
-
-    Box {
-        Text(text = memberId.toString())
-        Text(text = memberId.toString())
-
-    }
-
+//
+//    Box {
+//        Text(text = memberId.toString())
+//        Text(text = memberId.toString())
+//    }
 
     // 當筆記列表更新時，自動滾動到頂部
     LaunchedEffect(filteredNotes.size) {

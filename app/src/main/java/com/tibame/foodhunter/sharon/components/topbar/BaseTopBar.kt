@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -48,7 +49,7 @@ import com.tibame.foodhunter.ui.theme.FColor
 fun TopBarPreview(){
     val mockNavController = rememberNavController()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
+//    FilterChipSection()
 //    BaseTopBar(mockNavController,scrollBehavior)
 //    CalendarTopBar(mockNavController,scrollBehavior, PersonalToolsVM(noteVM, calendarVM), CalendarVM())
 //    NoteTopBar(mockNavController,scrollBehavior, PersonalToolsVM())
@@ -212,7 +213,12 @@ fun FilterChipSection(
                                 CardContentType.GROUP -> "揪團"
                             }
                         )
-                    }
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = FColor.Orange_5th,
+                        selectedLabelColor = FColor.Dark_80,
+                        containerColor = Color.White
+                    )
                 )
             }
         }

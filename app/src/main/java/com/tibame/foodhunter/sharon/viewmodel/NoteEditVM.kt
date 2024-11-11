@@ -65,14 +65,10 @@ sealed class NoteEditEvent {
 }
 
 
-
-
 /**
  * 筆記編輯頁面的 ViewModel
  */
-class NoteEditVM: ViewModel() {
-
-
+class NoteEditVM : ViewModel() {
     companion object {
         private const val TAG = "NoteEditVM"
     }
@@ -92,18 +88,24 @@ class NoteEditVM: ViewModel() {
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess = _saveSuccess.asStateFlow()
 
+
+    private var memberId: Int? = null
+
+    fun setMemberId(newMemberId: Int) {
+        memberId = newMemberId
+    }
+
     /**
      * 載入指定 ID 的筆記
      */
     fun loadNote(noteId: Int) {
+
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true) }
 
-                // 使用你現有的 repository 方法
                 val noteData = repository.getNoteById(noteId)
                 _note.value = noteData
-//                val notes = repository.getNotes()
 
                 // 更新 UI 狀態
                 noteData?.let { note ->
@@ -166,8 +168,6 @@ class NoteEditVM: ViewModel() {
                     )
                 }
             }
-
-//            is NoteEditEvent.SaveNote -> saveNote()
             is NoteEditEvent.NavigateBack -> {
                 // 導航邏輯會在 UI 層處理
             }
@@ -205,10 +205,11 @@ class NoteEditVM: ViewModel() {
 //                !uiState.value.isFirstEntry && uiState.value.isExistingNote && newTitle.isNotEmpty() -> {
 //                    Log.d(TAG, "既有筆記標題修改、標題不為空、返回即可更新")
 //                }
-             else -> {
-            currentState.copy(title = newTitle, hasTitle = newTitle.isNotEmpty()) }
+                else -> {
+                    currentState.copy(title = newTitle, hasTitle = newTitle.isNotEmpty())
+                }
+            }
         }
-    }
     }
 
     /**
@@ -232,7 +233,7 @@ class NoteEditVM: ViewModel() {
                     // 檢查保存是否成功
                     if (_saveSuccess.value) {
                         Log.d(TAG, "保存成功，觸發刷新")
-//                        delay(300)
+                        delay(300)
                     } else {
                         Log.e(TAG, "保存失敗: saveSuccess = ${_saveSuccess.value}")
                     }
@@ -259,15 +260,24 @@ class NoteEditVM: ViewModel() {
      * 3. 錯誤處理
      */
     private suspend fun saveNote(): Boolean {
+        val currentMemberId = memberId
+        if (currentMemberId == null) {
+            Log.e(TAG, "會員ID未設置，無法保存筆記")
+            _uiState.update { it.copy(errorMessage = "會員ID未設置") }
+            return false
+        }
+
         Log.d(TAG, "開始執行 saveNote")
         return try {
             _uiState.update { it.copy(isLoading = true) }
             val currentState = _uiState.value
-            Log.d(TAG, "當前狀態: " +
-                    "isExistingNote=${currentState.isExistingNote}, " +
-                    "title=${currentState.title}, " +
-                    "restaurantId=${currentState.restaurantId}, " +
-                    "memberId=1")
+            Log.d(
+                TAG, "當前狀態: " +
+                        "isExistingNote=${currentState.isExistingNote}, " +
+                        "title=${currentState.title}, " +
+                        "restaurantId=${currentState.restaurantId}, " +
+                        "memberId=$currentMemberId"
+            )
 
             // 檢查標題
             if (currentState.title.isEmpty()) {
@@ -297,7 +307,7 @@ class NoteEditVM: ViewModel() {
                     title = currentState.title,
                     content = currentState.content,
                     restaurantId = currentState.restaurantId,
-                    memberId = 1,
+                    memberId = memberId!!,
                     selectedDate = currentState.selectedDate
                 )
             }
@@ -345,21 +355,29 @@ class NoteEditVM: ViewModel() {
                         navController.popBackStack()
                     } else {
                         Log.e("NoteEditVM", "刪除筆記失敗")
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            errorMessage = "刪除失敗") }
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "刪除失敗"
+                            )
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("NoteEditVM", "刪除筆記時發生錯誤", e)
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        errorMessage = "刪除失敗：${e.message}") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "刪除失敗：${e.message}"
+                        )
+                    }
                 }
             } else {
                 Log.e("NoteEditVM", "無效的筆記 ID，無法刪除")
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    errorMessage = "無效的筆記 ID")
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "無效的筆記 ID"
+                    )
                 }
             }
         }
@@ -373,6 +391,7 @@ class NoteEditVM: ViewModel() {
         val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
         return dateFormat.format(date)
     }
+
     /**
      * 格式化星期幾
      */
