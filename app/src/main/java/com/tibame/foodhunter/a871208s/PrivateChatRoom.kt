@@ -1,6 +1,7 @@
 package com.tibame.foodhunter.a871208s
 
 import android.icu.text.SimpleDateFormat
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -293,7 +295,8 @@ fun PrivateChatRoomBottomBar(
 
 fun convertToTime(inputDate: String): String {
     // 定义输入日期格式
-    val inputFormat = SimpleDateFormat("MMM dd, yyyy, hh:mm:ss a", Locale.ENGLISH)
+    Log.e("TAG","input $inputDate")
+    val inputFormat = SimpleDateFormat("MMM dd, yyyy, hh:mm:ss\u202Fa", Locale.ENGLISH)
 
     // 定义输出日期格式
     val outputFormat = SimpleDateFormat("HH:mm", Locale.ENGLISH)

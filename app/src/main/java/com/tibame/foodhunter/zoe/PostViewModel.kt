@@ -178,4 +178,7 @@ class PostViewModel : ViewModel() {
             repository.loadRestRelatedPosts(restId)
         }
     }
+
+
+
 }

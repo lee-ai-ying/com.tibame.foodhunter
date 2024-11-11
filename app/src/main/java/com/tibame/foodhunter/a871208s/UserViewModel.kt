@@ -320,24 +320,6 @@ class UserViewModel : ViewModel() {
         }
 
     }
-    suspend fun getMemberUsername(memberId: Int): String? {
-        return try {
-            val url = "${serverUrl}/post/GetUsername"
-            val gson = Gson()
-            val jsonObject = JsonObject()
-            jsonObject.addProperty("memberId", memberId)
-
-            val result = CommonPost(url, jsonObject.toString())
-            Log.d("UserViewModel", "GetUsername Response: $result")
-
-            // 解析回應
-            val response = gson.fromJson(result, JsonObject::class.java)
-            response.get("username")?.asString
-        } catch (e: Exception) {
-            Log.e("UserViewModel", "獲取用戶名稱失敗: ${e.message}")
-            null
-        }
-    }
 
     suspend fun getEmailInfo(email: String): User? {
         return try {
@@ -382,6 +364,38 @@ class UserViewModel : ViewModel() {
             return responseJson.get("save").asBoolean
         } catch (e: Exception) {
             return false
+        }
+    }
+    suspend fun getMemberUsername(memberId: Int): String? {
+        return try {
+            Log.d("UserViewModel", "=== 開始獲取 username ===")
+
+            // 檢查 URL 和請求內容
+            val url = "${serverUrl}/post/GetUsername"  // 注意這裡改成跟其他 API 一樣的路徑格式
+            val jsonObject = JsonObject().apply {
+                addProperty("memberId", memberId)
+            }
+
+            Log.d("UserViewModel", "請求 URL: $url")
+            Log.d("UserViewModel", "請求內容: ${jsonObject}")
+
+            // 使用 CommonPost 發送請求
+            val result = CommonPost(url, jsonObject.toString())
+            Log.d("UserViewModel", "API 回應: $result")
+
+            if (result.isNotEmpty()) {
+                val gson = Gson()
+                val response = gson.fromJson(result, JsonObject::class.java)
+                val username = response.get("username")?.asString
+                Log.d("UserViewModel", "解析得到的 username: $username")
+                username
+            } else {
+                Log.e("UserViewModel", "API 回應為空")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "獲取 username 失敗", e)
+            null
         }
     }
 
