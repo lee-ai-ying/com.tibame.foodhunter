@@ -2,37 +2,28 @@
 
 package com.tibame.foodhunter.wei
 
+
 import android.util.Log
-import com.tibame.foodhunter.R
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-
 import androidx.compose.material3.TopAppBarDefaults
-
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,17 +44,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-
+import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
-import com.tibame.foodhunter.ui.theme.FoodHunterTheme
-import com.tibame.foodhunter.zoe.PostRepository
 import com.tibame.foodhunter.zoe.PostViewModel
 
 
@@ -87,82 +74,70 @@ fun RestaurantDetail(
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
-    LaunchedEffect (restaurant){ postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)}
-//    Log.d(relatedPosts, )
+    LaunchedEffect(restaurant) {
+        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)
+    }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .weight(1f),
-            topBar = { RestaurantDetailTopAppBar(navController) },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .background(Color.White)
-            ) {
-                NavHost(
-                    navController = restNavController,
-                    startDestination = mainSceneName,
-                    modifier = Modifier.weight(1f)
+
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.White)) {
+        NavHost(
+            navController = restNavController,
+            startDestination = mainSceneName,
+            modifier = Modifier.weight(1f)
+        ) {
+            composable(route = mainSceneName) {
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.5.dp,
+                    color = FColor.Orange_1st
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+
                 ) {
-                    composable(route = mainSceneName) {
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            thickness = 1.5.dp,
-                            color = FColor.Orange_1st
-                        )
-                        Column(
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(15.dp)
+                    Spacer(modifier = Modifier)
 
-                        ) {
-                            Spacer(modifier = Modifier)
-
-                            RestaurantInfoDetail(restaurantVM)
-
-//                            HorizontalDivider(
-//                                modifier = Modifier,
-//                                thickness = 1.5.dp,
-//                                color = FColor.Orange_1st
-//                            )
-
-                            //社群預覽
-
-//                            Text(
-//                                text = "社群預覽  待修",
-//                                fontSize = 18.sp
-//                            )
-                            RelatedPost(relatedPosts)
+                    RestaurantInfoDetail(restaurantVM)
 
 
-                            HorizontalDivider(
-                                modifier = Modifier,
-                                thickness = 1.5.dp,
-                                color = FColor.Orange_1st
-                            )
-                            Spacer(modifier = Modifier.size(10.dp))
+                    RelatedPost(relatedPosts, navController)
 
-                            //評論顯示區
-                            Text(
-                                text = "評論(%評論數)",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            ReviewZone(navController = navController)
-                        }
-                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier,
+                        thickness = 1.5.dp,
+                        color = FColor.Orange_1st
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+
+                    //評論顯示區
+                    Text(
+                        text = if (restaurant?.total_review == 0) "尚無評論"
+                        else "總評論數(${restaurant?.total_review})",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    ReviewZone(navController = navController)
                 }
             }
         }
     }
 }
+
 @Composable
-fun RestaurantDetailTopAppBar(navController: NavHostController) {
+fun RestaurantDetailTopAppBar(
+    scrollBehavior: TopAppBarScrollBehavior,
+    navController: NavHostController
+) {
     TopAppBar(
+        scrollBehavior = scrollBehavior,
         title = {
             Row(
                 modifier = Modifier
@@ -179,7 +154,7 @@ fun RestaurantDetailTopAppBar(navController: NavHostController) {
             }
         },
         actions = {
-            IconButton(onClick = {navController.popBackStack()}) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_close_24), // 使用你的叉叉圖標
                     contentDescription = "Close",
@@ -199,5 +174,9 @@ fun RestaurantDetailPreview() {
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
 
-    RestaurantDetail(navController = navController, restaurantVM = restaurantVM, reviewVM = reviewVM )
+    RestaurantDetail(
+        navController = navController,
+        restaurantVM = restaurantVM,
+        reviewVM = reviewVM
+    )
 }

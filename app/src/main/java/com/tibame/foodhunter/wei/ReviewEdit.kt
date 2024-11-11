@@ -116,8 +116,8 @@ fun GetReviews() {
         Review("使用者名稱5", 1)
     )
 
-    LazyColumn {
-        items(reviews) { review ->
+    Column{
+        reviews.forEach { review ->
             ReviewItem(review)
             Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
         }
