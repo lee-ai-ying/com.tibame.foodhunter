@@ -64,7 +64,7 @@ data class GroupChatHistory(
 
 data class GroupChatImage(
     @SerializedName("username") var username: String = "",
-    @SerializedName("profileImageBase64") var profileimage: String = "",
+    @SerializedName("profileImageBase64") var profileImage: String = "",
     var image: Bitmap? = null
 )
 

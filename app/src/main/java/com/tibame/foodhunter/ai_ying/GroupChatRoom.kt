@@ -1,9 +1,7 @@
 package com.tibame.foodhunter.ai_ying
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,16 +27,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -58,7 +52,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -84,10 +77,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
-import com.tibame.foodhunter.wei.CommentDialog
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 @Composable
 fun GroupChatRoom(
@@ -98,15 +89,12 @@ fun GroupChatRoom(
     val self = gChatVM.getUserName()
     val avatars by gChatVM.groupChatAvatar.collectAsState()
     val isLoading by gChatVM.isLoading.collectAsState()
+    val isAvatarLoading by gChatVM.isAvatarLoading.collectAsState()
     DisposableEffect(Unit) {
         gChatVM.gotoChatRoom(groupRoomId)
         gChatVM.getGroupChatHistory(groupRoomId)
         gChatVM.getAvatarImageInGroupChat(groupRoomId)
-        onDispose {
-            // onDestroy
-            gChatVM.clearChatHistory()
-
-        }
+        onDispose(gChatVM::clearChatHistory)
     }
 
     /*if (gChatVM.showEditGroup.asStateFlow().collectAsState().value) {
@@ -117,7 +105,7 @@ fun GroupChatRoom(
         EditGroupMember(gChatVM)
         return
     }*/
-    if (isLoading) {
+    if (isLoading || isAvatarLoading) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center

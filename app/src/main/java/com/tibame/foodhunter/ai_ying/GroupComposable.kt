@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,16 +24,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PrimaryTabRow
@@ -52,7 +48,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -282,10 +277,10 @@ fun GroupSingleInput(
 
 @Composable
 fun GroupSingleWithIcon(
+    modifier: Modifier = Modifier,
     defaultInput:String = "",
     trailingIcon: @Composable () -> Unit,
     placeholder: @Composable () -> Unit = {},
-    modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (String) -> Unit
 ) {
     GroupTextInputField(
@@ -302,10 +297,10 @@ fun GroupSingleWithIcon(
 
 @Composable
 fun GroupSingleInputWithIcon(
+    modifier: Modifier = Modifier,
     defaultInput:String = "",
     placeholder: @Composable () -> Unit,
     trailingIcon: @Composable () -> Unit,
-    modifier: Modifier = Modifier.fillMaxWidth(),
     readOnly: Boolean = false,
     onValueChange: (String) -> Unit
 ) {

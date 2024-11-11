@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -8,11 +7,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.a871208s.UserViewModel
-import com.tibame.foodhunter.andysearch.Restaurant
-import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
-import com.tibame.foodhunter.wei.ReviewCreateData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +17,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 
@@ -66,6 +61,8 @@ class GroupViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
+    private val _isAvatarLoading = MutableStateFlow(true)
+    val isAvatarLoading = _isAvatarLoading.asStateFlow()
 
     private val _nowChatRoomId = MutableStateFlow(999)
     val nowChatRoomId = _nowChatRoomId.asStateFlow()
@@ -135,6 +132,7 @@ class GroupViewModel : ViewModel() {
     fun searchGroupByCondition(input: GroupSearchData) {
         repository.updateGroupSearchCache(input)
         viewModelScope.launch {
+            _isLoading.update { true }
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("name", input.name)
@@ -151,6 +149,7 @@ class GroupViewModel : ViewModel() {
                 collectionType
             )
             repository.updateSearchGroupResult(list ?: emptyList())
+            _isLoading.update { false }
         }
     }
 
@@ -190,7 +189,7 @@ class GroupViewModel : ViewModel() {
     }
 
     val groupChatHistory = repository.groupChatHistory
-    fun getGroupChatHistory(groupRoomId: Int, isload: Boolean = true) {
+    fun getGroupChatHistory(groupRoomId: Int) {
         viewModelScope.launch {
             _isLoading.update { true }
             val gson = Gson()
@@ -211,6 +210,7 @@ class GroupViewModel : ViewModel() {
 
     fun clearChatHistory() {
         repository.updateGroupChatHistory(emptyList())
+        repository.updateGroupChatAvatar(emptyList())
     }
 
     fun updateGroupChat() {
@@ -266,7 +266,7 @@ class GroupViewModel : ViewModel() {
         jsonObject.addProperty("fcmToken", token)
         //Log.d("qq",jsonObject.toString())
         viewModelScope.launch {
-            val result = CommonPost("$serverUrl/fcm/register", jsonObject.toString())
+            CommonPost("$serverUrl/fcm/register", jsonObject.toString())
             //Log.d("qq", "sendTokenToServer: $result")
         }
     }
@@ -283,6 +283,7 @@ class GroupViewModel : ViewModel() {
 
     fun getAvatarImageInGroupChat(groupRoomId: Int) {
         viewModelScope.launch {
+            _isAvatarLoading.update { true }
             val gson = Gson()
             var jsonObject = JsonObject()
             jsonObject.addProperty("id", "$groupRoomId")
@@ -298,13 +299,14 @@ class GroupViewModel : ViewModel() {
                 dataList.add(
                     GroupChatImage(
                         it.username,
-                        it.profileimage,
-                        userVM?.decodeBase64ToBitmap(it.profileimage)
+                        it.profileImage,
+                        userVM?.decodeBase64ToBitmap(it.profileImage)
                     )
                 )
             }
             //Log.d("qq",dataList.toString())
             repository.updateGroupChatAvatar(dataList)
+            _isAvatarLoading.update { false }
         }
     }
 

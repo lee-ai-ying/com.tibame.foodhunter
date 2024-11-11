@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Place
@@ -47,7 +46,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.function.LongUnaryOperator
 
 
 @Composable
@@ -59,7 +57,7 @@ fun GroupCreate(
         gChatVM.getRestaurantList()
     }
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var showRestautantPickerDialog by remember { mutableStateOf(false) }
+    var showRestaurantPickerDialog by remember { mutableStateOf(false) }
     val inputData by remember { mutableStateOf(GroupCreateData()) }
     var selectDate by remember {
         mutableStateOf(
@@ -95,7 +93,7 @@ fun GroupCreate(
                             imageVector = Icons.Outlined.Place,
                             contentDescription = "",
                             modifier = Modifier.clickable {
-                                showRestautantPickerDialog = true
+                                showRestaurantPickerDialog = true
                             }
                         )
                     }
@@ -208,7 +206,7 @@ fun GroupCreate(
                 }
             )
         }
-        if (showRestautantPickerDialog) {
+        if (showRestaurantPickerDialog) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -227,7 +225,7 @@ fun GroupCreate(
                         imageVector = Icons.Outlined.KeyboardArrowUp,
                         contentDescription = "",
                         modifier = Modifier.clickable {
-                            showRestautantPickerDialog = false
+                            showRestaurantPickerDialog = false
                         }
                     )
                     GroupTitleText(text = "選擇餐廳")
@@ -252,7 +250,7 @@ fun GroupCreate(
                                     inputData.location = it.restaurantId
                                     restaurantName = it.restaurantName
                                     searchInput = ""
-                                    showRestautantPickerDialog = false
+                                    showRestaurantPickerDialog = false
                                 }
                         ) {
                             Row(
@@ -281,11 +279,6 @@ fun GroupCreate(
             }
         }
     }
-}
-
-@Composable
-fun MyLocationPicker() {
-
 }
 
 @Preview(showBackground = true)
