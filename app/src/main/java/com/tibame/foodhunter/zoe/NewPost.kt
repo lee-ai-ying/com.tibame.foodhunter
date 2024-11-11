@@ -266,13 +266,16 @@ fun NewPost(
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = Color.Black
+                        contentColor = if (isEditing) Color.Gray else Color.Black
                     ),
                     onClick = {
-                        pickImageLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    }
+                        if (!isEditing) {
+                            pickImageLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    },
+                    enabled = !isEditing
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -285,7 +288,12 @@ fun NewPost(
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = stringResource(id = R.string.select_picture))
+                        Text(
+                            text = if (isEditing)
+                                "編輯模式下無法更改圖片"
+                            else
+                                stringResource(id = R.string.select_picture)
+                        )
                     }
                 }
 
@@ -293,12 +301,15 @@ fun NewPost(
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = Color.Black
+                        contentColor = if (isEditing) Color.Gray else Color.Black
                     ),
                     onClick = {
-                        currentSheet = NewPostSheetContent.LOCATION
-                        showBottomSheet = true
-                    }
+                        if (!isEditing) {
+                            currentSheet = NewPostSheetContent.LOCATION
+                            showBottomSheet = true
+                        }
+                    },
+                    enabled = !isEditing
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -307,12 +318,18 @@ fun NewPost(
                     ) {
                         Icon(
                             Icons.Outlined.LocationOn,
-                            contentDescription = "location"
+                            contentDescription = "location",
+                            tint = if (isEditing) Color.Gray else Color.Black
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        Text(text = if (selectedLocation.isEmpty())
-                            stringResource(id = R.string.restaurant_location)
-                        else selectedLocation
+                        Text(
+                            text = if (selectedLocation.isEmpty()) {
+                                if (isEditing) {
+                                    post?.location ?: stringResource(id = R.string.restaurant_location)
+                                } else {
+                                    stringResource(id = R.string.restaurant_location)
+                                }
+                            } else selectedLocation
                         )
                     }
                 }

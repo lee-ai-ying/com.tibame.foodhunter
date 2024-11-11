@@ -310,7 +310,7 @@ private fun RestaurantItem(
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = FColor.Orange_4th,  // 卡片背景顏色
+            containerColor = FColor.Orange_3rd,  // 卡片背景顏色
             contentColor = FColor.Dark_80  // 卡片內容顏色
         )
     ) {

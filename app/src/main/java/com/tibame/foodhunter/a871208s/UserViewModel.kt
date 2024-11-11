@@ -319,6 +319,24 @@ class UserViewModel : ViewModel() {
         }
 
     }
+    suspend fun getMemberUsername(memberId: Int): String? {
+        return try {
+            val url = "${serverUrl}/post/GetUsername"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("memberId", memberId)
+
+            val result = CommonPost(url, jsonObject.toString())
+            Log.d("UserViewModel", "GetUsername Response: $result")
+
+            // 解析回應
+            val response = gson.fromJson(result, JsonObject::class.java)
+            response.get("username")?.asString
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "獲取用戶名稱失敗: ${e.message}")
+            null
+        }
+    }
 }
 
 

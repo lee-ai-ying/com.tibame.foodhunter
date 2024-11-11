@@ -7,6 +7,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.JsonObject
+import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -84,20 +87,7 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    // 獲取特定貼文的評論載入狀態
-    fun isLoadingComments(postId: Int): Boolean {
-        return commentLoadingStates.value[postId] ?: false
-    }
 
-    // 獲取特定貼文的評論載入錯誤
-    fun getCommentLoadingError(postId: Int): String? {
-        return commentLoadingError.value[postId]
-    }
-
-    // 重試載入評論
-    fun retryLoadingComments(postId: Int) {
-        loadCommentsForPost(postId)
-    }
 
     // 更新的 getPostById 方法
     fun getPostById(postId: Int): StateFlow<Post?> {
@@ -109,10 +99,7 @@ class PostViewModel : ViewModel() {
             .stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
-    // 其他現有方法保持不變
-    fun updateCarouselItems(items: List<CarouselItem>) {
-        _carouselItems.value = items
-    }
+
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
@@ -183,4 +170,5 @@ class PostViewModel : ViewModel() {
     fun updateFilters(filters: List<String>) {
         _selectedFilters.value = filters
     }
+
 }
