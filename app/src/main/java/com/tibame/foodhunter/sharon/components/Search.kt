@@ -29,10 +29,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 
 @Preview(showBackground = true)
@@ -51,6 +55,9 @@ fun SearchBar(
     onActiveChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
     BasicTextField(
         value = query,
         onValueChange = onQueryChange,
@@ -73,26 +80,23 @@ fun SearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "搜索",
+                    contentDescription = stringResource(id = R.string.str_search),
                     modifier = Modifier.size(20.dp),
                     tint = FColor.Dark_80
                 )
-
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp)
                 ) {
-                    if (query.isEmpty()) {
-                        placeholder()
-                    }
+                    if (query.isEmpty()) { placeholder() }
                     innerTextField()
                 }
 
                 if (query.isNotEmpty()) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(30.dp)
                             .background(
                                 color = FColor.Orange_6th,
                                 shape = CircleShape
@@ -105,7 +109,7 @@ fun SearchBar(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "清除",
+                                contentDescription = stringResource(id = R.string.str_clear),
                                 tint = FColor.Dark_80,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -123,7 +127,12 @@ fun SearchBar(
             imeAction = ImeAction.Search // 將 IME 動作設置為搜尋
         ),
         keyboardActions = KeyboardActions(
-            onSearch = { onSearch() } // 當按下「搜索」鍵時觸發 onSearch
+            onSearch = {
+                onSearch() // 當按下「搜索」鍵時觸發 onSearch
+                // 收起鍵盤
+                focusManager.clearFocus()
+                keyboardController?.hide()
+            }
         )
     )
 }
