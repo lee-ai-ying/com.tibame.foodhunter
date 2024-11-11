@@ -467,22 +467,22 @@ fun Main(
                 PrivateChatScreen(navController = navController,pChatVM,userViewModel)
             }
 
-
             navigation(
                 startDestination = context.getString((R.string.str_calendar)),
                 route = "personal_tools"
             ) {
                 composable(context.getString(R.string.str_calendar)) {
-                    PersonalToolsScreen(navController)
+                    PersonalToolsScreen(navController, userViewModel)
                 }
                 composable(context.getString(R.string.str_note)) {
-                    PersonalToolsScreen(navController)
+                    PersonalToolsScreen(navController, userViewModel)
                 }
 
                 composable("note/add") {
                     NoteEditRoute(
                         navController = navController,
-                        navigation = NoteEditNavigation.Add
+                        navigation = NoteEditNavigation.Add,
+                        userVM = userViewModel
                     )
                 }
 
@@ -495,7 +495,8 @@ fun Main(
 
                     NoteEditRoute(
                         navController = navController,
-                        navigation = NoteEditNavigation.Edit(noteId)
+                        navigation = NoteEditNavigation.Edit(noteId),
+                        userVM = userViewModel
                     )
                 }
             }

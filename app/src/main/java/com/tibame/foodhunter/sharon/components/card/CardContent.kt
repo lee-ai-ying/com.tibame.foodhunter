@@ -42,7 +42,7 @@ fun CardContent(
                     title = title,
                     restaurantName = restaurantName ?: "",
                     restaurantAddress = restaurantAddress ?: "",
-                    headcount = headcount ?: 0,
+                    headcount = headcount ?: 3,
                 )
                 // 揪團才需要顯示公開/私密切換
                 isPublic?.let {

@@ -8,12 +8,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.vector.ImageVector
+
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -42,13 +47,14 @@ import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.ui.theme.FColor
 
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun TopBarPreview(){
     val mockNavController = rememberNavController()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
+//    FilterChipSection()
 //    BaseTopBar(mockNavController,scrollBehavior)
 //    CalendarTopBar(mockNavController,scrollBehavior, PersonalToolsVM(noteVM, calendarVM), CalendarVM())
 //    NoteTopBar(mockNavController,scrollBehavior, PersonalToolsVM())
@@ -112,17 +118,18 @@ fun BaseTopBar(
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
                 if(showFilter) {
-
                     IconButton(onClick = onFilter) {
-                        Icon(Icons.Outlined.MoreVert, contentDescription = "Filter")
+                        Icon(Icons.Rounded.FilterList, contentDescription = "Filter")
                     }
                 }
-
             } else {
                 // 搜尋狀態允許顯示篩選時，顯示篩選按鈕
                 if (showFilter) {
                     IconButton(onClick = onFilter) {
-                        Icon(Icons.Outlined.MoreVert, contentDescription = "Filter")
+                        Icon(
+                            imageVector = Icons.Rounded.FilterList,
+                            contentDescription = "Filter"
+                        )
                     }
                 }
             }
@@ -212,7 +219,12 @@ fun FilterChipSection(
                                 CardContentType.GROUP -> "揪團"
                             }
                         )
-                    }
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = FColor.Orange_5th,
+                        selectedLabelColor = FColor.Dark_80,
+                        containerColor = Color.White
+                    )
                 )
             }
         }
