@@ -130,30 +130,30 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
         items(reviews) { review ->
             // 顯示每條評論的UI
             Text(text = review.content)
-            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+
             Log.d("ReviewList", "Review content: ${review.content}")
         }
     }
 }
 
-/**評論範例*/
-@Composable
-fun GetReviews() {
-    val reviews = listOf(
-        Review("使用者名稱1", 4),
-        Review("使用者名稱2", 5),
-        Review("使用者名稱3", 3),
-        Review("使用者名稱4", 2),
-        Review("使用者名稱5", 1)
-    )
-
-    LazyColumn {
-        items(reviews) { review ->
-            ReviewItem(review)
-            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
-        }
-    }
-}
+///**評論範例*/
+//@Composable
+//fun GetReviews() {
+//    val reviews = listOf(
+//        Review("使用者名稱1", 4),
+//        Review("使用者名稱2", 5),
+//        Review("使用者名稱3", 3),
+//        Review("使用者名稱4", 2),
+//        Review("使用者名稱5", 1)
+//    )
+//
+//    LazyColumn {
+//        items(reviews) { review ->
+//            ReviewItem(review)
+//            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+//        }
+//    }
+//}
 /**評論範例資料*/
 @Composable
 fun ReviewItem(review: Review) {

@@ -2,6 +2,7 @@ package com.tibame.foodhunter.wei
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
@@ -52,15 +53,23 @@ class ReviewRepository {
 
     // 根據餐廳ID獲取評論列表
     suspend fun fetchReviewByRestId(restaurantId: Int): List<ReviewResponse?> {
-        val url = "${serverUrl}/review/preLoadController?restaurantId=$restaurantId"
+        val url = "${serverUrl}/review/preLoadController"
         // 加入請求前的日誌
         Log.d("ReviewRepository", "Fetching reviews for restaurant ID: $restaurantId")
         Log.d("ReviewRepository", "Request URL: $url")
-        val result = CommonPost(url, "")
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("restaurantId", restaurantId)
+        val result = CommonPost(url, jsonObject.toString())
         // 加入接收到回應的日誌
         Log.d("ReviewRepository", "Received response: $result")
         val type = object : TypeToken<List<ReviewResponse>>() {}.type
         return try {
+            val reviews = gson.fromJson<List<ReviewResponse>>(result, type)
+            Log.d("Repository", "Parsed reviews: ${reviews?.size}")
+            reviews?.forEach {
+                Log.d("Repository", "Review: $it")
+            }
+            reviews ?: emptyList()
             gson.fromJson(result, type)
         } catch (e: Exception) {
             Log.e("ReviewRepository", "Error fetching reviews for restaurant $restaurantId", e)
@@ -72,6 +81,8 @@ class ReviewRepository {
     // 根據評論ID 獲取評論的詳細資料
     private suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {
         val url = "${serverUrl}/review/get?reviewId=$reviewId"
+        Log.d("ReviewRepository", "Fetching reviews for review ID: $reviewId")
+        Log.d("ReviewRepository", "Request URL: $url")
         val result = CommonPost(url, "")
 
         return try {

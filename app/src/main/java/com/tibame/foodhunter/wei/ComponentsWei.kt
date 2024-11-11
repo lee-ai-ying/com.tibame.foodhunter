@@ -144,10 +144,9 @@ fun RestaurantInfoDetail(
 //                color = Color.Black
 //            )
         }
+        Spacer(modifier = Modifier.weight(1f))
 
-        Spacer(modifier = Modifier.size(10.dp))
-
-        /**加入收藏(暫時擱置)*/
+        /**加入收藏(擱置)*/
 //        Column(
 //            horizontalAlignment = Alignment.End,
 //            verticalArrangement = Arrangement.Top,
@@ -185,13 +184,13 @@ fun RestaurantInfoDetail(
             Icon(
                 painter = painterResource(id = R.drawable.baseline_more_horiz_24),
                 contentDescription = "更多功能",
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(30.dp),
             )
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             // 下拉選單內容由DropdownMenuItem選項元件組成
             options.forEach { option ->

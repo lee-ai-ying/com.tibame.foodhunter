@@ -88,16 +88,21 @@ fun RestaurantDetail(
     val reviewVM: ReviewVM = viewModel()
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
+    val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
     val restaurantId by reviewVM.reviewState.collectAsState()
     LaunchedEffect (restaurant){ postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)}
 //    Log.d(relatedPosts, )
 
     // 根據餐廳 ID 載入評論
-    LaunchedEffect(restaurant) {
+    LaunchedEffect(restaurantId) {
         restaurant?.restaurant_id?.let { restaurantId ->
             reviewVM.loadReviews(restaurantId)
         }
+    }
+
+    LaunchedEffect(reviews) {
+        Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -128,12 +133,6 @@ fun RestaurantDetail(
 //                                color = FColor.Orange_1st
 //                            )
 
-                    //社群預覽
-
-//                            Text(
-//                                text = "社群預覽  待修",
-//                                fontSize = 18.sp
-//                            )
                             RelatedPost(relatedPosts)
 
 
@@ -146,12 +145,12 @@ fun RestaurantDetail(
 
                     //評論顯示區
                     Text(
-                        text = "評論(%評論數)",
+                        text = "評論(${reviews.size})",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
-                    ReviewZone(navController = navController, reviewVM,restaurantId = 1)
+                    ReviewZone(navController = navController, reviewVM,0 )
                 }
             }
         }
