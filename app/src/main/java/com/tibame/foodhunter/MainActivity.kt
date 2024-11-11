@@ -171,7 +171,7 @@ fun Main(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
+    var currectScene by remember { mutableStateOf(context.getString(R.string.str_Recommended_posts)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val locationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         rememberPermissionState(
@@ -188,6 +188,7 @@ fun Main(
         }
         GroupRepository.gChatVM = gChatVM
         gChatVM.userVM = userViewModel
+        gChatVM.getTokenSendServer()
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

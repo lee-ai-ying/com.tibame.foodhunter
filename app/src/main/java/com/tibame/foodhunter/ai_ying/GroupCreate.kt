@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Place
@@ -25,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -53,8 +53,11 @@ fun GroupCreate(
     navController: NavHostController,
     gChatVM: GroupViewModel
 ) {
+    LaunchedEffect(Unit) {
+        gChatVM.getRestaurantList()
+    }
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var showRestautantPickerDialog by remember { mutableStateOf(false) }
+    var showRestaurantPickerDialog by remember { mutableStateOf(false) }
     val inputData by remember { mutableStateOf(GroupCreateData()) }
     var selectDate by remember {
         mutableStateOf(
@@ -62,7 +65,6 @@ fun GroupCreate(
         )
     }
     var searchInput by remember { mutableStateOf("") }
-    gChatVM.getRestaurantList()
     val restaurantList by gChatVM.restaurantList.collectAsState()
     var restaurantName by remember { mutableStateOf("") }
     var errMsg by remember { mutableStateOf("") }
@@ -91,7 +93,7 @@ fun GroupCreate(
                             imageVector = Icons.Outlined.Place,
                             contentDescription = "",
                             modifier = Modifier.clickable {
-                                showRestautantPickerDialog = true
+                                showRestaurantPickerDialog = true
                             }
                         )
                     }
@@ -190,7 +192,7 @@ fun GroupCreate(
                 onConfirm = { utcTimeMillis ->
                     saveSelectTime = utcTimeMillis?:System.currentTimeMillis()
                     selectDate = utcTimeMillis?.let {
-                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC+8"))
                             .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             ?: selectDate
                         //.toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
@@ -204,7 +206,7 @@ fun GroupCreate(
                 }
             )
         }
-        if (showRestautantPickerDialog) {
+        if (showRestaurantPickerDialog) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -223,7 +225,7 @@ fun GroupCreate(
                         imageVector = Icons.Outlined.KeyboardArrowUp,
                         contentDescription = "",
                         modifier = Modifier.clickable {
-                            showRestautantPickerDialog = false
+                            showRestaurantPickerDialog = false
                         }
                     )
                     GroupTitleText(text = "選擇餐廳")
@@ -248,7 +250,7 @@ fun GroupCreate(
                                     inputData.location = it.restaurantId
                                     restaurantName = it.restaurantName
                                     searchInput = ""
-                                    showRestautantPickerDialog = false
+                                    showRestaurantPickerDialog = false
                                 }
                         ) {
                             Row(
@@ -277,11 +279,6 @@ fun GroupCreate(
             }
         }
     }
-}
-
-@Composable
-fun MyLocationPicker() {
-
 }
 
 @Preview(showBackground = true)

@@ -1,13 +1,12 @@
 package com.tibame.foodhunter.ai_ying
 
-import android.util.Log
-import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class MyFCMService : FirebaseMessagingService() {
     // repository採單例模式
-    private val repository = GroupRepository
+    private val groupRepository = GroupRepository
 
     // 當App在前景收到FCM時呼叫，App在背景收到FCM時不會呼叫此方法
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -20,8 +19,7 @@ class MyFCMService : FirebaseMessagingService() {
         }
         // 取得自訂資料
         val data = remoteMessage.data["data"]
-        //Log.d("qq","onMessageReceived():\ntitle: $title, body: $body, data: $data")
-        repository.gChatVM?.updateGroupChat()
+        groupRepository.gChatVM?.updateGroupChat()
     }
 
     // 當registration token更新時呼叫，應該將新的token傳送至server
@@ -29,9 +27,4 @@ class MyFCMService : FirebaseMessagingService() {
         //Log.d("qq", "onNewToken: $token")
     }
 
-    // 當FCM server刪除暫存訊息時呼叫(例如：裝置超過4週未存取訊息)
-    override fun onDeletedMessages() {
-        super.onDeletedMessages()
-        //Log.d("qq", "onDeletedMessages")
-    }
 }

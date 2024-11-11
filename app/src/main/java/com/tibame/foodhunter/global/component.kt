@@ -59,13 +59,13 @@ fun TopFunctionBar(
             }
         },
         actions = {
-            IconButton(onClick = {}) {
+            /*IconButton(onClick = {}) {
                 Icon(
                     Icons.Outlined.Notifications,
                     contentDescription = stringResource(R.string.str_notice),
                     tint = Color.White
                 )
-            }
+            }*/
             IconButton(onClick = {navController.navigate(context.getString(R.string.str_member)+"/8")}) {
                 Icon(
                     Icons.Filled.MailOutline,
@@ -98,7 +98,7 @@ fun BottomFunctionBar(
             icon = {
                 Icon(
                     Icons.Default.Home,
-                    contentDescription = stringResource(id = R.string.str_home)
+                    contentDescription = stringResource(id = R.string.str_Recommended_posts)
                 )
             },
             label = {
