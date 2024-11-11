@@ -1,6 +1,7 @@
 package com.tibame.foodhunter.a871208s
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -22,10 +23,10 @@ class FriendViewModel: ViewModel() {
 
     suspend fun refreshFriends(username: String) {
         _friendState.value = friendFetch(username) ?: emptyList()
+    }
+    suspend fun refreshFriends2(username: String) {
         _friendState2.value = friendFetch2(username) ?: emptyList()
     }
-
-
     suspend fun friendAdd(
         username: String,
         friend: String,
@@ -89,7 +90,7 @@ class FriendViewModel: ViewModel() {
 
             // 发起网络请求
             val result = CommonPost(url, jsonObject.toString())
-            Log.e("Response", result) // 输出响应结果
+            Log.e("Response3", result) // 输出响应结果
 
             // 解析响应数据为 List<Friend>
             val friendListType = object : TypeToken<List<Friend>>() {}.type
@@ -112,7 +113,7 @@ class FriendViewModel: ViewModel() {
 
             // 发起网络请求
             val result = CommonPost(url, jsonObject.toString())
-            Log.e("Response2", result) // 输出响应结果
+            Log.e("Response3", result) // 输出响应结果
 
             // 解析响应数据为 List<Friend>
             val friendListType = object : TypeToken<List<Friend>>() {}.type

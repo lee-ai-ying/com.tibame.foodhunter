@@ -22,6 +22,7 @@ import java.io.InputStream
 
 class UserViewModel : ViewModel() {
     var username = mutableStateOf("")
+    var emailFindPassword = mutableStateOf("")
     // 登入
 // 添加 memberId 的 StateFlow
     private val _memberId = MutableStateFlow(0)
@@ -319,6 +320,53 @@ class UserViewModel : ViewModel() {
         }
 
     }
+
+    suspend fun getEmailInfo(email: String): User? {
+        return try {
+            val url = "${serverUrl}/member/getEmailInfo"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+            jsonObject.addProperty("email", email)
+
+            val result = CommonPost(url, jsonObject.toString())
+            Log.e("Response", result) // 输出响应结果
+
+            // 使用 TypeToken 获取 User 的类型
+            val userType = object : TypeToken<User>() {}.type
+            val user = gson.fromJson<User>(result, userType) // 显式指定类型
+
+            user
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "获取用户信息时出错: ${e.message}")
+            null
+        }
+
+
+    }
+    suspend fun saveNewPassword(
+        email: String,
+        password: String,
+    ): Boolean {
+        try {
+            // server URL
+            val url = "${serverUrl}/member/saveNewPassword"
+            val gson = Gson()
+            val jsonObject = JsonObject()
+
+            // 將註冊資料轉成 JSON
+            jsonObject.addProperty("email", email)
+            jsonObject.addProperty("password", password)
+            // 發出 POST 請求，取得註冊結果
+            val result = CommonPost(url, jsonObject.toString())
+            val responseJson = gson.fromJson(result, JsonObject::class.java)
+
+            // 根據響應中的 logged 屬性來判斷是否註冊成功
+            return responseJson.get("save").asBoolean
+        } catch (e: Exception) {
+            return false
+        }
+    }
+
 }
 
 

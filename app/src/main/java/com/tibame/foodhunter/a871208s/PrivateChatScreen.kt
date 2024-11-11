@@ -92,8 +92,11 @@ fun PrivateChatScreen(
                     modifier = Modifier
                         .background(Color.White)
                         .clickable {
+                            pChatVM.friend.value =privateChat.username
+                            pChatVM.friendimage.value=privateChat.profileImageBase64
+                            pChatVM.friendnickname.value=privateChat.nickname
                             pChatVM.setDetailPrivateChat(privateChat)
-                            navController.navigate("PrivateChatRoom/" + privateChat.roomid)
+                            navController.navigate("PrivateChatRoom/" + privateChat.roomId)
                         }
                 ) {
                     Row(
@@ -161,8 +164,11 @@ fun PrivateChatScreen(
                         modifier = Modifier
                             .background(Color.White)
                             .clickable {
+                                pChatVM.friend.value =privateChat.username
+                                pChatVM.friendimage.value=privateChat.profileImageBase64
+                                pChatVM.friendnickname.value=privateChat.nickname
                                 pChatVM.setDetailPrivateChat(privateChat)
-                                navController.navigate("PrivateChatRoom/" + privateChat.roomid)
+                                navController.navigate("PrivateChatRoom/" + privateChat.roomId)
                             }
                     ) {
                         Row(

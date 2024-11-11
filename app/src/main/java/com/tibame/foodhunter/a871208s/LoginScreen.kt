@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -60,14 +61,19 @@ fun LoginScreen(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
-            text = { Text(text = "帳號或密碼錯誤") },
+            text = { Text(text = "帳號或密碼錯誤",
+                    color = colorResource(id = R.color.black))
+                },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
                 ) {
-                    Text("確定")
+                    Text("確定",
+                        color = colorResource(id = R.color.orange_1st))
+
                 }
-            }
+            },
+                    containerColor = Color.White
         )
     }
     Column(
