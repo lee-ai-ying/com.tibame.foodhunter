@@ -121,7 +121,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_create_group),
         context.getString(R.string.SearchToGoogleMap) + "/{id}",
         context.getString(R.string.randomFood),
-        "PrivateChatRoom/{roomid}",
+        "PrivateChatRoom/{roomId}",
         "GroupChatRoom/{groupId}",
         context.getString(R.string.str_group) + "/2",
         context.getString(R.string.str_member) + "/2",
@@ -149,7 +149,7 @@ fun checkBottomButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_group),
         context.getString(R.string.str_member),
         "GroupChatRoom/{groupId}",
-        "PrivateChatRoom/{roomid}",
+        "PrivateChatRoom/{roomId}",
         context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         context.getString(R.string.str_create_group),
@@ -200,7 +200,7 @@ fun Main(
                 )
                 return@Scaffold
             }
-            if (destination?.route == "PrivateChatRoom/{roomid}") {
+            if (destination?.route == "PrivateChatRoom/{roomId}") {
                 PrivateChatRoomTopBar(
                     navController,
                     TopAppBarDefaults.pinnedScrollBehavior(),
@@ -222,7 +222,7 @@ fun Main(
                 return@Scaffold
             }
             if (destination?.route == "PrivateChatRoom/{roomId}") {
-                PrivateChatRoomBottomBar(pChatVM)
+                PrivateChatRoomBottomBar(pChatVM,userViewModel)
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
@@ -240,7 +240,7 @@ fun Main(
                         currectScene = context.getString(R.string.str_group)
                     },
                     onMemberClick = {
-                        currectScene = context.getString(R.string.str_member)
+                        currectScene =  context.getString(R.string.str_member)
                     },
                     selectScene = currectScene
                 )
@@ -270,10 +270,10 @@ fun Main(
                 RegisterScreen(navController = navController, userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/3") {
-                ForgetPassword1Screen(navController = navController, {})
+                ForgetPassword1Screen(navController = navController, {},userViewModel)
             }
             composable(context.getString(R.string.str_login) + "/4") {
-                ForgetPassword2Screen(navController = navController, {})
+                ForgetPassword2Screen(navController = navController, {},userViewModel)
             }
             composable(context.getString(R.string.str_Recommended_posts)) {
                 val memberId by userViewModel.memberId.collectAsState()
@@ -411,12 +411,12 @@ fun Main(
             }
 
 
-            composable("PrivateChatRoom/{roomid}",
+            composable("PrivateChatRoom/{roomId}",
                 arguments = listOf(
-                    navArgument("roomid") { type = NavType.StringType }
+                    navArgument("roomId") { type = NavType.StringType }
                 )
             ) {
-                PrivateChatRoom(it.arguments?.getString("roomid") ?: "-1", pChatVM)//,gChatRoomVM)
+                PrivateChatRoom(it.arguments?.getString("roomId") ?: "-1", pChatVM,userViewModel)//,gChatRoomVM)
             }
 
 

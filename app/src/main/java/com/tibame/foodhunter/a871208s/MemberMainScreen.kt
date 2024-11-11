@@ -360,7 +360,8 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(context.getString(R.string.str_login))}
+                onClick = {userVM.username.value =""
+                    navController.navigate(context.getString(R.string.str_login))}
             ) {
 
             }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,13 +33,45 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import kotlinx.coroutines.launch
 
 @Composable
-fun ForgetPassword2Screen(navController: NavHostController = rememberNavController(),
-                          callback: @Composable () -> Unit) {
+fun ForgetPassword2Screen(
+    navController: NavHostController = rememberNavController(),
+    callback: @Composable () -> Unit, userVM: UserViewModel
+) {
     val context = LocalContext.current
     var password1 by remember { mutableStateOf("") }
     var password2 by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    var showDialog by remember { mutableStateOf(false) }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "密碼長度必須介於6-12") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定")
+                }
+            }
+        )
+    }
+    var showDialog2 by remember { mutableStateOf(false) }
+    if (showDialog2) {
+        AlertDialog(
+            onDismissRequest = { showDialog2 = false },  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "新密碼與再次輸入密碼不符") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定")
+                }
+            }
+        )
+    }
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
@@ -104,26 +138,39 @@ fun ForgetPassword2Screen(navController: NavHostController = rememberNavControll
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_login))}
+                onClick = {
+                    coroutineScope.launch {
+                        if (password1 == password2) {
+                            val saved =
+                                userVM.saveNewPassword(userVM.emailFindPassword.value, password1)
+                            if (saved) {
+                                navController.navigate(context.getString(R.string.str_login))
+                                userVM.emailFindPassword.value = ""
+                            } else {
+                                showDialog = true
+                            }
+                        } else {
+                            showDialog2 = true
+                        }
 
+                    }
+                }
             ) {
                 Text(text = "完成")
             }
+            Button(
+                modifier = Modifier
+                    .size(120.dp, 60.dp)
+                    .padding(8.dp),
+                onClick = {
+                    userVM.emailFindPassword.value = ""
+                    navController.navigate(context.getString(R.string.str_login) + "/3")
+                }
+            ) {
+                Text(text = "返回")
+            }
         }
-if (password1!=password2){
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(0.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "密碼不符",
-            fontSize = 20.sp,
-            color = Color.Blue
-        )
-    }
-}
+
 
     }
 }

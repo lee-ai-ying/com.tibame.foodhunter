@@ -1,14 +1,21 @@
 package com.tibame.foodhunter.a871208s
 
+import android.icu.text.SimpleDateFormat
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,11 +37,18 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -44,43 +59,34 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
-
+import com.tibame.foodhunter.ui.theme.FColor
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 
 @Composable
 fun PrivateChatRoom(
     PrivateRoomId: String,
-    pChatVM: PrivateViewModel= viewModel()
+    pChatVM: PrivateViewModel,
+    userVM: UserViewModel
 ) {
     pChatVM.gotoChatRoom(PrivateRoomId)
-    val item = listOf(
-        "測試",
-        "222\n222",
-        "333",
-        "4444",
-        "55555",
-        "666666",
-        "7777777",
-        "0000000000\n88888888",
-        "999999999",
-        "0000000000",
-        "111",
-        "222",
-        "333",
-        "444",
-        "555",
-        "666",
-        "777",
-        "888",
-        "999",
-        "000"
-    )
+    val item = pChatVM.messageState.collectAsState()
+    val scope = rememberCoroutineScope()
+    val memberIdState by userVM.memberId.collectAsState()
+    LaunchedEffect(Unit) {
+        scope.launch {
+            // 確保在畫面初次顯示時抓取好友資料
+            pChatVM.refreshmessage(userVM.username.value, pChatVM.friend.value)
+        }
+    }
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(colorResource(R.color.orange_6th)),
         reverseLayout = true
     ) {
-        items(item) {
+        items(item.value) { message ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -88,54 +94,76 @@ fun PrivateChatRoom(
                     .padding(start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                when (it) {
-                    "111" -> {}
+                when (message.message_id.toInt() == memberIdState) {
+                    true -> {}  // 如果是当前用户发送的消息
                     else ->
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.user1),
-                                contentDescription = "avatar",
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
+                            val imageBitmap =
+                                pChatVM.friendimage.value?.let { base64ToBitmap(it) }
+                            imageBitmap?.let {
+                                Image(
+                                    bitmap = it.asImageBitmap(),
+                                    contentDescription = "friend",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .border(
+                                            BorderStroke(1.dp, Color(0xFFFF9800)),
+                                            CircleShape
+                                        )
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } ?: run {
+                                // 顯示預設圖像或占位圖像
+                                Image(
+                                    painter = painterResource(id = R.drawable.account_circle),
+                                    contentDescription = "default friend image",
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .border(
+                                            BorderStroke(1.dp, Color(0xFFFF9800)),
+                                            CircleShape
+                                        )
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                 }
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(top = 8.dp, bottom = 8.dp),
-                    horizontalAlignment = when (it) {
-                        "111" -> Alignment.End
+                    horizontalAlignment = when (message.message_id.toInt() == memberIdState) {
+                        true -> Alignment.End
                         else -> Alignment.Start
                     }
                 ) {
-                    when (it) {
-                        "111" -> {}
-                        else -> Text("name")
+                    when (message.message_id.toInt() == memberIdState) {
+                        true -> {}
+                        else -> Text(pChatVM.friendnickname.value)
                     }
                     Row(
                         verticalAlignment = Alignment.Bottom
                     )
                     {
-                        if (it == "111") {
+                        if (message.message_id.toInt() == memberIdState) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
                                     vertical = 4.dp
                                 ),
-                                text = "AM11:11",
+                                text = convertToTime(message.message_time),
                                 fontSize = 12.sp
                             )
                         }
                         Column(
                             modifier = Modifier
                                 .background(
-                                    when (it) {
-                                        "111" -> colorResource(R.color.orange_4th)
+                                    when (message.message_id.toInt() == memberIdState) {
+                                        true -> colorResource(R.color.orange_4th)
                                         else -> Color.White
                                     },
                                     shape = RoundedCornerShape(8.dp)
@@ -143,16 +171,16 @@ fun PrivateChatRoom(
                                 .padding(8.dp)
                         ) {
                             Text(
-                                text = it
+                                text = message.message
                             )
                         }
-                        if (it != "111") {
+                        if (message.message_id.toInt() != memberIdState) {
                             Text(
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
                                     vertical = 4.dp
                                 ),
-                                text = "AM11:11",
+                                text = convertToTime(message.message_time),
                                 fontSize = 12.sp
                             )
                         }
@@ -198,11 +226,15 @@ fun PrivateChatRoomTopBar(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PrivateChatRoomBottomBar(
-    pChatVM: PrivateViewModel
+    pChatVM: PrivateViewModel,
+    userVM: UserViewModel
 ) {
-    val chatInput = pChatVM.chatInput.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    var chatInput by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -214,14 +246,11 @@ fun PrivateChatRoomBottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = ""
-            )
+
             TextField(
-                value = chatInput.value,
+                value = chatInput,
                 onValueChange = {
-                    pChatVM.chatRoomInput(it)
+                    chatInput = it
                 },
                 modifier = Modifier
                     .weight(1f),
@@ -237,17 +266,41 @@ fun PrivateChatRoomBottomBar(
                 }
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.Send,
-                contentDescription = ""
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "",
+                tint = FColor.Orange_1st,//MaterialTheme.colorScheme.primary
+                modifier = Modifier.clickable {
+                    coroutineScope.launch {
+                        val message = pChatVM.sendMessage(
+                            userVM.username.value,
+                            pChatVM.friend.value,
+                            chatInput
+                        )
+                        if (message) {
+                            chatInput = ""
+                            // 確保在畫面初次顯示時抓取好友資料
+                            pChatVM.refreshmessage(userVM.username.value, pChatVM.friend.value)
+                        }
+                    }
+                }
+
             )
         }
+
+
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PrivateChatRoomPreview() {
-    MaterialTheme {
-  PrivateChatRoom("")
-    }
+fun convertToTime(inputDate: String): String {
+    // 定义输入日期格式
+    val inputFormat = SimpleDateFormat("MMM dd, yyyy, hh:mm:ss a", Locale.ENGLISH)
+
+    // 定义输出日期格式
+    val outputFormat = SimpleDateFormat("HH:mm", Locale.ENGLISH)
+
+    // 解析输入的日期字符串
+    val date = inputFormat.parse(inputDate)
+
+    // 转换为需要的时间格式并返回
+    return outputFormat.format(date)
 }
