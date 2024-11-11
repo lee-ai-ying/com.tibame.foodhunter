@@ -43,6 +43,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.Main
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.titleFamily
 import kotlinx.coroutines.launch
 
 
@@ -88,6 +89,7 @@ fun LoginScreen(
             text = stringResource(R.string.app_name),
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
+            fontFamily = titleFamily,
             color = colorResource(R.color.orange_1st)
         )
 
@@ -178,18 +180,7 @@ fun LoginScreen(
                 Text(text = "註冊")
             }
         }
-        Button(
-            modifier = Modifier
-                .size(120.dp, 60.dp)
-                .padding(8.dp),
-            onClick = {
-                navController.navigate(context.getString(R.string.str_Recommended_posts))
-            }
-        ) {
-            Text(text = "快速登入")
-        }
     }
-
 }
 
 @Preview(showBackground = true)

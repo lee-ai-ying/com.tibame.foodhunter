@@ -53,6 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 
 
@@ -86,17 +87,24 @@ fun FriendManagementScreen(
     ) {
         item {
             // 新增好友
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "新增好友",
-                    modifier = Modifier.padding(8.dp),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Blue
-                )
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(FColor.Orange_3rd)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                    Text(
+                        text = "新增好友",
+                        modifier = Modifier.padding(8.dp),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 Column(
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier
@@ -111,19 +119,25 @@ fun FriendManagementScreen(
                         }
                     )
                 }
+                }
             }
-            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
         }
 
         item {
-            Text(
-                text = "已追蹤",
-                modifier = Modifier.padding(8.dp),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Blue
-            )
-            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(FColor.Orange_4th)
+            ) {
+                Text(
+                    text = "已追蹤",
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
 
         // 已追蹤好友列表
@@ -136,14 +150,20 @@ fun FriendManagementScreen(
         }
 
         item {
-            Text(
-                text = "建議追蹤",
-                modifier = Modifier.padding(8.dp),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Blue
-            )
-            HorizontalDivider(modifier = Modifier.size(500.dp, 1.dp), color = Color.Blue)
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(FColor.Orange_4th)
+            ) {
+                Text(
+                    text = "建議追蹤",
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
 
         // 建議追蹤好友列表

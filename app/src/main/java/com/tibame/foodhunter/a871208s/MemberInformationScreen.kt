@@ -365,7 +365,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
                 Text(text = "修改資料")
             }
         }
-
+/* 刪除帳號
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -382,7 +382,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
                 Text(text = "刪除帳號")
             }
         }
-
+*/
     }
     }
 
