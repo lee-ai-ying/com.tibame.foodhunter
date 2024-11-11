@@ -19,12 +19,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -78,11 +76,10 @@ import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.wei.ReviewVM
-import com.tibame.foodhunter.zoe.PersonHomepage
+import com.tibame.foodhunter.zoe.PersonHomepageScreen
 import com.tibame.foodhunter.zoe.PostDetailScreen
 import com.tibame.foodhunter.zoe.PostViewModel
 import com.tibame.foodhunter.zoe.SearchPost
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -307,7 +304,7 @@ fun Main(
                 arguments = listOf(navArgument("publisherId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val publisherId = backStackEntry.arguments?.getInt("publisherId") ?: return@composable
-                PersonHomepage(
+                PersonHomepageScreen(
                     publisherId = publisherId,
                     postViewModel = postViewModel,
                     navController = navController,

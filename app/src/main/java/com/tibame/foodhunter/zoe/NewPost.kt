@@ -81,13 +81,13 @@ enum class NewPostSheetContent {
 fun NewPost(
     navController: NavHostController,
     postViewModel: PostViewModel = viewModel(),
-    testVM: SearchScreenVM = viewModel(),
+    searchScreenVM: SearchScreenVM = viewModel(),
     postEditorViewModel: PostEditorViewModel = viewModel(),
     userVM: UserViewModel,
     postId: Int? = null
 ) {
     // State declarations
-    val choiceRest by testVM.choiceOneRest.collectAsState()
+    val choiceRest by searchScreenVM.choiceOneRest.collectAsState()
     var selectedTag by remember { mutableStateOf("") }
     val selectedLocation by postEditorViewModel.selectedLocation.collectAsState()
     var text by remember { mutableStateOf(TextFieldValue("")) }
@@ -186,7 +186,7 @@ fun NewPost(
                     onLocationSelected = { restaurantId ->
                         showBottomSheet = false
                     },
-                    testVM = testVM
+                    testVM = searchScreenVM
                 )
                 NewPostSheetContent.NONE -> {}
             }

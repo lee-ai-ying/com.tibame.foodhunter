@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun PersonHomepage(
+fun PersonHomepageScreen(
     publisherId: Int,
     postViewModel: PostViewModel,
     userVM: UserViewModel,
