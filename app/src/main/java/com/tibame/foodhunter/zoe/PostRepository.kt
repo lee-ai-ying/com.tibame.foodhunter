@@ -479,22 +479,26 @@ class PostRepository {
 
         Log.d("RestRelatedPostResponse", "成功處理 ${carouselItems.size} 張貼文照片")
 
+        val publisherProfileBitmap = if (!publisherProfileImage.isNullOrEmpty()) {
+            try {
+                val bitmap = processBase64Image(publisherProfileImage, publisher)
+                Log.d("PostRepository", "發布者頭像處理${if (bitmap != null) "成功" else "失敗"}")
+                bitmap
+            } catch (e: Exception) {
+                Log.e("PostRepository", "處理發布者頭像時發生錯誤", e)
+                null
+            }
+        } else {
+            Log.d("PostRepository", "發布者沒有頭像數據")
+            null
+        }
         // 創建 RestRelatedPost 對象
         val restRelatedPost = Post(
             postId = this.postId,
             publisher = Publisher(
                 id = this.postId, // 這裡假設發布者 ID 與 postId 相同，如有不同需調整
                 name = "Unknown User", // 這裡沒有提供發布者名稱，使用預設值
-                avatarBitmap = profileImage?.let {
-                    try {
-                        val bitmap = processBase64Image(it, postId)
-                        Log.d("RestRelatedPostResponse", "發布者頭像處理${if (bitmap != null) "成功" else "失敗"}")
-                        bitmap
-                    } catch (e: Exception) {
-                        Log.e("RestRelatedPostResponse", "處理發布者頭像時發生錯誤", e)
-                        null
-                    }
-                }
+                avatarBitmap = publisherProfileBitmap
             ),
             content = this.content,
             location = "Unknown Location", // 這裡沒有提供位置，使用預設值
@@ -579,6 +583,8 @@ data class UpdateResponse(
 data class RestRelatedPostResponse(
     val postId: Int,
     val content: String,
+    val publisher: Int,
     val profileImage: String? = null,
-    val photos: List<PhotoResponse>? = null
+    val photos: List<PhotoResponse>? = null,
+    val publisherProfileImage: String? = null
 )

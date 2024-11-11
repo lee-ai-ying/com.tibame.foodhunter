@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -256,54 +257,59 @@ fun RelatedPost(posts: List<Post>, navController: NavController) {
     val context = LocalContext.current
 
     val mainDp = 160.dp
-    HorizontalPager(
-        pageSize = PageSize.Fixed(144.dp),
-        beyondViewportPageCount = 3,
-        state = pagerState, // 控制左右間距
-        modifier = Modifier
-            .height(200.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(Color.White), // 背景色
-        pageSpacing = 8.dp,
-        verticalAlignment = Alignment.CenterVertically
-    ) { page ->
-        // 設定每個色塊的縮放效果
+    if (posts.isEmpty()){
+        Text(text = "尚無貼文", style = MaterialTheme.typography.titleLarge)
+    } else {
+        HorizontalPager(
+            pageSize = PageSize.Fixed(144.dp),
+            beyondViewportPageCount = 3,
+            state = pagerState, // 控制左右間距
+            modifier = Modifier
+                .height(200.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .background(Color.White), // 背景色
+            pageSpacing = 8.dp,
+            verticalAlignment = Alignment.CenterVertically
+        ) { page ->
+            // 設定每個色塊的縮放效果
 //        val width = when (page) {
 //            pagerState.currentPage -> 180.dp // 大項目寬度（或用戶設定）
 //            pagerState.currentPage + 1 ->  (180*0.7f).dp// 中等項目寬度
 //            else -> (180*0.2f).dp // 小項目寬度
 //        }
 
-        val leftdp = when (page) {
-            pagerState.currentPage -> 16.dp
-            else -> 8.dp // 小項目寬度
-        }
-        val postId = posts[page].postId
-        Log.d("postId1", postId.toString())
-        Box(modifier = Modifier
-            .background(Color.White)
-            .width(180.dp)
-            .height(184.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { navController.navigate("postDetail/${postId}") }
-        ){
+            val leftdp = when (page) {
+                pagerState.currentPage -> 16.dp
+                else -> 8.dp // 小項目寬度
+            }
+            val postId = posts[page].postId
+            Log.d("postId1", postId.toString())
+            Box(modifier = Modifier
+                .background(Color.White)
+                .width(180.dp)
+                .height(184.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { navController.navigate("postDetail/${postId}") }
+            ){
 
-            Log.d("publisher1", "RelatedPost${posts[page].publisher}")
-            ImageDisplay(imageSource = ImageSource.CarouselSource(posts[page].carouselItems))
+                Log.d("publisher1", "RelatedPost${posts[page].publisher}")
+                ImageDisplay(imageSource = ImageSource.CarouselSource(posts[page].carouselItems))
 
-            Avatar(
-                imageData = posts[page].publisher.avatarBitmap,
-                defaultImage = posts[page].publisher.avatarImage
-            )
+                Avatar(
+                    imageData = posts[page].publisher.avatarBitmap,
+                    defaultImage = posts[page].publisher.avatarImage
+                )
 
-            Text(
-                text = posts[page].content,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.align(Alignment.BottomStart).background(color = Color.White.copy(alpha = 0.5f))
-            )
+                Text(
+                    text = posts[page].content,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.BottomStart).background(color = Color.White.copy(alpha = 0.5f))
+                )
+            }
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
