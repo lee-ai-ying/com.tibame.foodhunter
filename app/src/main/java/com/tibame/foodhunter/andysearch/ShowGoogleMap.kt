@@ -118,7 +118,7 @@ fun ShowGoogleMap(
             currentLocation?.let { location ->
                 Circle(
                     center = location,
-                    radius = 1000.0,
+                    radius = 2000.0,
                     strokeColor = Color.Red,
                     strokeWidth = 2f,
                     fillColor = Color(0x220000FF)
@@ -149,48 +149,25 @@ fun ShowGoogleMap(
                 }
             }
         }
-        LaunchedEffect(currentLocation){
+        LaunchedEffect(newPosition, currentLocation){
             currentLocation?.let {
                 cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(it, 17f)
+                    CameraUpdateFactory.newLatLngZoom(it, 14f)
+                )
+            }
+            newPosition?.let {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(it, 14f)
                 )
             }
         }
 
-        LaunchedEffect(newPosition) {
-            newPosition?.let {
-                cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(it, 17f)
-                )
-            }
-        }
     }
 }
 
 
 
 
-fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): String {
-    // 將經緯度從度數轉換為弧度
-    val earthRadiusKM = 6371.0 // 地球半徑
-    val lat1Rad = Math.toRadians(lat1)
-    val lon1Rad = Math.toRadians(lon1)
-    val lat2Rad = Math.toRadians(lat2)
-    val lon2Rad = Math.toRadians(lon2)
-
-    // 緯度和經度的差值
-    val dLat = lat2Rad - lat1Rad
-    val dLon = lon2Rad - lon1Rad
-
-    // Haversine公式
-    val a = sin(dLat / 2).pow(2) + cos(lat1Rad) * cos(lat2Rad) * sin(dLon / 2).pow(2)
-    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-
-    val distance = round(earthRadiusKM * c * 10.0) / 10.0
-    return distance.toString()
-
-}
 
 
 
@@ -205,12 +182,6 @@ fun openNavigationMap(context: Context, latitude: Double, longitude: Double) {
     context.startActivity(intent)
 }
 
-fun extractCityArea(address: String): String? {
-    // 使用正則表達式匹配 "XX市XX區"
-    val regex = """\w+市\w+區""".toRegex()
-    val matchResult = regex.find(address)
-    return matchResult?.value
-}
 @Preview(showBackground = true)
 @Composable
 fun GoogleMapPreview() {

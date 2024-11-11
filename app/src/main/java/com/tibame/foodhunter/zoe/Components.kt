@@ -160,32 +160,33 @@ private fun ImageCarouselLayout(
             content(page)
         }
 
-        // 指示器
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(pageCount) { iteration ->
-                // 根據是否為當前頁面來決定顏色
-                val color = if (pagerState.currentPage == iteration) {
-                    colorResource(R.color.orange_1st) // 當前頁面使用橙色
-                } else {
-                    Color.LightGray // 非當前頁面使用灰色
+        // Only show indicators if there's more than one image
+        if (pageCount > 1) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(pageCount) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) {
+                        colorResource(R.color.orange_1st)
+                    } else {
+                        Color.LightGray
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .size(8.dp)
+                            .zIndex(1f)
+                    )
                 }
-                Box(
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(color) // 使用上面定義的顏色
-                        .size(8.dp)
-                        .zIndex(1f)
-                )
             }
         }
-        }
     }
+}
 @Composable
 fun ImageList(
     posts: List<Post>,

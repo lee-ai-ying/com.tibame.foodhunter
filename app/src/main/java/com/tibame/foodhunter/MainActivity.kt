@@ -77,6 +77,7 @@ import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.wei.RestaurantDetailTopAppBar
 import com.tibame.foodhunter.wei.ReviewVM
 import com.tibame.foodhunter.zoe.PersonHomepage
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -108,7 +109,6 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
         context.getString(R.string.str_login) + "/4",
-        context.getString(R.string.restaurantDetail),
     )
     return !(noTopBarRoutes.contains(destination?.route) ||
             destination?.parent?.route == "personal_tools")
@@ -120,7 +120,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_create_group),
-        context.getString(R.string.SearchToGoogleMap) + "/{id}",
+        context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         "PrivateChatRoom/{roomid}",
         "GroupChatRoom/{groupId}",
@@ -132,6 +132,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/6",
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
+        context.getString(R.string.restaurantDetail),
         "postDetail/{postId}",
         "person_homepage/{publisherId}"
     ).contains(destination?.route)
@@ -205,6 +206,14 @@ fun Main(
                     navController,
                     TopAppBarDefaults.pinnedScrollBehavior(),
                     pChatVM
+                )
+                return@Scaffold
+            }
+
+            if (destination?.route == context.getString(R.string.restaurantDetail)) {
+                RestaurantDetailTopAppBar(
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    navController
                 )
                 return@Scaffold
             }

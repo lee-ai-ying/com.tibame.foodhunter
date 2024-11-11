@@ -85,6 +85,7 @@ fun PostHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
+            Log.d("publisher1", "home :$publisher")
             Avatar(
                 imageData = publisher.avatarBitmap,
                 defaultImage = publisher.avatarImage

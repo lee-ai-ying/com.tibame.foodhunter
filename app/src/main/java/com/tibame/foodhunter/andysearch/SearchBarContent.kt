@@ -67,11 +67,11 @@ fun SearchBerContent(
         foodVM.loadLabelTags(context)
     }
 
-    Text(text = "搜尋條件 : $showSearchText")
+    Text(text = "搜尋條件 : $showSearchText", modifier = Modifier.padding(start = 52.dp, top = 8.dp, end = 16.dp))
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp)
+            .padding(start = 24.dp, top = 24.dp)
     ) {
         Row() {
             Icon(
