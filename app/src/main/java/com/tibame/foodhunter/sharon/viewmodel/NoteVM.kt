@@ -1,6 +1,5 @@
 package com.tibame.foodhunter.sharon.viewmodel
 
-import android.icu.text.SimpleDateFormat
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,8 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Date
-import java.util.Locale
 
 
 class NoteVM : ViewModel() {
@@ -29,37 +26,39 @@ class NoteVM : ViewModel() {
     private val repository = NoteRepository.instance
     val notes: StateFlow<List<Note>> = repository.notes
 
+//    // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
+//    private val _note = MutableStateFlow<Note?>(null)
+//    val note: StateFlow<Note?> = _note.asStateFlow()
 
-    // 單一筆記狀態 - 用於顯示單一筆記的詳細資訊
-    private val _note = MutableStateFlow<Note?>(null)
-    val note: StateFlow<Note?> = _note.asStateFlow()
-
-    // 1. 所有筆記的完整列表
+    // 所有筆記的完整列表
     private val _allNotes = MutableStateFlow<List<Note>>(emptyList())
-    // 2. 經過過濾後的筆記列表（這個會顯示給用戶看）
+
+    // 經過過濾後的筆記列表（這個會顯示給用戶看）
     private val _filteredNotes = MutableStateFlow<List<Note>>(emptyList())
     val filteredNotes: StateFlow<List<Note>> = _filteredNotes.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-
     private val _searchQuery = MutableStateFlow("")
 
+
+    private var memberId: Int? = null
+
+    fun setMemberId(memberId: Int) {
+        this.memberId = memberId
+        loadNotes(memberId)
+    }
 
     // 預留篩選相關狀態，目前未實作
     // private val _selectedContentTypes = MutableStateFlow<Set<CardContentType>>(emptySet())
     // val selectedContentTypes = _selectedContentTypes.asStateFlow()
 
     init {
-        // 首次載入
-        loadNotes()
-
-        // 監聽刷新事件
         viewModelScope.launch {
             NoteEvent.refreshTrigger.collect { needRefresh ->
-                if (needRefresh) {
-                    loadNotes()   // 再次載入
+                if (needRefresh && memberId != null) {
+                    loadNotes(memberId!!)
                     NoteEvent.resetTrigger()  // 重置觸發器
                 }
             }
@@ -70,23 +69,19 @@ class NoteVM : ViewModel() {
     /**
      * 初始化筆記列表
      */
-    fun loadNotes() {
+    fun loadNotes(memberId: Int) {
         viewModelScope.launch {
             try {
                 Log.d(TAG, "開始載入筆記")
                 _isLoading.value = true
 
-                // 1. 觸發 Repository 發送 HTTP 請求
                 Log.d(TAG, "呼叫 repository.getNotes()")
-                repository.getNotes()
+                repository.getNotes(memberId)
 
-                val notes = repository.notes.value
-                Log.d(TAG, "收到筆記資料: ${notes.size}筆")
-
-                // 3. 更新 ViewModel 的狀態
-                _allNotes.value = notes      // 保存完整列表
-                _filteredNotes.value = notes // 初始時顯示全部
-
+                // 只收集一次資料
+                val notes = repository.notes.first()
+                _allNotes.value = notes
+                _filteredNotes.value = notes
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing notes", e)
             } finally {
@@ -97,10 +92,10 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 設置搜尋流
+     * 1. 搜尋流程設置
      * 使用 Flow 處理搜尋邏輯，包含：
-     * 1. 防抖（debounce）：避免過於頻繁的搜尋
-     * 2. 即時過濾：搜尋條件改變時自動更新結果
+     * 1.1. 防抖（debounce）：避免過於頻繁的搜尋
+     * 1.2. 即時過濾：搜尋條件改變時自動更新結果
      *  這裡使用 Flow 的特性自動處理狀態更新
      */
     @OptIn(FlowPreview::class)
@@ -116,7 +111,7 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 處理搜尋邏輯
+     * 2. 接收搜尋請求
      */
     fun searchNotes(query: String) {
         Log.d(TAG, "[searchNotes] 接收搜尋請求: $query")
@@ -127,7 +122,7 @@ class NoteVM : ViewModel() {
     }
 
     /**
-     * 搜尋邏輯
+     * 3. 搜尋結果更新
      */
     private fun updateSearchResults(query: String) {
         Log.d(TAG, "[updateSearchResults] 開始更新搜尋結果")
@@ -146,20 +141,11 @@ class NoteVM : ViewModel() {
         Log.d(TAG, "[updateSearchResults] 過濾後結果數量: ${result.size}")
         _filteredNotes.value = result
         Log.d(TAG, "_filteredNotes value: ${_filteredNotes.value}")
-
     }
 
-    /**
-     * 清空搜尋
-     */
-    fun resetSearch() {
-        Log.d(TAG, "[clearSearch] 重置搜尋狀態")
-        _searchQuery.value = ""
-    }
 
     val hasSearchQuery: Boolean
         get() = _searchQuery.value.isNotEmpty()
-
 
     /**
      * 預留篩選方法，目前未實作
@@ -175,110 +161,6 @@ class NoteVM : ViewModel() {
         // 預留給未來實作篩選功能
     }
 
-
-
-
-
-    // 當用戶點選某個筆記時
-    fun getNoteById(noteId: Int) {
-        viewModelScope.launch {
-            try {
-                val result = repository.getNoteById(noteId)
-                // 更新選中的筆記
-                _note.value = result
-                Log.d("NoteVM", "Note received: $result")
-            } catch (e: Exception) {
-                Log.e("NoteVM", "Error getting note: ${e.message}")
-            }
-        }
-    }
-
-
-    /**
-     * 新增筆記
-     */
-    fun addNote(title: String, content: String, type: CardContentType) {
-        viewModelScope.launch {
-            try {
-                val newNote = Note(
-                    noteId = System.currentTimeMillis().toInt(),
-                    type = type,
-                    date = getCurrentDate(),
-                    day = getCurrentDay(),
-                    title = title,
-                    content = content,
-                    imageResId = null,
-                    restaurantName = null
-                )
-
-                val currentList = _allNotes.value.toMutableList()
-                currentList.add(0, newNote)
-                _allNotes.value = currentList
-            } catch (e: Exception) {
-                Log.e("NoteVM", "Error adding note", e)
-            }
-        }
-    }
-
-    /**
-     * 更新筆記
-     */
-    fun updateNote(
-        noteId: Int,
-        title: String,
-        content: String,
-        type: CardContentType,
-        restaurantName: String? = null
-    ) {
-        viewModelScope.launch {
-            try {
-                val currentList = _allNotes.value.toMutableList()
-                val index = currentList.indexOfFirst { it.noteId == noteId }
-
-                if (index != -1) {
-                    val oldNote = currentList[index]
-                    val updatedNote = oldNote.copy(
-                        title = title,
-                        content = content,
-                        type = type,
-                        restaurantName = restaurantName
-                    )
-                    currentList[index] = updatedNote
-                    _allNotes.value = currentList
-                }
-            } catch (e: Exception) {
-                Log.e("NoteVM", "Error updating note", e)
-            }
-        }
-    }
-
-    /**
-     * 刪除筆記
-     */
-    fun deleteNote(noteId: Int) {
-        viewModelScope.launch {
-            try {
-                val currentList = _allNotes.value.toMutableList()
-                currentList.removeAll { it.noteId == noteId }
-                _allNotes.value = currentList
-            } catch (e: Exception) {
-                Log.e("NoteVM", "Error deleting note", e)
-            }
-        }
-    }
-
-    /**
-     * 工具函數
-     */
-    private fun getCurrentDate(): String {
-        val sdf = SimpleDateFormat("MM/dd", Locale.getDefault())
-        return sdf.format(Date())
-    }
-
-    private fun getCurrentDay(): String {
-        val sdf = SimpleDateFormat("EEEE", Locale.CHINESE)
-        return "星期" + sdf.format(Date()).substring(2, 3)
-    }
 
     /**
      * 資源清理

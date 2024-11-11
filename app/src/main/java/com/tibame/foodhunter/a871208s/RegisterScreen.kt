@@ -1,11 +1,11 @@
 package com.tibame.foodhunter.a871208s
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,18 +15,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
@@ -65,27 +67,47 @@ fun RegisterScreen(
     userVM: UserViewModel
 ) {
     val context = LocalContext.current
-    var username by remember { mutableStateOf("123456") }
-    var password by remember { mutableStateOf("123456") }
-    var nickname by remember { mutableStateOf("測試2") }
-    var email by remember { mutableStateOf("abc") }
-    var phone by remember { mutableStateOf("0911122233") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var nickname by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var birthday by remember { mutableStateOf("2024年11月5日") }
+    var birthday by remember { mutableStateOf("") }
     val options = listOf("男", "女")
-    var gender by remember { mutableStateOf("男") }
+    var gender by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
-            text = { Text(text = "註冊失敗") },
+            text = { Text(text = "註冊失敗",
+                color = colorResource(id = R.color.black)) },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
                 ) {
-                    Text("確定")
+                    Text("確定",
+                        color = colorResource(id = R.color.orange_1st))
+                }
+            }
+        )
+    }
+    var showDialog2 by remember { mutableStateOf(false) }
+    if (showDialog2) {
+        AlertDialog(
+            onDismissRequest = { showDialog2 = false
+                navController.navigate(context.getString(R.string.str_login))},  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "註冊成功",
+                color = colorResource(id = R.color.black)) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showDialog2 = false
+                        navController.navigate(context.getString(R.string.str_login))}  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定",
+                        color = colorResource(id = R.color.orange_1st))
                 }
             }
         )
@@ -103,7 +125,7 @@ fun RegisterScreen(
             Text(
                 text = "建立新帳號",
                 modifier = Modifier.padding(8.dp),
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -120,13 +142,25 @@ fun RegisterScreen(
                 fontSize = 20.sp,
                 color = Color.Black
             )
-            TextField(
+            OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                placeholder = { Text(text = "請輸入帳號", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入帳號", fontSize = 16.sp) },
                 singleLine = true,
-                shape = RoundedCornerShape(0.dp),
-                modifier = Modifier.fillMaxWidth().background(FColor.Orange_4th),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (username.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (username.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
         }
         Column(
@@ -137,16 +171,29 @@ fun RegisterScreen(
             Text(
                 text = "密碼",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text(text = "請輸入密碼", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入密碼", fontSize = 16.sp) },
                 singleLine = true,
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (password.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (password.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
+
 
         }
         Column(
@@ -157,15 +204,27 @@ fun RegisterScreen(
             Text(
                 text = "暱稱",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                placeholder = { Text(text = "請輸入暱稱", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入暱稱", fontSize = 16.sp) },
                 singleLine = true,
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (nickname.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (nickname.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
 
         }
@@ -177,15 +236,27 @@ fun RegisterScreen(
             Text(
                 text = "電子信箱",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text(text = "請輸入信箱", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入信箱", fontSize = 16.sp) },
                 singleLine = true,
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (email.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (email.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
 
         }
@@ -197,15 +268,27 @@ fun RegisterScreen(
             Text(
                 text = "手機號碼",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                placeholder = { Text(text = "請輸入號碼", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入號碼", fontSize = 16.sp) },
                 singleLine = true,
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (phone.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (phone.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
 
         }
@@ -217,12 +300,12 @@ fun RegisterScreen(
             Text(
                 text = "生日",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             OutlinedTextField(
                 value = birthday,
                 onValueChange = { birthday = it },
-                placeholder = { Text(text = "請輸入生日", fontSize = 18.sp) },
+                placeholder = { Text(text = "請輸入生日", fontSize = 16.sp) },
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.DateRange,
@@ -255,21 +338,33 @@ fun RegisterScreen(
                         )
                     }
                 },
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().background(
+                    color = if (birthday.isNotEmpty()) Color.White else FColor.Gary_20,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                    .border(
+                        width = 1.dp,
+                        color = if (birthday.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = FColor.Orange_1st,
+                    unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                )
             )
 
         }
 
         Column(
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier
+            modifier = Modifier.fillMaxWidth()
                 .padding(16.dp, 2.dp)
         ) {
             Text(
                 text = "性別",
                 fontSize = 20.sp,
-                color = Color.Blue
+                color = Color.Black
             )
             ExposedDropdownMenuBox(
                 modifier = Modifier.fillMaxWidth(),
@@ -277,26 +372,50 @@ fun RegisterScreen(
                 onExpandedChange = { expanded = it }
             ) {
                 TextField(
-                    //shape = RoundedCornerShape(32.dp),
                     readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.fillMaxWidth().background(
+                        color = if (gender.isNotEmpty()) Color.White else FColor.Gary_20,
+                        shape = RoundedCornerShape(0.dp)
+                    )
+                        .border(
+                            width = 1.dp,
+                            color = if (gender.isNotEmpty()) FColor.Orange_1st else FColor.Gary,
+                            shape = RoundedCornerShape(0.dp)
+                        ).menuAnchor(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = FColor.Orange_1st,
+                        unfocusedBorderColor = FColor.Gary,// 設定聚焦時的邊框顏色
+                    ),
+
                     value = gender,
                     onValueChange = {
                         gender = it
                         expanded = true
                     },
                     singleLine = true,
-                    label = { Text("選擇性別") },
+                    label = { Text("選擇性別",
+                        color = Color.Black
+                    )
+                            },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth().background(
+                        color = Color.White ,
+                        shape = RoundedCornerShape(0.dp)
+                    )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(0.dp)
+                        )
                 ) {
                     options.forEach { option ->
                         DropdownMenuItem(
+                            modifier = Modifier.fillMaxWidth(),
                             text = { Text(option) },
                             onClick = {
                                 gender = option
@@ -330,12 +449,17 @@ fun RegisterScreen(
                             convertDateFormat(birthday)
                         )
                         if (register) {
-                            navController.navigate(context.getString(R.string.str_login))
+                            showDialog2 = true
+
                         } else {
                             showDialog = true
                         }
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.orange_1st), // 背景顏色
+                    contentColor = Color.White // 文字顏色
+                )
             ) {
                 Text(text = "建立")
             }
@@ -345,7 +469,11 @@ fun RegisterScreen(
                     .padding(8.dp),
                 onClick = {
                             navController.navigate(context.getString(R.string.str_login))
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.orange_3rd), // 背景顏色
+                    contentColor = Color.White // 文字顏色
+                )
             ) {
                 Text(text = "返回")
             }

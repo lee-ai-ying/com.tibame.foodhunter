@@ -13,80 +13,75 @@ import androidx.compose.ui.unit.dp
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FTypography
 
-@Preview
-@Composable
-fun DeleteConfirmationDialogP(){
-    DeleteConfirmationDialog()
+@Preview(showBackground = true)@Composable
+fun DeleteConfirmationDialogP() {
+    var showDialog by remember { mutableStateOf(true) }
+    if (showDialog) {
+        DeleteConfirmationDialog(
+            onDeleteConfirmed = { showDialog = false },
+            onCancel = { showDialog = false }
+        )
+    }
 }
 
 
 //TODO 排版
 @Composable
 fun DeleteConfirmationDialog(
-    onDeleteConfirmed: () -> Unit ={},
-    onCancel: () -> Unit ={},
+    onDeleteConfirmed: () -> Unit = {},
+    onCancel: () -> Unit = {},
 ) {
-    Box(
+    Column(
         modifier = Modifier
-            .width(288.dp)
-            .height(144.dp)
-            .wrapContentSize(Alignment.Center)
-    ) {
-        Column(
-            modifier = Modifier
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(28.dp)
-                )
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // 彈出框標題
-            Text(
-                text = "確定要刪除？",
-                style = FTypography.Title1,
-                color = FColor.Dark_80,
-                modifier = Modifier.padding(start = 10.dp)
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(28.dp)
             )
+            .padding(16.dp)
+            .width(288.dp), // 固定寬度
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "確定要刪除？",
+            style = FTypography.Title1,
+            color = FColor.Dark_80,
+            modifier = Modifier.padding(start = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // 按鈕區域
-            Row(
-                modifier = Modifier.width(200.dp).padding(start = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            OutlinedButton(
+                modifier = Modifier
+                    .weight(1f),
+                onClick = onCancel,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = FColor.Dark_80
+                ),
             ) {
-                // 取消按鈕
-                OutlinedButton(
-                    modifier = Modifier
-                        .weight(1f),
-                    onClick = { onCancel() },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = FColor.Dark_80
-                    ),
-                ) {
-                    Text(text = "取消",style = FTypography.Label1)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // 刪除按鈕
-                OutlinedButton(
-                    modifier = Modifier
-                        .weight(1f),
-                    onClick = { onDeleteConfirmed() },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = FColor.Orange_1st
-                    ),
-
-                ) {
-                    Text(text = "刪除",style = FTypography.Label1)
-                }
+                Text(text = "取消", style = FTypography.Label1)
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedButton(
+                modifier = Modifier
+                    .weight(1f),
+                onClick = onDeleteConfirmed,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = FColor.Orange_1st
+                ),
+            ) {
+                Text(text = "刪除", style = FTypography.Label1)
+            }
         }
     }
 }

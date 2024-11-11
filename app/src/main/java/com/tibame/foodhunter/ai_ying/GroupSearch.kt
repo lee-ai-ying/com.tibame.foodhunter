@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
@@ -26,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -54,6 +54,9 @@ fun GroupSearch(
     gChatVM: GroupViewModel,
     onSearchClick: () -> Unit = {}
 ) {
+    LaunchedEffect(Unit) {
+        gChatVM.getRestaurantList()
+    }
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var selectDate by remember {
         mutableStateOf(
@@ -61,7 +64,6 @@ fun GroupSearch(
         )
     }
     val inputData by gChatVM.groupSearchCache.collectAsState()
-    gChatVM.getRestaurantList()
     var searchInput by remember { mutableStateOf("") }
     var showRestaurantPickerDialog by remember { mutableStateOf(false) }
     val restaurantList by gChatVM.restaurantList.collectAsState()
@@ -204,7 +206,7 @@ fun GroupSearch(
                 onConfirm = { utcTimeMillis ->
                     saveSelectTime = utcTimeMillis?:System.currentTimeMillis()
                     selectDate = utcTimeMillis?.let {
-                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC+8"))
                             .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             ?: selectDate
 //                            .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))

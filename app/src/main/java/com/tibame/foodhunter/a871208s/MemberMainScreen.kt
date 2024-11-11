@@ -254,11 +254,11 @@ fun MemberMainScreen(
                 verticalAlignment= Alignment.CenterVertically
             ){
                 Icon(
-                    imageVector = Icons.Default.AccountBox,
+                    imageVector = Icons.Default.Star,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "我的貼文",
+                Text(text = "我的日曆",
                     fontSize = 24.sp)
             }
         }
@@ -283,11 +283,11 @@ fun MemberMainScreen(
                 verticalAlignment= Alignment.CenterVertically
             ){
                 Icon(
-                    imageVector = Icons.Default.Star,
+                    imageVector = Icons.Default.AccountBox,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "我的收藏",
+                Text(text = "我的貼文",
                     fontSize = 24.sp)
             }
         }

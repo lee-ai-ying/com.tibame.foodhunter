@@ -3,6 +3,7 @@ package com.tibame.foodhunter.sharon.data
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.NonCancellable
@@ -21,14 +22,12 @@ import java.util.Locale
 class NoteRepository private constructor() {
     companion object {
         private const val TAG = "NoteRepository"
-
-        // 使用團隊統一的 serverUrl
         private const val BASE_URL = serverUrl
         private const val API_PATH = "/api/note"
         val instance = NoteRepository()
     }
 
-    // StateFlow 用於觀察筆記列表的變化
+
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
@@ -38,14 +37,21 @@ class NoteRepository private constructor() {
      * 取得所有筆記
      * @return 成功回傳正數，失敗回傳-1
      */
-    suspend fun getNotes() {
+    suspend fun getNotes(memberId: Int) {
         try {
             // 組合完整 URL
             val url = "$BASE_URL$API_PATH/getAllNotes"
 
-            // 因為 getAllNotes 不需要參數，傳空的""
-            val response = CommonPost(url, "")
-            Log.d("NoteRepo", "收到回應: $response")
+            // 準備請求參數
+            val requestBody = JsonObject().apply {
+                addProperty("member_id", memberId)
+            }
+
+            // 發送請求
+            val response = CommonPost(url, requestBody.toString())
+            Log.d(TAG, "API回應: $response")
+
+
 
             // 有空再研究簡化
 //            val type = object : TypeToken<List<NoteApiResponse>>() {}.type
@@ -92,12 +98,8 @@ class NoteRepository private constructor() {
 
                 // 更新 StateFlow
                 _notes.value = sortedNotesList
-                Log.d(TAG, "排序後的資料: $sortedNotesList")
+                Log.d(TAG, "成功載入 ${sortedNotesList.size} 筆筆記")
 
-
-                // 記錄總筆數
-                val total = jsonResponse.get("total").asInt
-                Log.d(TAG, "成功取得筆記列表，總筆數: $total")
             } else {
                 Log.e(TAG, "API 無回應")
                 _notes.value = emptyList()
@@ -112,13 +114,13 @@ class NoteRepository private constructor() {
     /**
      * 根據ID取得單一筆記
      */
-    suspend fun getNoteById(noteId: Int): Note? {
+    suspend fun getNoteById(memberId: Int): Note? {
         val url = "$BASE_URL$API_PATH/getNoteById"
 
         try {
             // 準備請求參數
             val requestBody = JsonObject().apply {
-                addProperty("note_id", noteId)
+                addProperty("note_id", memberId)
             }
 
             // 發送請求
@@ -158,7 +160,8 @@ class NoteRepository private constructor() {
                     date = formatDate(jsonResponse.get("selected_date").asString),
                     day = formatDay(jsonResponse.get("selected_date").asString),
                     restaurantName = null,
-                    imageResId = null
+                    imageResId = null,
+                    memberId = jsonResponse.get("member_id").asInt,
                 ).also {
                     Log.d(TAG, "成功建立Note物件: $it")
                 }
@@ -197,73 +200,7 @@ class NoteRepository private constructor() {
         */
     }
 
-    /**
-     * 測試用：本地新增筆記
-     * 當後端API還未完成時使用
-     */
-    suspend fun addNoteLocal(
-        title: String,
-        content: String,
-        type: CardContentType,
-        selectedDate: Date,
-        restaurantName: String? = null,
-    ): Int? {
-        try {
-            // 生成臨時 ID
-            val newNoteId = System.currentTimeMillis().toInt()
 
-            // 取得當前日期並格式化
-            val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                .format(java.util.Date())
-
-            // 創建新筆記
-            val newNote = Note(
-                noteId = newNoteId,
-                title = title,
-                content = content,
-                type = type,
-                selectedDate = selectedDate,
-                date = formatDate(formattedDate),  // 使用正確格式的日期字串
-                day = formatDay(formattedDate),    // 使用正確格式的日期字串
-                restaurantName = restaurantName,
-                imageResId = null
-            )
-
-            // 添加到現有列表
-            val currentList = _notes.value.toMutableList()
-            currentList.add(0, newNote)  // 加到最前面
-            _notes.value = currentList
-
-            Log.d(TAG, "本地新增筆記成功: $newNote")
-            return newNoteId
-
-        } catch (e: Exception) {
-            Log.e(TAG, "本地新增筆記失敗", e)
-            throw e
-        }
-    }
-
-    // 修改 addNote 方法，暫時使用本地測試版本
-    suspend fun addNote1(
-        title: String,
-        content: String,
-        type: CardContentType,
-        selectedDate: Date,
-        restaurantName: String? = null,
-    ): Int? {
-        // 暫時使用本地版本測試
-        return try {
-            addNoteLocal(title, content, type, selectedDate, restaurantName)
-        } catch (e: Exception) {
-            Log.e(TAG, "新增筆記失敗", e)
-            null
-        }
-    }
-
-    /**
-     * 新增筆記
-     * @return 新增成功返回筆記ID，失敗返回null
-     */
     /**
      * 新增筆記
      * @return 成功回傳正數，失敗回傳-1
@@ -271,11 +208,11 @@ class NoteRepository private constructor() {
     suspend fun addNote(
         title: String,
         content: String,
-        restaurantId: Int = 1,  // 先用固定值
-        memberId: Int = 1,    // int，暫時固定
+        restaurantId: Int,
         selectedDate: Date,
+        memberId: Int
     ): Int {
-        val url = "http://10.2.16.225:8080/com.tibame.foodhunter_server/api/note/create"
+        val url = "$BASE_URL$API_PATH/create"
 
         // 轉成 "yyyy-MM-dd" 給後端
         val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -303,15 +240,11 @@ class NoteRepository private constructor() {
                 val result = jsonResponse.get("result")?.asBoolean ?: false
 
                 return if (result) {
-                    // 從本地端更新
 
-
-                    // 新增成功，從後端重新取得筆記列表
-                    getNotes()
+                    getNotes(memberId)
                     Log.d(TAG, "新增筆記成功")
                     1  // 成功返回1
                 } else {
-                    // 新增失敗，檢查錯誤訊息
                     val errMsg = jsonResponse.get("errMsg")?.asString ?: "未知錯誤"
                     Log.e(TAG, "新增筆記失敗: $errMsg")
                     return -1
@@ -353,8 +286,91 @@ class NoteRepository private constructor() {
             date = formatDate(selected_date),
             day = formatDay(selected_date),
             restaurantName = null,
-            imageResId = null
+            imageResId = null,
+            memberId = member_id
         )
+    }
+
+    suspend fun deleteNoteById(noteId: Int,): Int {
+        val url = "$BASE_URL$API_PATH/deleteNoteById"
+        val requestBody = JsonObject().apply {
+            addProperty("note_id", noteId)
+        }
+
+        return try {
+            val response = CommonPost(url, requestBody.toString())
+            Log.d(TAG, "刪除筆記回應：$response")
+
+            if (response.isNotEmpty()) {
+                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
+                val resultStr = jsonResponse.get("result")?.asString ?: ""
+
+                if (resultStr.contains("刪除成功")) {
+                    Log.d(TAG, "刪除筆記成功，ID: $noteId")
+
+                    refreshNotes()
+                    _notes.value = _notes.value.filter { it.noteId != noteId }
+
+                    1  // 成功返回1
+                } else {
+                    val errMsg = jsonResponse.get("error")?.asString ?: "未知錯誤"
+                    Log.e(TAG, "刪除筆記失敗: $errMsg")
+                    -1  // 刪除失敗
+                }
+            } else {
+                Log.e(TAG, "API 回應為空")
+                -1  // 空回應時的錯誤碼
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "刪除筆記時發生錯誤", e)
+            -1  // 例外錯誤時的錯誤碼
+        }
+    }
+
+
+    suspend fun updateNote(
+        noteId: Int,
+        title: String,
+        content: String,
+        restaurantId: Int,
+        selectedDate: Date,
+    ): Int {
+        val url = "$BASE_URL$API_PATH/update"
+
+        val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            .format(selectedDate)
+
+        val requestBody = JsonObject().apply {
+            addProperty("noteId", noteId)
+            addProperty("title", title)
+            addProperty("content", content)
+            addProperty("restaurantId", restaurantId)
+            addProperty("selectedDate", backendDateStr)
+        }
+
+        return try {
+            val response = CommonPost(url, requestBody.toString())
+            // 使用 Gson 將 JSON 字符串轉換為 JsonObject
+            val jsonResponse = JsonParser.parseString(response).asJsonObject
+            val backendResult = jsonResponse.get("result").asBoolean
+            Log.e(TAG, "更新筆記結果 $backendResult")
+
+            if (backendResult) {
+                refreshNotes()
+                1
+            } else {
+                -1
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "更新筆記失敗", e)
+            -1
+        }
+    }
+
+    // 重整資料
+    private suspend fun refreshNotes() {
+        _notes.value = emptyList()
+//        getNotes()  // 重新取得資料
     }
 
     /**
@@ -390,78 +406,4 @@ class NoteRepository private constructor() {
         }
     }
 
-    suspend fun deleteNoteById(noteId: Int): Int {
-        val url = "$BASE_URL$API_PATH/deleteNoteById"
-        val requestBody = JsonObject().apply {
-            addProperty("note_id", noteId)
-        }
-
-        return try {
-            val response = CommonPost(url, requestBody.toString())
-            Log.d(TAG, "刪除筆記回應：$response")
-
-            if (response.isNotEmpty()) {
-                val jsonResponse = gson.fromJson(response, JsonObject::class.java)
-                val resultStr = jsonResponse.get("result")?.asString ?: ""
-
-                if (resultStr.contains("刪除成功")) {
-                    Log.d(TAG, "刪除筆記成功，ID: $noteId")
-
-                    // 立即從本地列表移除
-
-                    _notes.value = _notes.value.filter { it.noteId != noteId }
-
-//                    getNotes()
-
-                    1  // 成功返回1
-                } else {
-                    val errMsg = jsonResponse.get("error")?.asString ?: "未知錯誤"
-                    Log.e(TAG, "刪除筆記失敗: $errMsg")
-                    -1  // 刪除失敗
-                }
-            } else {
-                Log.e(TAG, "API 回應為空")
-                -1  // 空回應時的錯誤碼
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "刪除筆記時發生錯誤", e)
-            -1  // 例外錯誤時的錯誤碼
-        }
-    }
-
-
-    suspend fun updateNote(
-        noteId: Int,
-        title: String,
-        content: String,
-        restaurantId: Int,
-        selectedDate: Date
-    ): Int {
-        val url = "$BASE_URL$API_PATH/update"
-
-        val backendDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            .format(selectedDate)
-
-        val requestBody = JsonObject().apply {
-            addProperty("noteId", noteId)
-            addProperty("title", title)
-            addProperty("content", content)
-            addProperty("restaurantId", restaurantId)
-            addProperty("selectedDate", backendDateStr)
-        }
-
-        return try {
-            val response = CommonPost(url, requestBody.toString())
-            if (response.contains("更新成功")) {
-                // 更新本地資料
-                getNotes()  // 重新取得資料
-                1
-            } else {
-                -1
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "更新筆記失敗", e)
-            -1
-        }
-    }
 }

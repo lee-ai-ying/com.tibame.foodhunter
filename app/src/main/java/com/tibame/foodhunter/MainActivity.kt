@@ -75,6 +75,8 @@ import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
 import com.tibame.foodhunter.wei.RestaurantDetail
+import com.tibame.foodhunter.wei.RestaurantDetailTopAppBar
+import com.tibame.foodhunter.wei.ReviewDetail
 import com.tibame.foodhunter.wei.ReviewVM
 import com.tibame.foodhunter.zoe.PersonHomepageScreen
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -105,7 +107,6 @@ fun checkTopBarNoShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_login) + "/2",
         context.getString(R.string.str_login) + "/3",
         context.getString(R.string.str_login) + "/4",
-        context.getString(R.string.restaurantDetail),
     )
     return !(noTopBarRoutes.contains(destination?.route) ||
             destination?.parent?.route == "personal_tools")
@@ -117,7 +118,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
     val context = LocalContext.current
     return listOf(
         context.getString(R.string.str_create_group),
-        context.getString(R.string.SearchToGoogleMap) + "/{id}",
+        context.getString(R.string.SearchToGoogleMap),
         context.getString(R.string.randomFood),
         "PrivateChatRoom/{roomId}",
         "GroupChatRoom/{groupId}",
@@ -129,6 +130,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/6",
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
+        context.getString(R.string.restaurantDetail),
         "postDetail/{postId}",
         "person_homepage/{publisherId}"
     ).contains(destination?.route)
@@ -165,6 +167,7 @@ fun Main(
     pChatVM: PrivateViewModel = viewModel(),
     postViewModel: PostViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
+    reviewVM: ReviewVM = viewModel(),
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -185,6 +188,7 @@ fun Main(
         }
         GroupRepository.gChatVM = gChatVM
         gChatVM.userVM = userViewModel
+        gChatVM.getTokenSendServer()
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -202,6 +206,14 @@ fun Main(
                     navController,
                     TopAppBarDefaults.pinnedScrollBehavior(),
                     pChatVM
+                )
+                return@Scaffold
+            }
+
+            if (destination?.route == context.getString(R.string.restaurantDetail)) {
+                RestaurantDetailTopAppBar(
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    navController
                 )
                 return@Scaffold
             }
@@ -383,7 +395,15 @@ fun Main(
 
             composable(context.getString(R.string.restaurantDetail)){
                 RestaurantDetail(
-                    navController = navController, restaurantVM = searchVM,reviewVM = ReviewVM()
+                    navController = navController,
+                    restaurantVM =searchVM,
+                    reviewVM = reviewVM
+                )
+            }
+
+            composable(context.getString(R.string.reviewDetail)){
+                ReviewDetail(
+                    navController = navController, reviewVM =reviewVM
                 )
             }
 
@@ -448,22 +468,22 @@ fun Main(
                 PrivateChatScreen(navController = navController,pChatVM,userViewModel)
             }
 
-
             navigation(
                 startDestination = context.getString((R.string.str_calendar)),
                 route = "personal_tools"
             ) {
                 composable(context.getString(R.string.str_calendar)) {
-                    PersonalToolsScreen(navController)
+                    PersonalToolsScreen(navController, userViewModel)
                 }
                 composable(context.getString(R.string.str_note)) {
-                    PersonalToolsScreen(navController)
+                    PersonalToolsScreen(navController, userViewModel)
                 }
 
                 composable("note/add") {
                     NoteEditRoute(
                         navController = navController,
-                        navigation = NoteEditNavigation.Add
+                        navigation = NoteEditNavigation.Add,
+                        userVM = userViewModel
                     )
                 }
 
@@ -476,7 +496,8 @@ fun Main(
 
                     NoteEditRoute(
                         navController = navController,
-                        navigation = NoteEditNavigation.Edit(noteId)
+                        navigation = NoteEditNavigation.Edit(noteId),
+                        userVM = userViewModel
                     )
                 }
             }

@@ -2,8 +2,10 @@ package com.tibame.foodhunter.wei
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.tibame.foodhunter.global.CommonPost
+import com.tibame.foodhunter.global.serverUrl
 import com.tibame.foodhunter.zoe.DeleteResponse
 import com.tibame.foodhunter.zoe.PostResponse
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ReviewRepository {
-    private val serverUrl = "http://10.0.2.2:8080/com.tibame.foodhunter_server"
+
 
     private val _reviewList = MutableStateFlow<List<Review>>(emptyList())
     val reviewList: StateFlow<List<Review>> = _reviewList.asStateFlow()
@@ -50,16 +52,37 @@ class ReviewRepository {
     }
 
     // 根據餐廳ID獲取評論列表
-    suspend fun fetchReviewByRestId(): List<ReviewResponse?> {
-        val url = "${com.tibame.foodhunter.global.serverUrl}/review/preLoad"
-        val result = CommonPost(url, "")
+    suspend fun fetchReviewByRestId(restaurantId: Int): List<ReviewResponse?> {
+        val url = "${serverUrl}/review/preLoadController"
+        // 加入請求前的日誌
+        Log.d("ReviewRepository", "Fetching reviews for restaurant ID: $restaurantId")
+        Log.d("ReviewRepository", "Request URL: $url")
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("restaurantId", restaurantId)
+        val result = CommonPost(url, jsonObject.toString())
+        // 加入接收到回應的日誌
+        Log.d("ReviewRepository", "Received response: $result")
         val type = object : TypeToken<List<ReviewResponse>>() {}.type
-        return gson.fromJson(result, type)
+        return try {
+            val reviews = gson.fromJson<List<ReviewResponse>>(result, type)
+            Log.d("Repository", "Parsed reviews: ${reviews?.size}")
+            reviews?.forEach {
+                Log.d("Repository", "Review: $it")
+            }
+            reviews ?: emptyList()
+            gson.fromJson(result, type)
+        } catch (e: Exception) {
+            Log.e("ReviewRepository", "Error fetching reviews for restaurant $restaurantId", e)
+            emptyList() // 若發生錯誤，返回空列表
+        }
     }
+
 
     // 根據評論ID 獲取評論的詳細資料
     private suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {
         val url = "${serverUrl}/review/get?reviewId=$reviewId"
+        Log.d("ReviewRepository", "Fetching reviews for review ID: $reviewId")
+        Log.d("ReviewRepository", "Request URL: $url")
         val result = CommonPost(url, "")
 
         return try {
@@ -96,7 +119,8 @@ class ReviewRepository {
         }
     }
 
-    // 載入所有回覆
+
+ //載入所有回覆
     suspend fun loadReplies(reviewId: Int) {
         try {
             val replyResponses = fetchReplies(reviewId)
@@ -115,6 +139,22 @@ class ReviewRepository {
         }
     }
 
+//    同時載入回覆及評論
+//    suspend fun loadReviewsWithReplies(restaurantId: Int): List<Review> {
+//        // 1. 獲取餐廳的評論列表
+//        val reviews = fetchReviewByRestId(restaurantId).mapNotNull { it?.toReview() }
+//
+//        // 2. 並行載入每則評論的回覆
+//        val reviewsWithReplies = reviews.map { review ->
+//            val replies = fetchReplies(review.reviewId).map { it.toReply() }
+//            review.copy(replies = replies)  // 更新評論物件中的回覆列表
+//        }
+//
+//        // 更新 _reviewList 狀態，供 ViewModel 監聽使用
+//        _reviewList.update { reviewsWithReplies }
+//
+//        return reviewsWithReplies
+//    }
 
 
 //    // 刪除回覆
@@ -172,6 +212,44 @@ class ReviewRepository {
         val message: String,
         val data: T
     )
+
+//    data class ReviewResponse(
+//        val reviewId: Int,
+//        val content: String,
+//        val rating: Int,
+//        val reviewTime: String,
+//        val userId: Int,
+//        val userNickname: String
+//    ) {
+//        fun toReview(): Review {
+//            return Review(
+//                reviewId = reviewId,
+//                content = content,
+//                rating = rating,
+//                timestamp = reviewTime,
+//                reviewer = Reviewer(userId, userNickname, avatarImage = null),
+//                replies = emptyList() // 回覆列表稍後加載
+//            )
+//        }
+//    }
+//
+//    data class ReplyResponse(
+//        val replyId: Int,
+//        val reviewId: Int,
+//        val memberId: Int,
+//        val content: String,
+//        val replyTime: String,
+//        val memberNickname: String
+//    ) {
+//        fun toReply(): Reply {
+//            return Reply(
+//                id = replyId,
+//                content = content,
+//                timestamp = replyTime,
+//                replier = Replier(memberId, memberNickname, avatarImage = null)
+//            )
+//        }
+//    }
 
 //    data class DeleteResponse(
 //        val success: Boolean,

@@ -18,6 +18,8 @@ class RandomFoodVM: ViewModel(){
     private val _randomFood = MutableStateFlow(emptyList<String>())
     val settingRandomFood: StateFlow<List<String>> = _randomFood.asStateFlow()
 
+    private val _choiceCity = MutableStateFlow("台北市中正區")
+    val choiceCity: StateFlow<String> = _choiceCity.asStateFlow()
     // searchbar 用的
     private val _labelTags = MutableStateFlow(emptyList<String>())
     val labelTags:StateFlow<List<String>> = _labelTags.asStateFlow()
@@ -29,6 +31,9 @@ class RandomFoodVM: ViewModel(){
     }
     fun updateSettingRandomFood(item: List<String>){
         _randomFood.update{settingRandomFoodList(item)}
+    }
+    fun updateChoiceCity(newCity: String){
+        _choiceCity.update{newCity}
     }
 
     fun loadFoodLabel(context: Context){

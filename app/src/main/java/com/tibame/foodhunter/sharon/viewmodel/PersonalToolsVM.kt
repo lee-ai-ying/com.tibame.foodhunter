@@ -47,11 +47,9 @@ class PersonalToolsVM: ViewModel() {
     private val calendarVM = CalendarVM()
     val calendarState = this.calendarVM.uiState
 
-    // Note ViewModel
-    private val noteVM = NoteVM()
 
     /**
-     * Tab 切換
+     * 切換Tab時重置TopBar狀態
      */
     fun updateSelectedTab(index: Int) {
         _uiState.update { it.copy(selectedTabIndex = index) }
@@ -98,8 +96,9 @@ class PersonalToolsVM: ViewModel() {
         }
     }
 
-
-    // 搜尋事件流 - 分別給不同的 Tab
+    /**
+     * 搜尋數據流 - 分別給不同的 Tab
+     */
     private val _calendarSearchQuery = MutableStateFlow("")
     val calendarSearchQuery = _calendarSearchQuery.asStateFlow()
 
@@ -128,13 +127,12 @@ class PersonalToolsVM: ViewModel() {
     }
 
     /**
-     * 切換篩選器顯示狀態
+     * 篩選器顯示狀態
      */
     fun toggleFilterChipVisibility() {
         _topBarState.update { currentState ->
             currentState.copy(
                 isFilterChipVisible = !currentState.isFilterChipVisible,
-//                isSearchVisible = true  // 顯示篩選時確保搜尋欄也顯示
             )
         }
 
@@ -145,6 +143,4 @@ class PersonalToolsVM: ViewModel() {
             }
         }
     }
-
-
 }

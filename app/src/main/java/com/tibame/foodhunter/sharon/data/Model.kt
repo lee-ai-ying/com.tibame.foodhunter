@@ -1,28 +1,30 @@
 package com.tibame.foodhunter.sharon.data
 
-import java.time.LocalDate
 import java.util.Date
 
 
 data class Note(
-    val noteId: Int,
     val type: CardContentType,
-    val selectedDate: Date = Date()  ,
+    val title: String,
+    val noteId: Int,
+    val selectedDate: Date = Date(),
     val date: String,
     val day: String,
-    val title: String,
     val content: String,
     val imageResId: Int? = null, // 可選欄位
-    val restaurantName: String? = null  // 可選欄位
+    val restaurantName: String? = null, // 可選欄位
+    val memberId: Int
 )
 
 data class Group(
-    val id: Int,
+    val groupName: String,
+    val restaurantName: String? = null,
+    val restaurantAddress: String? = null,
+    val isPublic: Int,
+    val groupDate: Date = Date(),
     val type: CardContentType,
-    val title: String,
-    val location: String,
-    val date: LocalDate,
-    val memberCount: Int,
+    val date: String,        // MM/dd 格式
+    val day: String,         // 星期幾
     val memberId: Int
 )
 

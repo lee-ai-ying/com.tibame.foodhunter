@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,13 +51,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.Restaurant
 import com.tibame.foodhunter.ui.theme.FColor
 
 
 @Preview
 @Composable
 fun PreviewReviewEdit() {
-    CommentButton()
+    CommentDialog(
+        onDismiss = { println("Dialog Dismissed") },
+        onSubmit = { comment, rating -> println("Comment Submitted: $comment with rating $rating") }
+    )
 
 }
 
@@ -63,15 +70,16 @@ fun PreviewReviewEdit() {
 @Composable
 fun ReviewZone(
     navController: NavHostController,
+    viewModel: ReviewVM,
+    restaurantId: Int
 ) {
-
+    val context = LocalContext.current
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-
         HorizontalDivider(
             modifier = Modifier,
             thickness = 2.5.dp,
@@ -81,12 +89,12 @@ fun ReviewZone(
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
-                navController.navigate("評論頁面")
+                // 記得傳遞餐廳 ID 參數到詳細頁面
+                navController.navigate(context.getString(R.string.reviewDetail))
             },
             modifier = Modifier
                 .width(150.dp)
                 .height(50.dp),
-
             shape = ButtonDefaults.outlinedShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFED2C7),
@@ -97,35 +105,56 @@ fun ReviewZone(
                 text = "顯示所有評論",
                 modifier = Modifier,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-
-                )
+                fontWeight = FontWeight.SemiBold
+            )
         }
-        GetReviews()
+
+        // 確保從 viewModel 中載入評論，並傳遞正確的 restaurantId
+        ReviewList(restaurantId = restaurantId, viewModel = viewModel)
     }
 }
 
-/**評論範例*/
+/** 真正的評論 */
 @Composable
-fun GetReviews() {
-    val reviews = listOf(
-        Review("使用者名稱1", 4),
-        Review("使用者名稱2", 5),
-        Review("使用者名稱3", 3),
-        Review("使用者名稱4", 2),
-        Review("使用者名稱5", 1)
-    )
+fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
+    // 當頁面載入時，載入該餐廳的評論
+    LaunchedEffect(restaurantId) {
+        Log.d("ReviewList", "Loading reviews for restaurantId: $restaurantId")
+        viewModel.loadReviews(restaurantId)
+    }
 
-    LazyColumn {
-        items(reviews) { review ->
+    val reviews by viewModel.reviewState.collectAsState()  // 觀察評論列表的資料變動
+    Log.d("ReviewList", "Loaded reviews: ${reviews.size}")
+
+    Column{
+        reviews.forEach { review ->
             ReviewItem(review)
             Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
         }
     }
 }
+
+///**評論範例*/
+//@Composable
+//fun GetReviews() {
+//    val reviews = listOf(
+//        Review("使用者名稱1", 4),
+//        Review("使用者名稱2", 5),
+//        Review("使用者名稱3", 3),
+//        Review("使用者名稱4", 2),
+//        Review("使用者名稱5", 1)
+//    )
+//
+//    LazyColumn {
+//        items(reviews) { review ->
+//            ReviewItem(review)
+//            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+//        }
+//    }
+//}
 /**評論範例資料*/
 @Composable
-fun ReviewItem(review: Review) {
+fun ReviewItem(review: Reviews) {
     var rememberRating by remember { mutableStateOf(review.rating) }
     var likeCount by remember { mutableStateOf(0) }
     var dislikeCount by remember { mutableStateOf(0) }
@@ -151,7 +180,7 @@ fun ReviewItem(review: Review) {
         ) {
             Spacer(modifier = Modifier.size(8.dp))
             Text(
-                text = review.username,
+                text = review.reviewer.name,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -257,20 +286,20 @@ fun RatingBar(
 
 /**新增評論的按鈕*/
 @Composable
-fun CommentButton(ReviewViewModel: ReviewVM = viewModel()) {
+fun CommentButton(reviewVM: ReviewVM = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
 
     Button(
         onClick = { showDialog = true },
         modifier = Modifier.padding(16.dp)
     ) {
-//        Icon(
-//            painter = painterResource(
-//                id = R.drawable.新增評論的圖示
-//            ),
-//            contentDescription = "建立評論",
-//            modifier = Modifier.size(30.dp)
-//        )
+        Icon(
+            painter = painterResource(
+                id = R.drawable.baseline_edit
+            ),
+            contentDescription = "建立評論",
+            modifier = Modifier.size(30.dp)
+        )
         Text("新增評論")
     }
 
@@ -290,7 +319,7 @@ fun CommentButton(ReviewViewModel: ReviewVM = viewModel()) {
 fun CommentDialog(
     onDismiss: () -> Unit,
     onSubmit: (String, Int) -> Unit,
-    reviewViewModel: ReviewVM = viewModel()
+    reviewVM: ReviewVM = viewModel()
 ) {
     var commentText by remember { mutableStateOf("") }
     var inputData by remember { mutableStateOf(ReviewCreateData()) }
@@ -349,7 +378,7 @@ fun CommentDialog(
                     Button(
                         onClick = {
                             onSubmit(commentText, rating)
-                            reviewViewModel.setReviewCreateData(inputData)
+                            reviewVM.setReviewCreateData(inputData)
                         },
                         enabled = commentText.isNotEmpty() && rating > 0,
 

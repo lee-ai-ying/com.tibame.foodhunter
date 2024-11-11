@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,6 +57,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
@@ -67,6 +70,7 @@ import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.util.getDisplayName
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.ui.theme.FColor
 
 
 /**
@@ -270,21 +274,23 @@ fun Header(
     onNextMonthButtonClicked: (YearMonth) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(30.dp),
         horizontalArrangement = Arrangement.Start
+
     ) {
         IconButton(
-            modifier = Modifier.align(Alignment.CenterVertically),
-
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .width(30.dp),
             onClick = {
             onPreviousMonthButtonClicked.invoke(yearMonth.minusMonths(1))
         }) {
             Icon(
-                modifier = Modifier.align(Alignment.CenterVertically),
-
+                modifier = Modifier.align(Alignment.Bottom),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = stringResource(id = R.string.str_back)
-
             )
         }
         Text(
@@ -295,6 +301,9 @@ fun Header(
                 .align(Alignment.CenterVertically)
         )
         IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .width(30.dp),
             onClick = {
                 onNextMonthButtonClicked.invoke(yearMonth.plusMonths(1))
             }) {
@@ -369,28 +378,35 @@ fun ContentItem(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+//                .size(48.dp) // 圓形大小
+                .clip(CircleShape) // 使用圓形裁切
                 .clickable { onClickListener(date) }
                 .background(
                     color = when {
-                        date.isSelected -> colorResource(id = R.color.gary_20)
-                        isToday -> colorResource(id = R.color.gary_20)
+                        date.isSelected -> FColor.Orange_6th
+                        isToday -> FColor.Orange_6th
                         else -> Color.Transparent
                     },
                     shape = CircleShape
                 )
                 .then(
                     when {
-                        (date.isSelected && isToday) || (isToday)-> {
+                        (date.isSelected && isToday)-> {
                         Modifier.border(
                             width = 2.dp,
-                            color = colorResource(id = R.color.dark_20),
+                            color = FColor.Orange_1st,
                             shape = CircleShape
                             )
                         }
-
+                        date.isSelected -> {
+                            Modifier.border(
+                                width = 2.dp,
+                                color = FColor.Orange_1st,
+                                shape = CircleShape
+                            )
+                        }
                         else -> Modifier
                     }
-
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -404,8 +420,8 @@ fun ContentItem(
                 modifier = Modifier.padding(top = 4.dp)
             )
 
-            // 如果有書籍，顯示指示點
-            if (date.hasBook) {
+            // 如果有card，顯示指示點
+            if (date.hasCard) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(
                     modifier = Modifier,
@@ -416,25 +432,28 @@ fun ContentItem(
                         modifier = Modifier
                             .size(4.dp)
                             .background(
-                                color = if (date.isSelected)
-                                    MaterialTheme.colorScheme.onPrimary
-                                else
-                                    MaterialTheme.colorScheme.outline,
+                                color =
+                                when {
+                                    (date.isSelected) -> { FColor.Orange_1st }
+
+                                    else ->
+                                        FColor.Yellow_1
+                                },
                                 shape = CircleShape
                             )
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .background(
-                                color = if (date.isSelected)
-                                    MaterialTheme.colorScheme.onPrimary
-                                else
-                                    MaterialTheme.colorScheme.outline,
-                                shape = CircleShape
-                            )
-                    )
+//                    Spacer(modifier = Modifier.width(4.dp))
+//                    Box(
+//                        modifier = Modifier
+//                            .size(4.dp)
+//                            .background(
+//                                color = if (date.isSelected)
+//                                    MaterialTheme.colorScheme.onPrimary
+//                                else
+//                                    MaterialTheme.colorScheme.outline,
+//                                shape = CircleShape
+//                            )
+//                    )
                 }
             }
 
