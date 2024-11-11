@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.ui.test.android)
+    implementation("androidx.compose.material:material-icons-extended:1.5.1") // 添加 material-icons-extended 依賴
 
 
     implementation(libs.gson)
