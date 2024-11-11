@@ -71,10 +71,9 @@ class SearchScreenVM: ViewModel() {
         val cityPart = _cityText.value
         val pricePart = _choicePrice.value
         val otherPart = _otherConditions.value
-        val inputPart = _searchText.value
 
         _showSearchText.update {
-            listOf(pricePart, cityPart, otherPart, inputPart)
+            listOf(pricePart, cityPart, otherPart)
                 .filter { it.isNotBlank() } // 過濾掉空白的條件
                 .joinToString(" ")
         }

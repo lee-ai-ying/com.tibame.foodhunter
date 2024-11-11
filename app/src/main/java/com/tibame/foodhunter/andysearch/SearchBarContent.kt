@@ -18,9 +18,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentWithReceiverOf
@@ -59,12 +61,17 @@ fun SearchBerContent(
 
     val choicePrice by searchTextVM.choicePrice.collectAsState()
     val otherConditions by searchTextVM.otherConditions.collectAsState()
+    val showSearchText by searchTextVM.showSearchText.collectAsState()
     val cityText by searchTextVM.cityText.collectAsState()
-    foodVM.loadLabelTags(context)
+    LaunchedEffect(Unit) {
+        foodVM.loadLabelTags(context)
+    }
+
+    Text(text = "搜尋條件 : $showSearchText")
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp)
+            .padding(top = 24.dp)
     ) {
         Row() {
             Icon(
@@ -123,7 +130,6 @@ fun SearchBerContent(
                 )
                 searchTextVM.updateChoicePrice("$minPrice ~ $maxPrice")
                 searchTextVM.loadShowSearchText()
-//                searchTextVM.updateSearchText()
             }
         }
     }

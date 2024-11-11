@@ -86,6 +86,7 @@ fun ImageDisplay(
                     .height(319.dp)
             )
         }
+        else ->{}
     }
 }
 //從Uri拿照片

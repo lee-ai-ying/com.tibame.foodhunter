@@ -171,4 +171,11 @@ class PostViewModel : ViewModel() {
         _selectedFilters.value = filters
     }
 
+
+    val restRelatedPosts: StateFlow<List<Post>> = repository.restRelatedPost
+    fun fetchRestRelatedPosts(restId: Int) {
+        viewModelScope.launch {
+            repository.loadRestRelatedPosts(restId)
+        }
+    }
 }
