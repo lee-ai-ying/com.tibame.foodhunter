@@ -12,6 +12,7 @@
     <string name="str_backToSearch">返回地圖</string>
     <string name="str_login">登入</string>
     <string name="str_calendar">日曆</string>
+    <string name="str_clear">清除</string>
     <string name="str_note">手札</string>
     <string name="str_note_edit">編輯筆記</string>
     <string name="str_note_cancel_add">取消新增筆記</string>
@@ -26,6 +27,7 @@
     <string name="album_name">相簿名稱</string>
     <string name="recommend">推薦</string>
     <string name="search">搜尋</string>
+    <string name="search_cancel">取消搜尋</string>
     <string name="next">下一步</string>
     <string name="only_friend">僅限好友</string>
     <string name="for_public">公開</string>

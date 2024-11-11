@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -98,7 +100,7 @@ fun BaseTopBar(
                 IconButton(onClick = { onToggleSearchVisibility() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "取消搜尋"
+                        contentDescription = stringResource(id = R.string.search_cancel)
                     )
                 }
             } else {
@@ -106,14 +108,14 @@ fun BaseTopBar(
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "返回"
+                        contentDescription = stringResource(id = R.string.str_back)
                     )
                 }
             }
         },
         actions = {
             if (!isSearchVisible) {
-                // 非搜尋狀態、允許顯示篩選時，顯示搜尋按鈕和篩選按鈕
+                // 非搜尋狀態 > 顯示篩選時，顯示搜尋按鈕和篩選按鈕
                 IconButton(onClick = onToggleSearchVisibility) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
@@ -123,7 +125,7 @@ fun BaseTopBar(
                     }
                 }
             } else {
-                // 搜尋狀態允許顯示篩選時，顯示篩選按鈕
+                // 搜尋狀態 > 顯示篩選時，顯示篩選按鈕
                 if (showFilter) {
                     IconButton(onClick = onFilter) {
                         Icon(
@@ -193,7 +195,9 @@ fun FilterChipSection(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(30.dp)
+            .padding(top = 0.dp),
         shape = RoundedCornerShape(
             topStart = 0.dp,
             topEnd = 0.dp,
@@ -201,11 +205,11 @@ fun FilterChipSection(
             bottomEnd = 12.dp
         ),
         color = Color.White,
-
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
         ) {
             CardContentType.entries.forEach { filterType ->
