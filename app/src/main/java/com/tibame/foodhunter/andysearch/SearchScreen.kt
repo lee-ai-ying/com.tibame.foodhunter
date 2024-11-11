@@ -30,6 +30,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -96,12 +97,21 @@ fun SearchScreen(
     }
 
     if (delayScreen) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text("載入中") },
-            text = { Text("正在準備餐廳資訊，請稍候...") },
-            confirmButton = {}
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(50.dp),
+                color = FColor.Orange_1st
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "載入中...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = FColor.Orange_1st
+            )
+        }
     } else {
         Column(
             modifier = Modifier.fillMaxSize(),
