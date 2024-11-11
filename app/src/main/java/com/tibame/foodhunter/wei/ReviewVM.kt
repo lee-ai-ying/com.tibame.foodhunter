@@ -114,6 +114,18 @@ class ReviewVM : ViewModel() {
         }
     }
 
+    /** 載入評論及回覆 */
+//    fun loadReviewsWithReplies(restaurantId: Int) {
+//        viewModelScope.launch {
+//            try {
+//                val reviewsWithReplies = repository.loadReviewsWithReplies(restaurantId)
+//                _reviewState.value = reviewsWithReplies
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Error loading reviews and replies for restaurant $restaurantId", e)
+//            }
+//        }
+//    }
+
     /** 添加一個新的評論 */
     fun addReview(item: Reviews) {
         _reviewState.update {

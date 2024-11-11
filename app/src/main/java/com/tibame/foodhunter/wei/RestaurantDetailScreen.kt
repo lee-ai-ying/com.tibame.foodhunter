@@ -77,8 +77,6 @@ fun RestaurantDetail(
     reviewVM: ReviewVM
 
 ) {
-    val restaurantId =0
-
 
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
@@ -91,11 +89,15 @@ fun RestaurantDetail(
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
+    val restaurantId by reviewVM.reviewState.collectAsState()
     LaunchedEffect (restaurant){ postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)}
 //    Log.d(relatedPosts, )
 
-    LaunchedEffect(restaurantId) {
-        reviewVM.setRestaurantId(restaurantId)
+    // 根據餐廳 ID 載入評論
+    LaunchedEffect(restaurant) {
+        restaurant?.restaurant_id?.let { restaurantId ->
+            reviewVM.loadReviews(restaurantId)
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -149,7 +151,7 @@ fun RestaurantDetail(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
-                    ReviewZone(navController = navController, reviewVM,restaurantId = restaurantId)
+                    ReviewZone(navController = navController, reviewVM,restaurantId = 1)
                 }
             }
         }

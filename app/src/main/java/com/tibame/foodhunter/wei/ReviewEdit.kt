@@ -130,6 +130,7 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
         items(reviews) { review ->
             // 顯示每條評論的UI
             Text(text = review.content)
+            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
             Log.d("ReviewList", "Review content: ${review.content}")
         }
     }

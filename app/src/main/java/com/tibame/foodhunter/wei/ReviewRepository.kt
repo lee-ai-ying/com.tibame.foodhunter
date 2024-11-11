@@ -108,7 +108,8 @@ class ReviewRepository {
         }
     }
 
-    // 載入所有回覆
+
+ //載入所有回覆
     suspend fun loadReplies(reviewId: Int) {
         try {
             val replyResponses = fetchReplies(reviewId)
@@ -127,6 +128,22 @@ class ReviewRepository {
         }
     }
 
+//    同時載入回覆及評論
+//    suspend fun loadReviewsWithReplies(restaurantId: Int): List<Review> {
+//        // 1. 獲取餐廳的評論列表
+//        val reviews = fetchReviewByRestId(restaurantId).mapNotNull { it?.toReview() }
+//
+//        // 2. 並行載入每則評論的回覆
+//        val reviewsWithReplies = reviews.map { review ->
+//            val replies = fetchReplies(review.reviewId).map { it.toReply() }
+//            review.copy(replies = replies)  // 更新評論物件中的回覆列表
+//        }
+//
+//        // 更新 _reviewList 狀態，供 ViewModel 監聽使用
+//        _reviewList.update { reviewsWithReplies }
+//
+//        return reviewsWithReplies
+//    }
 
 
 //    // 刪除回覆
@@ -184,6 +201,44 @@ class ReviewRepository {
         val message: String,
         val data: T
     )
+
+//    data class ReviewResponse(
+//        val reviewId: Int,
+//        val content: String,
+//        val rating: Int,
+//        val reviewTime: String,
+//        val userId: Int,
+//        val userNickname: String
+//    ) {
+//        fun toReview(): Review {
+//            return Review(
+//                reviewId = reviewId,
+//                content = content,
+//                rating = rating,
+//                timestamp = reviewTime,
+//                reviewer = Reviewer(userId, userNickname, avatarImage = null),
+//                replies = emptyList() // 回覆列表稍後加載
+//            )
+//        }
+//    }
+//
+//    data class ReplyResponse(
+//        val replyId: Int,
+//        val reviewId: Int,
+//        val memberId: Int,
+//        val content: String,
+//        val replyTime: String,
+//        val memberNickname: String
+//    ) {
+//        fun toReply(): Reply {
+//            return Reply(
+//                id = replyId,
+//                content = content,
+//                timestamp = replyTime,
+//                replier = Replier(memberId, memberNickname, avatarImage = null)
+//            )
+//        }
+//    }
 
 //    data class DeleteResponse(
 //        val success: Boolean,
