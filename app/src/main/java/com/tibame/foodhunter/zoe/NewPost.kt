@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.a871208s.UserViewModel
+import com.tibame.foodhunter.andysearch.RandomFoodVM
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
@@ -97,7 +98,9 @@ fun NewPost(
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var selectedCarouselItems by remember { mutableStateOf<List<CarouselItem>>(emptyList()) }
     var isEditing by remember { mutableStateOf(false) }
-
+    val restaurantVM: RandomFoodVM = viewModel()
+    val foodLabel by restaurantVM.foodLabel.collectAsState()
+    restaurantVM.loadFoodLabel(context)
     LaunchedEffect(choiceRest) {
         choiceRest?.let { restaurant ->
             Log.d("LocationSelection", "更新貼文位置: restaurantId = ${restaurant.restaurant_id}, name = ${restaurant.name}")
@@ -156,10 +159,7 @@ fun NewPost(
         }
     }
 
-    // Available tags
-    val availableTags = remember {
-        listOf("早午餐", "午餐", "晚餐", "下午茶", "宵夜", "甜點", "飲料")
-    }
+
 
     // Bottom sheet content
     if (showBottomSheet) {
@@ -174,7 +174,7 @@ fun NewPost(
         ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(
-                    availableTags = availableTags,
+                    availableTags = foodLabel["restaurant_tags"]?: emptyList(),
                     selectedTags = selectedTag,
                     onFilterChange = { newTag ->
                         selectedTag = newTag

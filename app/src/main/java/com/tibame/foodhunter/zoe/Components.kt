@@ -240,23 +240,6 @@ fun ImageList(
 
 
 
-@Composable
-fun ImageItem(imageResId: Int, contentDescription: String) {
-    Card(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .aspectRatio(1f)  // 確保圖片是正方形的
-            .fillMaxWidth(),  // 填滿可用寬度
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Image(
-            painter = painterResource(id = imageResId),
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
 
 @Composable
 fun FavoriteIcon() {

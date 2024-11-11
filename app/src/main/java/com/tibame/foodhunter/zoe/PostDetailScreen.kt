@@ -245,7 +245,6 @@ fun PostDetailItem(
         Text(
             text = post.content,
             modifier = Modifier.fillMaxWidth(),
-            maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
     }
