@@ -62,18 +62,31 @@ fun IsOpenNow(openingHours: String): Boolean {
     return false
 }
 
-fun extractAddressPart(address: String): String? {
-    val regex = """台灣(\w+市)(\w+區)(\w+路)""".toRegex()
+fun extractAddress(address: String, regexState: Int): String? {
+    val regex = when (regexState) {
+        0 -> """台灣(\w+市)(\w+區)(\w+[路街])""".toRegex()
+        else -> """.*?市(.*)""".toRegex()
+    }
+
     val matchResult = regex.find(address)
+
     return matchResult?.let {
-        val city = it.groupValues[1]
-        val district = it.groupValues[2]
-        val road = it.groupValues[3]
-        Log.d("Address", "road: $road ")
-        "$city, $district, $road"
+        when (regexState) {
+            0 -> {
+                val city = it.groupValues.getOrNull(1) ?: ""
+                val district = it.groupValues.getOrNull(2) ?: ""
+                val road = it.groupValues.getOrNull(3) ?: ""
+                Log.d("Address", "road: $road")
+                "$city, $district, $road"
+            }
+            else -> {
+                val restOfAddress = it.groupValues.getOrNull(1) ?: ""
+                Log.d("Address", "rest of address: $restOfAddress")
+                restOfAddress
+            }
+        }
     }
 }
-
 
 
 fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): String {

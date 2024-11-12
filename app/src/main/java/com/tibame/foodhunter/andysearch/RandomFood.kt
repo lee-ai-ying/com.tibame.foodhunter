@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -131,7 +132,7 @@ fun RandomFood(
     ) {
         Button(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(16.dp).shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showCitySettingDialog = !showCitySettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
@@ -149,6 +150,7 @@ fun RandomFood(
                     .fillMaxSize()
                     .rotate(animatedRotationAngle) // 旋轉動畫
             ) {
+
                 options.forEachIndexed { index, content ->
                     // 繪製弧形
                     drawArc(
@@ -158,6 +160,7 @@ fun RandomFood(
                         useCenter = true,
                         size = size
                     )
+
 
                     val radians = Math.toRadians(optionNumber.toDouble()) // 轉換為弧度
 
@@ -234,7 +237,7 @@ fun RandomFood(
 
         Button(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(16.dp).shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showSettingDialog = !showSettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
@@ -282,25 +285,11 @@ fun CityDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
                 .background(Color.White)
                 .padding(16.dp)
         ) {
-
-            Column {
-
-                Button(
-                    onClick = { citySet = !citySet },
-                    colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
-                ) {
-                    Text(choiceCity, style = MaterialTheme.typography.bodyLarge)
-                }
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                    thickness = 2.dp,
-                    color = Color.Black
-                )
+            Spacer(modifier = Modifier.padding(16.dp))
 
 
-                if (citySet) {
-                    CityLabel(cities, randomFoodVM, onDismiss)
-                }
+            if (citySet) {
+                CityLabel(cities, randomFoodVM, onDismiss)
             }
             IconButton(
                 modifier = Modifier.align(Alignment.TopEnd),
@@ -311,7 +300,6 @@ fun CityDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
                     contentDescription = "Close"
                 )
             }
-
         }
     }
 }

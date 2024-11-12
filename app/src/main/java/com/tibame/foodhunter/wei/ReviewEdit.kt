@@ -126,7 +126,7 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
     val reviews by viewModel.reviewState.collectAsState()  // 觀察評論列表的資料變動
     Log.d("ReviewList", "Loaded reviews: ${reviews.size}")
 
-    Column{
+    Column(modifier = Modifier.padding(12.dp)){
         reviews.forEach { review ->
             ReviewItem(review)
             Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距

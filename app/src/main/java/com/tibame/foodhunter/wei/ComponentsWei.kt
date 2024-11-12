@@ -1,10 +1,7 @@
 package com.tibame.foodhunter.wei
 
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,11 +17,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -40,10 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,13 +51,17 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.andysearch.ImageScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
+import com.tibame.foodhunter.andysearch.extractAddress
 import com.tibame.foodhunter.sharon.components.NiaTab
 import com.tibame.foodhunter.sharon.components.NiaTabRow
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.zoe.Avatar
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
 import com.tibame.foodhunter.zoe.Post
+import kotlinx.coroutines.delay
 
 
 @Preview
@@ -72,7 +75,7 @@ fun PreviewInfoDetail() {
 @Composable
 fun RestaurantInfoDetail(
     //snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    restaurantVM : SearchScreenVM
+    restaurantVM: SearchScreenVM
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -86,17 +89,18 @@ fun RestaurantInfoDetail(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.mapimage),
-            contentDescription = "餐廳照片",
-            modifier = Modifier
-                .size(100.dp)
-                .border(BorderStroke(3.dp, Color(0xFF000000)), RoundedCornerShape(12))
-                .clip(RoundedCornerShape(12)),
-            contentScale = ContentScale.Crop
-        )
+        restaurant?.let {
+            ImageScreen(
+                it.restaurant_id,
+                Modifier
+                    .size(100.dp)
+                    .clip(shape = RoundedCornerShape(12.dp))
+            )
+        }
 
         Spacer(modifier = Modifier.size(10.dp))
 
@@ -108,94 +112,117 @@ fun RestaurantInfoDetail(
 
             Text(
                 text = restaurant?.name.toString(),
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
-//            Text(
-//                text = restaurant?.address.toString(),
-//                fontSize = 14.sp,
-//                fontWeight = FontWeight.SemiBold,
-//                color = Color.Black
-//            )
-//            Text(
-//                text = restaurant?.opening_hours.toString(),
-//                fontSize = 14.sp,
-//                fontWeight = FontWeight.SemiBold,
-//                color = Color.Black
-//            )
+            extractAddress(address = restaurant?.address ?: "無地址資訊", 1)?.let {
+                Text(
+                    text = it,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,// 限制宽度
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible
+                )
+            }
+            val averageScore = if (restaurant?.total_review != 0) {
+                restaurant?.total_scores?.toDouble()?.div(restaurant?.total_review!!)
+            } else {
+                0.0
+            }
+            Log.d("rating", "$restaurant, ${restaurant?.total_review}, ${restaurant?.total_review}")
+            val formattedAverageScore = String.format("%.1f", averageScore)
+            val text = formattedAverageScore
+            Row(
+                verticalAlignment = Alignment.CenterVertically // 對齊 Text 和 Icon
+            ) {
+                Text(
+                    text = "營業中",
+                    style = TextStyle(
+                        color = colorResource(R.color.teal_700),
+                        fontSize = 14.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.width(4.dp)) // 添加間距
+
+                Text(
+                    text = text,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible
+                )
+
+                Spacer(modifier = Modifier.width(4.dp)) // 添加間距
+
+                Box(
+                    contentAlignment = Alignment.Center // 使兩層 Icon 居中對齊
+                ) {
+                    // 底層的黑色描邊 Icon（比上層的 Icon 稍大）
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_star),
+                        contentDescription = "rating",
+                        modifier = Modifier.size(16.dp), // 比上層的 Icon 大一點
+                        tint = Color.Black // 黑色作為描邊
+                    )
+
+                    // 上層的黃色 Icon
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_star),
+                        contentDescription = "rating",
+                        modifier = Modifier.size(12.dp), // 內層 Icon 稍小
+                        tint = Color.Yellow // 設置 Icon 顏色為黃色
+                    )
+                }
+            }
+
         }
-        Spacer(modifier = Modifier.weight(1f))
+//        Spacer(modifier = Modifier.weight(1f))
 
         /**加入收藏(擱置)*/
-//        Column(
-//            horizontalAlignment = Alignment.End,
-//            verticalArrangement = Arrangement.Top,
-//            modifier = Modifier.weight(0.5f)
+
+
+        //更多功能
+//        IconButton(onClick = { expanded = !expanded }) {
+//            Icon(
+//                painter = painterResource(id = R.drawable.baseline_more_vert_24),
+//                contentDescription = "更多功能",
+//                modifier = Modifier.size(30.dp),
+//            )
+//        }
+
+//        DropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false },
 //        ) {
-//
-//            //加入收藏
-//            IconButton(
-//                onClick = {
-//                    isBookmarked = !isBookmarked
-//                    val message = if (isBookmarked) {
-//                        "收藏成功"
-//                    } else {
-//                        "取消收藏"
+//            // 下拉選單內容由DropdownMenuItem選項元件組成
+//            options.forEach { option ->
+//                DropdownMenuItem(
+//                    text = { Text(option) },
+//                    // 點選項目後呼叫
+//                    onClick = {
+//                        // 跳到各功能
+//                        expanded = false
+//                        when (option) {
+//                            "建立揪團" -> navController.navigate("建立揪團")
+//                            "建立筆記" -> navController.navigate("手札")
+//                            "建立貼文" -> navController.navigate("發文")
+//                        }
 //                    }
-//
-//                    scope.launch {
-//                        Log.e("TAG", "showSnackBar")
-//                        snackbarHostState.showSnackbar(
-//                            message,
-//                            withDismissAction = true
-//                        )
-//                    }
-//                }) {
-//                Icon(
-//                    modifier = Modifier.size(30.dp),
-//                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
-//                    contentDescription = if (isBookmarked) "已收藏" else "未收藏",
 //                )
 //            }
 //        }
-
-        //更多功能
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_more_vert_24),
-                contentDescription = "更多功能",
-                modifier = Modifier.size(30.dp),
-            )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            // 下拉選單內容由DropdownMenuItem選項元件組成
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    // 點選項目後呼叫
-                    onClick = {
-                        // 跳到各功能
-                        expanded = false
-                        when (option) {
-                            "建立揪團" -> navController.navigate("建立揪團")
-                            "建立筆記" -> navController.navigate("手札")
-                            "建立貼文" -> navController.navigate("發文")
-                        }
-                    }
-                )
-            }
-        }
     }
 
     var selectedTab by remember { mutableIntStateOf(-1) }
-    val titles = listOf("營業時間", "電話", "地址")
-    NiaTabRow(selectedTabIndex = if (selectedTab == -1) 0 else selectedTab,
-        modifier = Modifier.fillMaxWidth()) {
+    val titles = listOf("營業時間", "電話", "信箱/網站")
+    NiaTabRow(
+        selectedTabIndex = if (selectedTab == -1) 0 else selectedTab,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+    ) {
         titles.forEachIndexed { index, title ->
             NiaTab(
                 selected = selectedTab == index,
@@ -204,7 +231,7 @@ fun RestaurantInfoDetail(
             )
         }
     }
-    if (selectedTab != -1){
+    if (selectedTab != -1) {
         when (selectedTab) {
             0 -> {
                 // 營業時間
@@ -213,8 +240,9 @@ fun RestaurantInfoDetail(
                 ) {
                     restaurant?.opening_hours?.let { openingHours ->
                         openingHours.split(";").forEach { dayHours ->
+                            val cleanDayHours = dayHours.trim()
                             Text(
-                                text = dayHours,
+                                text = cleanDayHours,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black
@@ -223,6 +251,7 @@ fun RestaurantInfoDetail(
                     }
                 }
             }
+
             1 -> {
                 // 電話
                 Text(
@@ -233,10 +262,11 @@ fun RestaurantInfoDetail(
                     modifier = Modifier.padding(16.dp)
                 )
             }
+
             2 -> {
                 // 地址
                 Text(
-                    text = restaurant?.address ?: "無地址資訊",
+                    text = restaurant?.email ?: "無信箱/網站資訊",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
@@ -252,63 +282,102 @@ fun RestaurantInfoDetail(
 fun RelatedPost(posts: List<Post>, navController: NavController) {
     Log.d("RelatedPost", posts.toString())
     val postListSize = posts.size
-    val pagerState = rememberPagerState(pageCount = {postListSize})
-    val context = LocalContext.current
+    val pagerState = rememberPagerState(pageCount = { postListSize })
 
-    val mainDp = 160.dp
-    if (posts.isEmpty()){
-        Text(text = "尚無貼文", style = MaterialTheme.typography.titleLarge)
-    } else {
-        HorizontalPager(
-            pageSize = PageSize.Fixed(144.dp),
-            beyondViewportPageCount = 3,
-            state = pagerState, // 控制左右間距
-            modifier = Modifier
-                .height(200.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .background(Color.White), // 背景色
-            pageSpacing = 8.dp,
-            verticalAlignment = Alignment.CenterVertically
-        ) { page ->
-            // 設定每個色塊的縮放效果
-//        val width = when (page) {
-//            pagerState.currentPage -> 180.dp // 大項目寬度（或用戶設定）
-//            pagerState.currentPage + 1 ->  (180*0.7f).dp// 中等項目寬度
-//            else -> (180*0.2f).dp // 小項目寬度
-//        }
+    var loading by remember { mutableStateOf(true) }
 
-            val leftdp = when (page) {
-                pagerState.currentPage -> 16.dp
-                else -> 8.dp // 小項目寬度
-            }
-            val postId = posts[page].postId
-            Log.d("postId1", postId.toString())
-            Box(modifier = Modifier
-                .background(Color.White)
-                .width(180.dp)
-                .height(184.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { navController.navigate("postDetail/${postId}") }
-            ){
+    // 模擬加載過程，可以替換為實際的數據加載邏輯
+    LaunchedEffect(posts) {
+        loading = true
+        delay(3500)
+        loading = false
 
-                Log.d("publisher1", "RelatedPost${posts[page].publisher}")
-                ImageDisplay(imageSource = ImageSource.CarouselSource(posts[page].carouselItems))
-
-                Avatar(
-                    imageData = posts[page].publisher.avatarBitmap,
-                    defaultImage = posts[page].publisher.avatarImage
+    }
+    when {
+        loading -> {
+            // 顯示轉圈進度指示器
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(50.dp),
+                    color = FColor.Orange_1st
                 )
-
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = posts[page].content,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.BottomStart).background(color = Color.White.copy(alpha = 0.5f))
+                    text = "載入中...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = FColor.Orange_1st
                 )
             }
         }
-    }
 
+        posts.isEmpty() -> {
+            Text(
+                text = "尚無貼文",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(12.dp)
+            )
+        }
+
+        else -> {
+            // 有貼文，顯示 HorizontalPager
+            HorizontalPager(
+                pageSize = PageSize.Fixed(144.dp),
+                beyondViewportPageCount = 3,
+                state = pagerState,
+                modifier = Modifier
+                    .height(200.dp)
+                    .padding(horizontal = 16.dp)
+                    .background(Color.White),
+                pageSpacing = 8.dp,
+                verticalAlignment = Alignment.CenterVertically
+            ) { page ->
+                val postId = posts[page].postId
+                Log.d("postId1", postId.toString())
+
+                Box(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .width(180.dp)
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { navController.navigate("postDetail/${postId}") }
+                ) {
+                    Log.d("publisher1", "RelatedPost${posts[page].publisher}")
+
+                    // 顯示圖片和使用者頭像
+                    ImageDisplay(imageSource = ImageSource.CarouselSource(posts[page].carouselItems))
+                    Avatar(
+                        imageData = posts[page].publisher.avatarBitmap,
+                        defaultImage = posts[page].publisher.avatarImage
+                    )
+
+                    // 帶黑色描邊的白色文字
+                    Text(
+                        text = posts[page].content,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(2.dp),
+                        color = Color.White,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = Offset(2f, 2f),
+                                blurRadius = 4f
+                            )
+                        )
+                    )
+                }
+            }
+        }
+
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
