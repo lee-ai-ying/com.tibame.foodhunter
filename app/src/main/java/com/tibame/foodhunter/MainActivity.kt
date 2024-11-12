@@ -191,7 +191,6 @@ fun Main(
         GroupRepository.gChatVM = gChatVM
         GroupRepository.pChatVM = pChatVM
         gChatVM.userVM = userViewModel
-        gChatVM.getTokenSendServer()
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -286,6 +285,7 @@ fun Main(
             composable(context.getString(R.string.str_login)) {
                 LoginScreen(navController = navController, userViewModel){
                     currectScene = context.getString(R.string.str_Recommended_posts)
+                    gChatVM.getTokenSendServer()
                 }
             }
             composable(context.getString(R.string.str_login) + "/2") {

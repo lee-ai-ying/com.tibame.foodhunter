@@ -20,9 +20,13 @@ class MyFCMService : FirebaseMessagingService() {
         }
         // 取得自訂資料
         val data = remoteMessage.data["data"]
-        groupRepository.gChatVM?.updateGroupChat()
-        val userVM = groupRepository.gChatVM?.userVM
-        groupRepository.pChatVM?.refreshmessage2(userVM?.username?.value?:"", groupRepository.pChatVM?.friend?.value?:"")
+        //Log.d("qqq",data.toString())
+        if (data.equals("group")){
+            groupRepository.gChatVM?.updateGroupChat()
+        }
+        else{
+            groupRepository.pChatVM?.refreshmessage2(groupRepository.gChatVM?.userVM?.username?.value?:"", groupRepository.pChatVM?.friend?.value?:"")
+        }
     }
 
     // 當registration token更新時呼叫，應該將新的token傳送至server
