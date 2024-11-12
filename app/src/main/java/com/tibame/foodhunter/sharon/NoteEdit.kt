@@ -172,7 +172,8 @@ fun NoteEditRoute(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
+                        .wrapContentSize(Alignment.Center),
+                    color = FColor.Orange_1st
                 )
             } else {
                 // 載入完成，顯示編輯頁面

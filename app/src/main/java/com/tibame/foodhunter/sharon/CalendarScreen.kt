@@ -156,7 +156,9 @@ fun CalendarScreen(
             when {
                 isLoading && filteredItems.isEmpty() -> {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center),
                         color = FColor.Orange_1st
                     )
                 }
