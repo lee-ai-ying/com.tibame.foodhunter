@@ -4,6 +4,7 @@ import android.content.Context
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.tibame.foodhunter.zoe.PostPhoto
 
 data class District(
     val zip: String,
@@ -33,7 +34,10 @@ data class Restaurant(
     val service_charge: String,
 )
 
-
+data class RestaurantUrl(
+    val restaurant_id: Int,
+    val photo_url: String
+)
 
 
 fun readJson(context: Context, fileName: String): String{
@@ -49,3 +53,9 @@ fun parseCityJson(context: Context, fileName: String):List<City>{
 
 
 
+fun parsePhotoUrlJson(context: Context, fileName: String): List<RestaurantUrl>{
+    val jsonString = readJson(context, fileName)
+    val gson = Gson()
+    val inputType = object : TypeToken<List<RestaurantUrl>>() {}.type
+    return gson.fromJson(jsonString, inputType)
+}
