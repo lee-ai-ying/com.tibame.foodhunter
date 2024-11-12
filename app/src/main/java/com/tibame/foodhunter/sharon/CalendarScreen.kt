@@ -175,7 +175,7 @@ fun CalendarScreen(
                             key = { index ->
                                 when (val item = dayItems[index]) {
                                     is Note -> "note_${item.noteId}"
-                                    is Group -> "group_${item.memberId}_${item.groupDate.time}"
+                                    is Group -> "group_${item.groupId}"
                                     else -> index.toString()
                                 }
                             }

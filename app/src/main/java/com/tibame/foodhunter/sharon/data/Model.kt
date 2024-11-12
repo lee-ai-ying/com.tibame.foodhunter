@@ -17,6 +17,7 @@ data class Note(
 )
 
 data class Group(
+    val groupId: Int,
     val groupName: String,
     val restaurantName: String? = null,
     val restaurantAddress: String? = null,
