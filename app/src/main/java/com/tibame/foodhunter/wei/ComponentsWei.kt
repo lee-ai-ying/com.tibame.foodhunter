@@ -17,7 +17,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,12 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -49,7 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.ImageScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
@@ -75,16 +71,12 @@ fun PreviewInfoDetail() {
 @Composable
 fun RestaurantInfoDetail(
     //snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    restaurantVM: SearchScreenVM
+    //navController: NavController,
+    restaurantVM : SearchScreenVM
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("建立揪團", "建立筆記", "建立貼文")
-    // 回傳CoroutineScope物件以適用於此compose環境
-    val scope = rememberCoroutineScope()
-    // 控制收藏狀態(icon圖示及snackbar文字)
-    val navController = rememberNavController()
-
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
 
     Row(
@@ -114,7 +106,7 @@ fun RestaurantInfoDetail(
                 text = restaurant?.name.toString(),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = FColor.Dark_80
             )
             extractAddress(address = restaurant?.address ?: "無地址資訊", 1)?.let {
                 Text(

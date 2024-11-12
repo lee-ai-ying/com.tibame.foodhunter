@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
 
 
@@ -33,9 +37,13 @@ import com.tibame.foodhunter.ui.theme.FColor
 @Composable
 fun ReviewDetail(
     navController: NavHostController,
-    reviewVM: ReviewVM = remember { ReviewVM() }
+    reviewVM: ReviewVM = remember { ReviewVM() },
+    restaurantVM: SearchScreenVM,
+    restaurantsId: Int,
+    reviewId: Int? = null
 ) {
-    val restaurantId = navController.previousBackStackEntry?.arguments?.getInt("restaurantId") ?: 0
+
+    val restaurantsId = navController.previousBackStackEntry?.arguments?.getInt("restaurantId") ?: 0
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf("評論頁面") }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -44,6 +52,28 @@ fun ReviewDetail(
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
     // 回傳CoroutineScope物件以適用於此compose環境
+    val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
+    val restaurant by restaurantVM.choiceOneRest.collectAsState()
+    val restaurantId by reviewVM.reviewState.collectAsState()
+
+
+    // 根據餐廳 ID 載入評論
+    LaunchedEffect(restaurantId) {
+        restaurant?.restaurant_id?.let { restaurantId ->
+            reviewVM.loadReviews(restaurantId)
+        }
+    }
+
+    reviewId?.let { id ->
+        // 當 reviewId 不為 null 時Launch
+        LaunchedEffect(id) {
+            reviewVM.loadReviewById(id)
+        }
+    }
+
+    LaunchedEffect(reviews) {
+        Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
+    }
 
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -71,7 +101,7 @@ fun ReviewDetail(
 //                                color = FColor.Orange_1st
 //                            )
 
-                    DetailReviewZone(reviewVM = reviewVM)
+                    DetailReviewZone(navController = navController, reviewVM, 0, reviewId = 0)
 
                     HorizontalDivider(
                         modifier = Modifier,
@@ -89,7 +119,7 @@ fun ReviewDetail(
 @Composable
 fun ReviewDetailScreenPreview() {
     // 提供一個模擬的 NavHostController 和 ReviewVM
-    val navController = rememberNavController() // 不需要做太多複雜的導航設定
-    val reviewVM = remember { ReviewVM() } // 使用模擬的 ReviewVM
-    ReviewDetail(navController = navController, reviewVM = reviewVM)
+//    val navController = rememberNavController()
+//    val reviewVM = remember { ReviewVM() } // 使用模擬的 ReviewVM
+//    ReviewDetail(navController = navController, reviewVM = reviewVM)
 }

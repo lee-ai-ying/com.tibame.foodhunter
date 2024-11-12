@@ -1,8 +1,11 @@
 package com.tibame.foodhunter.wei
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,9 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -22,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,15 +41,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.components.SearchBar
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.zoe.FilterChips
 
 @Preview
@@ -51,323 +62,408 @@ fun ReviewCompoentsPreview() {
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
 
-    ReviewInfoDetail( reviewVM = reviewVM )
+    ReviewInfoDetail(reviewVM = reviewVM)
 }
-
-
-/**詳細評論內容*/
-@Composable
-fun ReviewInfoDetail(
-    reviewVM: ReviewVM,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
-
-) {
-    val review by reviewVM.reviewState.collectAsState()
-    val sortOrder by reviewVM.sortOrder.collectAsState()
-    // 控制收藏狀態(icon圖示及snackbar文字)
-    //var isBookmarked by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf("最新發布", "最多好評", "最高評分")
-
-    // 回傳CoroutineScope物件以適用於此compose環境
-    val scope = rememberCoroutineScope()
-
-    var searchQuery by remember { mutableStateOf("") }
-    var isActive by remember { mutableStateOf(false) }
-
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.height(120.dp)
-
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                placeholder = { Text("在評論中搜尋") },
-                onActiveChange = { isActive }
-            )
-
-            FilterChips(
-                filters = listOf("服務費", "環境", "價格", "清潔"),
-                selectedFilters = listOf(""),
-                onFilterChange = { },
-            )
-        }
-
-        // DropDownMenu開關按鈕
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(
-                painter = painterResource(id = R.drawable.filter_list),
-                contentDescription = "評論篩選器",
-                modifier = Modifier.size(30.dp)
-            )
-        }
-
-        // DropDownMenu 顯示選項
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        // 根據選擇更新排序方式
-                        when (option) {
-                            "Newest" -> reviewVM.updateSortOrder(SortOrder.NEWEST)
-                            "Most Liked" -> reviewVM.updateSortOrder(SortOrder.MOST_LIKED)
-                            "Highest Rating" -> reviewVM.updateSortOrder(SortOrder.HIGHEST_RATING)
-                        }
-                        expanded = false // 選擇後關閉下拉選單
-                    }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.size(10.dp))
-
-        //val options = listOf("複製文字", "回覆此評論", "編輯評論")
-
-        /**加入收藏(暫時擱置)*/
-//        Column(
-//            horizontalAlignment = Alignment.End,
-//            verticalArrangement = Arrangement.Top,
-//            modifier = Modifier.weight(0.5f)
-//        ) {
-//
-//            //加入收藏
-//            IconButton(
-//                onClick = {
-//                    isBookmarked = !isBookmarked
-//                    val message = if (isBookmarked) {
-//                        "收藏成功"
-//                    } else {
-//                        "取消收藏"
-//                    }
-//
-//                    scope.launch {
-//                        Log.e("TAG", "showSnackBar")
-//                        snackbarHostState.showSnackbar(
-//                            message,
-//                            withDismissAction = true
-//                        )
-//                    }
-//                }) {
-//                Icon(
-//                    modifier = Modifier.size(30.dp),
-//                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
-//                    contentDescription = if (isBookmarked) "已收藏" else "未收藏",
-//                )
-//            }
-//        }
-
-
-    }
-}
-
-
 
 /**評論顯示區*/
 @Composable
-fun DetailReviewZone(
-    reviewVM: ReviewVM,
+fun ReviewZone(
+    navController: NavHostController,
+    viewModel: ReviewVM,
+    restaurantId: Int,
+    reviewId: Int? = null
 ) {
-    val review by reviewVM.reviewState.collectAsState()
+    val context = LocalContext.current
+    // 收集評論狀態
+    val currentReview by viewModel.currentReview.collectAsState()
+
+    // 當 reviewId 不為 null 時才載入評論
+    LaunchedEffect(reviewId) {
+        reviewId?.let { id ->
+            viewModel.loadReviewById(id)
+        }
+    }
+
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-
         HorizontalDivider(
             modifier = Modifier,
-            thickness = 2.5.dp,
+            thickness = 2.dp,
             color = Color(0xFFFE724C)
         )
         Spacer(modifier = Modifier.size(8.dp))
 
+        // 顯示評論內容
+        currentReview?.let { review ->
+            ReviewItem(review = review)
+        } ?: run {
+            // 若沒有評論資料，顯示載入中或錯誤訊息
+            //Text("載入中...")
+        }
 
-        GetDetailReviews()
+        Button( // 點擊後導航到 ReviewDetail頁面
+            onClick = {
+                // 記得傳遞餐廳 ID 參數到詳細頁面
+                navController.navigate(context.getString(R.string.reviewDetail))
+            },
+            modifier = Modifier
+                .width(150.dp)
+                .height(50.dp),
+            shape = ButtonDefaults.outlinedShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFED2C7),
+                contentColor = Color(0xFFB43310)
+            )
+        ) {
+            Text(
+                text = "顯示所有評論",
+                modifier = Modifier,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(modifier = Modifier.size(5.dp))
+
+        // 確保從 viewModel 中載入評論，並傳遞正確的 restaurantId
+        ReviewList(restaurantId = restaurantId, viewModel = viewModel)
     }
 }
 
+/** 真正的評論 */
 @Composable
-fun ReviewItems(review: Reviews) {
-    var rememberRating by remember { mutableStateOf(review.rating) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        // 顯示頭像
-        Image(
-            painter = painterResource(id = R.drawable.image),
-            contentDescription = "Reviewer Avatar",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, Color.Gray, RoundedCornerShape(20.dp)),
-            contentScale = ContentScale.Crop
-        )
+fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
+    // 當頁面載入時，載入該餐廳的評論
+    LaunchedEffect(restaurantId) {
+        Log.d("ReviewList", "Loading reviews for restaurantId: $restaurantId")
+        viewModel.loadReviews(restaurantId)
+    }
 
-        Spacer(modifier = Modifier.width(8.dp))
+    val reviews by viewModel.reviewState.collectAsState()  // 觀察評論列表的資料變動
+    val isLoading by viewModel.isLoading.collectAsState()
+    Log.d("ReviewList", "Loaded reviews: ${reviews.size}")
+
+    Column {
+        if (isLoading) {
+            // 添加載入指示器
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(50.dp)
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally),
+                color = FColor.Orange_1st
+            )
+        } else {
+            if (reviews.isEmpty()) {
+                Text(
+                    text = "目前尚無評論",
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                reviews.forEach { review ->
+                    ReviewItem(review)
+                    Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+                }
+            }
+        }
+    }
+}
+
+/**評論資料*/
+@Composable
+fun ReviewItem(review: Reviews?) {
+    var isLiked by remember { mutableStateOf(review?.isLiked ?: false) }
+    var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
+    var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
+    var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
+    if (review == null) {
+        Text(
+            text = "目前尚無評論",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        return
+    }
+
+    Row {
 
         Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Top,
             modifier = Modifier.weight(1f)
         ) {
+            Spacer(modifier = Modifier.size(8.dp))
+
             // 顯示評論者名稱
             Text(
                 text = review.reviewer.name,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.Black
+                color = FColor.Dark_80
             )
+
+            Spacer(modifier = Modifier.size(5.dp))
 
             // 顯示評分
             RatingBar(
-                rating = rememberRating,
-                onRatingChanged = { newRememberRating ->
-                    rememberRating = newRememberRating
-                }
-            )
-            Text(
-                text = "評分: ${review.rating}",
-                fontSize = 14.sp,
-                color = Color.Gray
+                rating = review.rating,
+                onRatingChanged = { }  //顯示用，不需改變
             )
 
             // 顯示評論內容
             Text(
                 text = review.content,
-                fontSize = 14.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // 顯示時間戳
+            // 顯示評論時間
             Text(
                 text = review.timestamp,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = Color.Gray
             )
         }
+
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Bottom,
+            modifier = Modifier.padding(top = 32.dp)
+        ) {
+            // 按讚按鈕
+            Button(
+                onClick = {
+                    isLiked = !isLiked
+                    thumbsUpCount += if (isLiked) 1 else -1
+                    if (isDisliked) {
+                        isDisliked = false
+                        thumbsDownCount--
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isLiked) R.drawable.baseline_thumb_up_filled
+                        else R.drawable.baseline_thumb_up
+                    ),
+                    contentDescription = "讚",
+                    modifier = Modifier.size(30.dp),
+                    // 加入 tint 參數來設定顏色
+                    tint = if (isLiked) FColor.Orange_1st //
+                    else FColor.Dark_80 // 未選中時的顏色
+                )
+                Text(text = " $thumbsUpCount",
+                    modifier = Modifier.padding(start = 8.dp))
+            }
+
+            // 倒讚按鈕
+            Button(
+                onClick = {
+                    isDisliked = !isDisliked
+                    thumbsDownCount += if (isDisliked) 1 else -1
+                    if (isLiked) {
+                        isLiked = false
+                        thumbsUpCount--
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled
+                        else R.drawable.baseline_thumb_down
+                    ),
+                    contentDescription = "倒讚",
+                    modifier = Modifier.size(30.dp),
+                    // 加入 tint 參數來設定顏色
+                    tint = if (isDisliked) FColor.Orange_1st
+                    else FColor.Dark_80 // 未選中時的顏色
+                )
+                Text(text = " $thumbsDownCount",
+                    modifier = Modifier.padding(start = 8.dp))
+            }
+        }
     }
+
+    HorizontalDivider(
+        modifier = Modifier,
+        thickness = 0.5.dp,
+        color = FColor.Orange_1st
+    )
 }
 
-/**詳細評論範例**/
-@Composable
-fun GetDetailReviews(
-) {
-    val reviews = listOf(
-        Reviews(
-            reviewId = 1,
-            reviewer = Reviewer(
-                id = 1,
-                name = "使用者名稱1",
-                avatarImage = null,
-                followers = 10,
-                following = 5
-            ),
-            restaurantId = 101,
-            rating = 4,
-            content = "這家餐廳的食物非常美味！",
-            timestamp = "2024-11-01 12:00",
-            isLiked = false,
-            isDisliked = false,
-            replies = emptyList(),
-            maxPrice = 500,
-            minPrice = 200,
-            serviceCharge = 0
-        ),
-        Reviews(
-            reviewId = 2,
-            reviewer = Reviewer(
-                id = 2,
-                name = "使用者名稱2",
-                avatarImage = null,
-                followers = 20,
-                following = 10
-            ),
-            restaurantId = 102,
-            rating = 5,
-            content = "服務態度非常好，食物也很新鮮！",
-            timestamp = "2024-11-02 13:00",
-            isLiked = true,
-            isDisliked = false,
-            replies = emptyList(),
-            maxPrice = 600,
-            minPrice = 300,
-            serviceCharge = 2
-        ),
-        Reviews(
-            reviewId = 3,
-            reviewer = Reviewer(
-                id = 3,
-                name = "使用者名稱3",
-                avatarImage = null,
-                followers = 5,
-                following = 2
-            ),
-            restaurantId = 103,
-            rating = 3,
-            content = "食物還可以，但環境有點吵。",
-            timestamp = "2024-11-03 14:00",
-            isLiked = false,
-            isDisliked = true,
-            replies = emptyList(),
-            maxPrice = 400,
-            minPrice = 150,
-            serviceCharge = 0
-        ),
-        Reviews(
-            reviewId = 4,
-            reviewer = Reviewer(
-                id = 4,
-                name = "使用者名稱4",
-                avatarImage = null,
-                followers = 15,
-                following = 7
-            ),
-            restaurantId = 104,
-            rating = 2,
-            content = "不太好，食物冷掉了。",
-            timestamp = "2024-11-04 15:00",
-            isLiked = false,
-            isDisliked = true,
-            replies = emptyList(),
-            maxPrice = 300,
-            minPrice = 100,
-            serviceCharge = 1
-        ),
-        Reviews(
-            reviewId = 5,
-            reviewer = Reviewer(
-                id = 5,
-                name = "使用者名稱5",
-                avatarImage = null,
-                followers = 8,
-                following = 3
-            ),
-            restaurantId = 105,
-            rating = 1,
-            content = "非常失望，不會再來了。",
-            timestamp = "2024-11-05 16:00",
-            isLiked = false,
-            isDisliked = true,
-            replies = emptyList(),
-            maxPrice = 200,
-            minPrice = 50,
-            serviceCharge = 2
-        )
-    )
 
-    LazyColumn {
-        items(reviews) { review ->
-            ReviewItems(review) // 假設有一個 ReviewItem 函數處理每個評論的顯示
-            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+/**星星*/
+@Composable
+fun RatingBar(
+    modifier: Modifier = Modifier,
+    rating: Int,
+    onRatingChanged: (Int) -> Unit,
+    filledStarColor: Color = FColor.Yellow_1,
+    outlineStarColor: Color = FColor.Dark_80
+) {
+
+
+    Row(modifier = modifier) {
+        for (i in 1..5) {
+            Icon(
+                painter = painterResource(
+                    id = if (i <= rating) R.drawable.baseline_star else R.drawable.baseline_star_outline
+                ),
+                contentDescription = "$i 顆星",
+                modifier = Modifier
+                    .size(35.dp)
+                    .clickable { onRatingChanged(i) },
+                tint = if (i <= rating) filledStarColor else outlineStarColor
+            )
         }
     }
 }
+
+
+
+
+
+/**詳細評論資料*/
+//@Composable
+//fun ReviewItem(review: Reviews?) {
+//    var isLiked by remember { mutableStateOf(review?.isLiked ?: false) }
+//    var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
+//    var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
+//    var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
+//    if (review == null) {
+//        Text(
+//            text = "目前尚無評論",
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.Bold,
+//            color = Color.Black
+//        )
+//        return
+//    }
+//
+//    Row {
+//
+//        Column(
+//            horizontalAlignment = Alignment.Start,
+//            verticalArrangement = Arrangement.Top,
+//            modifier = Modifier.weight(1f)
+//        ) {
+//            Spacer(modifier = Modifier.size(8.dp))
+//
+//            // 顯示評論者名稱
+//            Text(
+//                text = review.reviewer.name,
+//                fontSize = 18.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = FColor.Dark_80
+//            )
+//
+//            Spacer(modifier = Modifier.size(5.dp))
+//
+//            // 顯示評分
+//            RatingBar(
+//                rating = review.rating,
+//                onRatingChanged = { }  //顯示用，不需改變
+//            )
+//
+//            // 顯示評論內容
+//            Text(
+//                text = review.content,
+//                fontSize = 16.sp,
+//                color = Color.Black,
+//                modifier = Modifier.padding(vertical = 8.dp)
+//            )
+//
+//            // 顯示評論時間
+//            Text(
+//                text = review.timestamp,
+//                fontSize = 14.sp,
+//                color = Color.Gray
+//            )
+//        }
+//
+//        Column(
+//            horizontalAlignment = Alignment.Start,
+//            verticalArrangement = Arrangement.Bottom,
+//            modifier = Modifier.padding(top = 32.dp)
+//        ) {
+//            // 按讚按鈕
+//            Button(
+//                onClick = {
+//                    isLiked = !isLiked
+//                    thumbsUpCount += if (isLiked) 1 else -1
+//                    if (isDisliked) {
+//                        isDisliked = false
+//                        thumbsDownCount--
+//                    }
+//                },
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color.Transparent,
+//                    contentColor = Color.Black
+//                )
+//            ) {
+//                Icon(
+//                    painter = painterResource(
+//                        id = if (isLiked) R.drawable.baseline_thumb_up_filled
+//                        else R.drawable.baseline_thumb_up
+//                    ),
+//                    contentDescription = "讚",
+//                    modifier = Modifier.size(30.dp),
+//                    // 加入 tint 參數來設定顏色
+//                    tint = if (isLiked) FColor.Orange_1st //
+//                    else FColor.Dark_80 // 未選中時的顏色
+//                )
+//                Text(text = " $thumbsUpCount",
+//                    modifier = Modifier.padding(start = 8.dp))
+//            }
+//
+//            // 倒讚按鈕
+//            Button(
+//                onClick = {
+//                    isDisliked = !isDisliked
+//                    thumbsDownCount += if (isDisliked) 1 else -1
+//                    if (isLiked) {
+//                        isLiked = false
+//                        thumbsUpCount--
+//                    }
+//                },
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color.Transparent,
+//                    contentColor = Color.Black
+//                )
+//            ) {
+//                Icon(
+//                    painter = painterResource(
+//                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled
+//                        else R.drawable.baseline_thumb_down
+//                    ),
+//                    contentDescription = "倒讚",
+//                    modifier = Modifier.size(30.dp),
+//                    // 加入 tint 參數來設定顏色
+//                    tint = if (isDisliked) FColor.Orange_1st
+//                    else FColor.Dark_80 // 未選中時的顏色
+//                )
+//                Text(text = " $thumbsDownCount",
+//                    modifier = Modifier.padding(start = 8.dp))
+//            }
+//        }
+//    }
+//
+//    HorizontalDivider(
+//        modifier = Modifier,
+//        thickness = 0.5.dp,
+//        color = FColor.Orange_1st
+//    )
+//}

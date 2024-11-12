@@ -58,11 +58,20 @@ import com.tibame.foodhunter.zoe.PostViewModel
 fun RestaurantDetail(
     navController: NavHostController,
     restaurantVM: SearchScreenVM,
-    reviewVM: ReviewVM
+    reviewVM: ReviewVM,
+    reviewId: Int? = null
 
 ) {
 
     val reviewVM: ReviewVM = viewModel()
+    val context = LocalContext.current
+    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val destination = navController.currentBackStackEntryAsState().value?.destination
+    val snackbarHostState = remember { SnackbarHostState() }
+    // 回傳CoroutineScope物件以適用於此compose環境
+    val scope = rememberCoroutineScope()
+    //val reviewVM: ReviewVM = viewModel()
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
@@ -70,6 +79,11 @@ fun RestaurantDetail(
     val restaurantId by reviewVM.reviewState.collectAsState()
     LaunchedEffect(restaurant) { postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
 //    Log.d(relatedPosts, )
+    //val isLoading by reviewVM.isLoading.collectAsState()
+    LaunchedEffect(restaurant) {
+        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
+//    Log.d(relatedPosts, )
+
     // 根據餐廳 ID 載入評論
     LaunchedEffect(restaurantId) {
         restaurant?.restaurant_id?.let { restaurantId ->
@@ -77,9 +91,18 @@ fun RestaurantDetail(
         }
     }
 
+
+    reviewId?.let { id ->
+        // 當 reviewId 不為 null 時Launch
+        LaunchedEffect(id) {
+            reviewVM.loadReviewById(id)
+        }
+    }
+
     LaunchedEffect(reviews) {
         Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
     }
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -105,9 +128,7 @@ fun RestaurantDetail(
 
                 RestaurantInfoDetail(restaurantVM)
 
-
                 RelatedPost(relatedPosts, navController)
-
 
                 HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
@@ -119,15 +140,17 @@ fun RestaurantDetail(
                 //評論顯示區
                 Text(
                     text = "評論(${reviews.size})",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(12.dp),
+                    color = FColor.Dark_80
                 )
-                ReviewZone(navController = navController, reviewVM, 0)
-//            }
+
+                ReviewZone(
+                    navController = navController, reviewVM, 0, 0
+                )
+            }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -172,10 +195,12 @@ fun RestaurantDetailPreview() {
     val navController = rememberNavController()
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
+    val reviewId: Int
 
     RestaurantDetail(
         navController = navController,
         restaurantVM = restaurantVM,
-        reviewVM = reviewVM
+        reviewVM = reviewVM,
+        reviewId = 0
     )
 }
