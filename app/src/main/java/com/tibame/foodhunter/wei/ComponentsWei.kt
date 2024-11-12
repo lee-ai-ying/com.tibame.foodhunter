@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -39,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +56,7 @@ import com.tibame.foodhunter.R
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.components.NiaTab
 import com.tibame.foodhunter.sharon.components.NiaTabRow
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.zoe.Avatar
 import com.tibame.foodhunter.zoe.ImageDisplay
 import com.tibame.foodhunter.zoe.ImageSource
@@ -71,6 +74,7 @@ fun PreviewInfoDetail() {
 @Composable
 fun RestaurantInfoDetail(
     //snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    navController: NavController,
     restaurantVM : SearchScreenVM
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
@@ -79,8 +83,7 @@ fun RestaurantInfoDetail(
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
     // 控制收藏狀態(icon圖示及snackbar文字)
-    val navController = rememberNavController()
-
+    val context = LocalContext.current
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
 
     Row(
@@ -88,13 +91,24 @@ fun RestaurantInfoDetail(
         modifier = Modifier.fillMaxWidth()
     ) {
         Image(
-            painter = painterResource(id = R.drawable.mapimage),
+            painter = painterResource(id = R.drawable.rounded_dining),
             contentDescription = "餐廳照片",
             modifier = Modifier
-                .size(100.dp)
-                .border(BorderStroke(3.dp, Color(0xFF000000)), RoundedCornerShape(12))
+                .size(60.dp)
+                .border(BorderStroke(3.dp, Brush.sweepGradient(
+                    listOf(
+                        Color(0xFFC6826F),
+                        Color(0xFFFE8160),
+                        Color(0xFFFFC529),
+                        Color(0xFFFFEFC3),
+                        Color(0xFFFFC529),
+                        Color(0xFFFE8160),
+                    )
+                )
+                ), RoundedCornerShape(12))
                 .clip(RoundedCornerShape(12)),
             contentScale = ContentScale.Crop
+
         )
 
         Spacer(modifier = Modifier.size(10.dp))
@@ -109,20 +123,8 @@ fun RestaurantInfoDetail(
                 text = restaurant?.name.toString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = FColor.Dark_80
             )
-//            Text(
-//                text = restaurant?.address.toString(),
-//                fontSize = 14.sp,
-//                fontWeight = FontWeight.SemiBold,
-//                color = Color.Black
-//            )
-//            Text(
-//                text = restaurant?.opening_hours.toString(),
-//                fontSize = 14.sp,
-//                fontWeight = FontWeight.SemiBold,
-//                color = Color.Black
-//            )
         }
         Spacer(modifier = Modifier.weight(1f))
 
@@ -181,9 +183,9 @@ fun RestaurantInfoDetail(
                         // 跳到各功能
                         expanded = false
                         when (option) {
-                            "建立揪團" -> navController.navigate("建立揪團")
-                            "建立筆記" -> navController.navigate("手札")
-                            "建立貼文" -> navController.navigate("發文")
+                            "建立揪團" -> navController.navigate(context.getString(R.string.str_create_group))
+                            "建立筆記" -> navController.navigate(context.getString(R.string.str_note))
+                            "建立貼文" -> navController.navigate(context.getString(R.string.str_post))
                         }
                     }
                 )

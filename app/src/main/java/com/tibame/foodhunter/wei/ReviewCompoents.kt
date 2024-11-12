@@ -169,7 +169,7 @@ fun ReviewInfoDetail(
 
 
 
-/**評論顯示區*/
+/**詳細評論顯示區*/
 @Composable
 fun DetailReviewZone(
     reviewVM: ReviewVM,
@@ -275,6 +275,8 @@ fun GetDetailReviews(
             rating = 4,
             content = "這家餐廳的食物非常美味！",
             timestamp = "2024-11-01 12:00",
+            thumbsup = 20,
+            thumbsdown= 2,
             isLiked = false,
             isDisliked = false,
             replies = emptyList(),
@@ -295,6 +297,8 @@ fun GetDetailReviews(
             rating = 5,
             content = "服務態度非常好，食物也很新鮮！",
             timestamp = "2024-11-02 13:00",
+            thumbsup = 10,
+            thumbsdown= 0,
             isLiked = true,
             isDisliked = false,
             replies = emptyList(),
@@ -315,6 +319,8 @@ fun GetDetailReviews(
             rating = 3,
             content = "食物還可以，但環境有點吵。",
             timestamp = "2024-11-03 14:00",
+            thumbsup = 2,
+            thumbsdown= 2,
             isLiked = false,
             isDisliked = true,
             replies = emptyList(),
@@ -335,6 +341,8 @@ fun GetDetailReviews(
             rating = 2,
             content = "不太好，食物冷掉了。",
             timestamp = "2024-11-04 15:00",
+            thumbsup = 0,
+            thumbsdown= 32,
             isLiked = false,
             isDisliked = true,
             replies = emptyList(),
@@ -355,6 +363,8 @@ fun GetDetailReviews(
             rating = 1,
             content = "非常失望，不會再來了。",
             timestamp = "2024-11-05 16:00",
+            thumbsup = 6,
+            thumbsdown= 14,
             isLiked = false,
             isDisliked = true,
             replies = emptyList(),

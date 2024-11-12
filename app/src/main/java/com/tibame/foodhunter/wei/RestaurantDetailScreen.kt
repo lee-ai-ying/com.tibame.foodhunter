@@ -62,7 +62,8 @@ import com.tibame.foodhunter.zoe.PostViewModel
 fun RestaurantDetail(
     navController: NavHostController,
     restaurantVM: SearchScreenVM,
-    reviewVM: ReviewVM
+    reviewVM: ReviewVM,
+    reviewId: Int? = null
 
 ) {
 
@@ -89,6 +90,13 @@ fun RestaurantDetail(
     LaunchedEffect(restaurantId) {
         restaurant?.restaurant_id?.let { restaurantId ->
             reviewVM.loadReviews(restaurantId)
+        }
+    }
+
+    reviewId?.let { id ->
+        // 當 reviewId 不為 null 時Launch
+        LaunchedEffect(id) {
+            reviewVM.loadReviewById(id)
         }
     }
 
@@ -119,7 +127,7 @@ fun RestaurantDetail(
             ) {
                 Spacer(modifier = Modifier)
 
-                RestaurantInfoDetail(restaurantVM)
+                RestaurantInfoDetail(navController,restaurantVM)
 
 
                 RelatedPost(relatedPosts, navController)
@@ -139,7 +147,9 @@ fun RestaurantDetail(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                ReviewZone(navController = navController, reviewVM, 0)
+                ReviewZone(
+                    navController = navController, reviewVM, 0, reviewId = 0
+                )
             }
         }
     }
@@ -187,10 +197,12 @@ fun RestaurantDetailPreview() {
     val navController = rememberNavController()
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
+    val reviewId: Int
 
     RestaurantDetail(
         navController = navController,
         restaurantVM = restaurantVM,
-        reviewVM = reviewVM
+        reviewVM = reviewVM,
+        reviewId = 0
     )
 }

@@ -71,9 +71,19 @@ fun PreviewReviewEdit() {
 fun ReviewZone(
     navController: NavHostController,
     viewModel: ReviewVM,
-    restaurantId: Int
+    restaurantId: Int,
+    reviewId: Int? = null
 ) {
+    /// 當 reviewId 不為 null 時才載入評論
+    LaunchedEffect(reviewId) {
+        reviewId?.let { id ->
+            viewModel.loadReviewById(id)
+        }
+    }
+
     val context = LocalContext.current
+    // 收集評論狀態
+    val currentReview by viewModel.currentReview.collectAsState()
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -86,6 +96,14 @@ fun ReviewZone(
             color = Color(0xFFFE724C)
         )
         Spacer(modifier = Modifier.size(8.dp))
+
+        // 顯示評論內容
+        currentReview?.let { review ->
+            ReviewItem(review = review)
+        } ?: run {
+            // 若沒有評論資料，顯示載入中或錯誤訊息
+            //Text("載入中...")
+        }
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
@@ -154,60 +172,74 @@ fun ReviewList(restaurantId: Int, viewModel: ReviewVM) {
 //}
 /**評論範例資料*/
 @Composable
-fun ReviewItem(review: Reviews) {
-    var rememberRating by remember { mutableStateOf(review.rating) }
-    var likeCount by remember { mutableStateOf(0) }
-    var dislikeCount by remember { mutableStateOf(0) }
-    var isLiked by remember { mutableStateOf(false) }
-    var isDisliked by remember { mutableStateOf(false) }
+fun ReviewItem(review: Reviews?) {
+    var isLiked by remember { mutableStateOf(review?.isLiked ?: false) }
+    var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
+    var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
+    var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
+    if (review == null) {
+        Text(
+            text = "目前尚無評論",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        return
+    }
 
     Row {
-        Image(
-            painter = painterResource(id = R.drawable.account_circle),
-            contentDescription = "評論者",
-            modifier = Modifier
-                .size(70.dp)
-                .border(BorderStroke(2.dp, FColor.Orange_d1), CircleShape)
-                .clip(RoundedCornerShape(12)),
-            contentScale = ContentScale.Crop
-        )
 
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier
-                .weight(1f)
+            modifier = Modifier.weight(1f)
         ) {
             Spacer(modifier = Modifier.size(8.dp))
+
+            // 顯示評論者名稱
             Text(
                 text = review.reviewer.name,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = FColor.Orange_1st
             )
 
             Spacer(modifier = Modifier.size(5.dp))
 
+            // 顯示評分
             RatingBar(
-                rating = rememberRating,
-                onRatingChanged = { newRememberRating ->
-                    rememberRating = newRememberRating
-                }
+                rating = review.rating,
+                onRatingChanged = { }  //顯示用，不需改變
+            )
+
+            // 顯示評論內容
+            Text(
+                text = review.content,
+                fontSize = 16.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // 顯示評論時間
+            Text(
+                text = review.timestamp,
+                fontSize = 14.sp,
+                color = Color.Gray
             )
         }
 
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier,
         ) {
+            // 按讚按鈕
             Button(
                 onClick = {
                     isLiked = !isLiked
-                    likeCount += if (isLiked) 1 else -1
+                    thumbsUpCount += if (isLiked) 1 else -1
                     if (isDisliked) {
                         isDisliked = false
-                        dislikeCount--
+                        thumbsDownCount--
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -217,21 +249,27 @@ fun ReviewItem(review: Reviews) {
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if (isLiked) R.drawable.baseline_thumb_up_filled else R.drawable.baseline_thumb_up
+                        id = if (isLiked) R.drawable.baseline_thumb_up_filled
+                        else R.drawable.baseline_thumb_up
                     ),
-                    contentDescription = "讚哦",
-                    modifier = Modifier.size(30.dp)
+                    contentDescription = "讚",
+                    modifier = Modifier.size(30.dp),
+                    // 加入 tint 參數來設定顏色
+                    tint = if (isLiked) Color(0xFFFE724C) // 橘色1st
+                    else Color.Gray // 未選中時為灰色
                 )
-                Text(text = " $likeCount", modifier = Modifier.padding(start = 8.dp))
+                Text(text = " $thumbsUpCount",
+                    modifier = Modifier.padding(start = 8.dp))
             }
 
+            // 倒讚按鈕
             Button(
                 onClick = {
                     isDisliked = !isDisliked
-                    dislikeCount += if (isDisliked) 1 else -1
+                    thumbsDownCount += if (isDisliked) 1 else -1
                     if (isLiked) {
                         isLiked = false
-                        likeCount--
+                        thumbsUpCount--
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -241,15 +279,20 @@ fun ReviewItem(review: Reviews) {
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled else R.drawable.baseline_thumb_down
+                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled
+                        else R.drawable.baseline_thumb_down
                     ),
                     contentDescription = "倒讚",
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(30.dp),
+                    tint = if (isDisliked) Color(0xFFFE724C) // 橘色1st
+                    else Color.Gray // 未選中時為灰色
                 )
-                Text(text = " $dislikeCount", modifier = Modifier.padding(start = 8.dp))
+                Text(text = " $thumbsDownCount",
+                    modifier = Modifier.padding(start = 8.dp))
             }
         }
     }
+
     HorizontalDivider(
         modifier = Modifier,
         thickness = 0.5.dp,

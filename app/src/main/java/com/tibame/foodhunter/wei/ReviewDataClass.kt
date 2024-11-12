@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.ImageBitmap
+import java.security.Timestamp
 
 
 data class ReviewCreateData(
@@ -61,6 +62,8 @@ data class Reviews(
     var rating: Int = 0,
     var content: String,
     var timestamp: String,
+    var thumbsup: Int?, //從資料庫中得到的累積鑽數
+    var thumbsdown: Int?,
     var isLiked: Boolean = false,
     var isDisliked: Boolean = false,
     var replies: List<Reply>,
@@ -78,7 +81,6 @@ data class Reviewer(
 )
 
 
-data class Review(val username: String, val rating: Int)
 
 
 
