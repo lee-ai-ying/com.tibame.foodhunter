@@ -62,7 +62,7 @@ fun CalendarScreen(
         }
     }
 
-// 選中日期的狀態
+    // 選中日期的狀態
     var selectedDate by remember {
         mutableStateOf<CalendarUiState.Date?>(null)
     }
@@ -98,7 +98,6 @@ fun CalendarScreen(
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.YEAR) == date.year
                     }
-
                     is Group -> {
                         val calendar = Calendar.getInstance().apply {
                             time = item.groupDate
@@ -107,7 +106,6 @@ fun CalendarScreen(
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.YEAR) == date.year
                     }
-
                     else -> false
                 }
             }
@@ -116,8 +114,6 @@ fun CalendarScreen(
             Log.d("CalendarScreen", "dayItems = empt ${dayItems.size}")
             dayItems = emptyList()
         }
-//        Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
-//        Log.d("CalendarScreen", "過濾後項目數量:filteredItems ${filteredItems.size}")
     }
     Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
     Log.d("CalendarScreen", "過濾後項目數量:filteredItems ${filteredItems.size}")
@@ -164,7 +160,6 @@ fun CalendarScreen(
                         color = FColor.Orange_1st
                     )
                 }
-
                 filteredItems.isEmpty() || dayItems.isEmpty() -> {
                     Column(
                         modifier = Modifier
@@ -176,8 +171,6 @@ fun CalendarScreen(
                         Column(
                             modifier = Modifier.height(110.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
-
-//                        contentAlignment = Alignment.Center
                         ) {
                             Row(
                                 modifier = Modifier,
@@ -192,7 +185,6 @@ fun CalendarScreen(
                             }
                             Text(modifier = Modifier.padding(vertical = 3.dp),
                                 text = "或")
-
                             Row(
                                 modifier = Modifier,
                             ) {
@@ -207,21 +199,7 @@ fun CalendarScreen(
                         }
                     }
                 }
-//                dayItems.isEmpty() -> {
-//                    Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
-//                    Row(
-//                        modifier = Modifier,
-////                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Text("請點擊 ")
-//                        Icon(
-//                            modifier = Modifier.fillMaxSize(),
-//                            imageVector = Icons.Outlined.Edit,
-//                            contentDescription = stringResource(id = R.string.str_note_add)
-//                        )
-//                        Text(" 新增筆記")
-//                    }
-//                }
+//
                 // 卡片列表部分
                 else -> {
                     LazyColumn(
@@ -273,8 +251,7 @@ fun CalendarScreen(
                                     )
                                 }
 
-                                else -> {
-                                } // 處理其他可能的情況
+                                else -> {} // 處理其他可能的情況
                             }
                         }
                     }

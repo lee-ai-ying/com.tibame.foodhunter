@@ -18,7 +18,7 @@ fun CardContentPreview(){
 
 }
 
-fun String.limitChineseLength(maxLength: Int = 12): String {
+fun String.limitChineseLength(maxLength: Int = 15): String {
     return if (this.length > maxLength) {
         "${this.take(maxLength)}..."
     } else {
@@ -57,28 +57,23 @@ fun CardContent(
         when (type) {
             CardContentType.GROUP -> {
                 GroupTextContent(
-                    title = title.limitChineseLength(15),
+                    title = title.limitChineseLength(10),
                     restaurantName = restaurantName?.limitChineseLength() ?: "",
-                    restaurantAddress = restaurantAddress?.limitChineseLength(10) ?: "",
+                    restaurantAddress = restaurantAddress?.limitChineseLength(14) ?: "",
 //                    headcount = headcount ?: 3,
                 )
                 // 揪團才需要顯示公開/私密切換
                 Row(
                     modifier = modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End  // 靠右對齊
-                ){
-
-                GroupVisibilityToggle(isPublic = isPublic)
-                }
+                    horizontalArrangement = Arrangement.End
+                ){ GroupVisibilityToggle(isPublic = isPublic) }
             }
-
             CardContentType.NOTE -> {
                 NoteTextContent(
                     title = title.limitChineseLength(),
                     content = content?.limitChineseLength() ?: "",
                     modifier = Modifier.weight(1f)
                 )
-                // 筆記才需要顯示圖片
                 imageResId?.let {
                     NoteImage(imageResId = it)
                 }
