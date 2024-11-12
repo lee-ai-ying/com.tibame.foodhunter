@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -76,7 +75,27 @@ fun ForgetPassword2Screen(
                 color = colorResource(id = R.color.black)) },
             confirmButton = {
                 TextButton(
-                    onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
+                    onClick = { showDialog2 = false }  // 點擊確定按鈕，關閉對話框
+                ) {
+                    Text("確定",
+                        color = colorResource(id = R.color.orange_1st))
+                }
+            }
+        )
+    }
+    var showDialog3 by remember { mutableStateOf(false) }
+    if (showDialog3) {
+        AlertDialog(
+            onDismissRequest = { showDialog3 = false
+                navController.navigate(context.getString(R.string.str_login))
+                userVM.emailFindPassword.value = ""},  // 點擊對話框以外區域，關閉對話框
+            text = { Text(text = "修改完成 請重新登入",
+                color = colorResource(id = R.color.black)) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showDialog3 = false
+                        navController.navigate(context.getString(R.string.str_login))
+                        userVM.emailFindPassword.value = ""}  // 點擊確定按鈕，關閉對話框
                 ) {
                     Text("確定",
                         color = colorResource(id = R.color.orange_1st))
@@ -98,7 +117,7 @@ fun ForgetPassword2Screen(
             Text(
                 text = "忘記密碼",
                 modifier = Modifier.padding(8.dp),
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -187,8 +206,8 @@ fun ForgetPassword2Screen(
                             val saved =
                                 userVM.saveNewPassword(userVM.emailFindPassword.value, password1)
                             if (saved) {
-                                navController.navigate(context.getString(R.string.str_login))
-                                userVM.emailFindPassword.value = ""
+                                showDialog3 = true
+
                             } else {
                                 showDialog = true
                             }

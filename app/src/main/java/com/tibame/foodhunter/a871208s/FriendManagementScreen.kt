@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
-import androidx.benchmark.UserInfo.currentUserId
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,12 +23,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -184,9 +184,10 @@ fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            text = { Text(text = "確定要取消追蹤?") },
+            text = { Text(text = "確定要取消追蹤?",
+                color = colorResource(id = R.color.black)) },
             confirmButton = {
-                    Button(onClick = { coroutineScope.launch {
+                TextButton(onClick = { coroutineScope.launch {
                         val friendDel = friendVM.friendDel(userVM.username.value,friend.username)
                         Log.e("Response","Response2: friendDel: $friendDel")
                         if (friendDel) {
@@ -197,10 +198,13 @@ fun FriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewModel
                         // 隱藏對話框
                         showDialog = false
                     }
-                }) { Text("確定") }
+                }) { Text("確定",
+                    color = colorResource(id = R.color.orange_1st)
+                ) }
             },
             dismissButton = {
-                Button(onClick = { showDialog = false }) { Text("取消") }
+                TextButton(onClick = { showDialog = false }) { Text("取消",
+                    color = colorResource(id = R.color.black)) }
             }
         )
     }
@@ -250,9 +254,10 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewMode
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            text = { Text(text = "請確認是否要追蹤?") },
+            text = { Text(text = "請確認是否要追蹤?",
+                color = colorResource(id = R.color.black)) },
             confirmButton = {
-                Button(onClick = { coroutineScope.launch {val friendAdd = friendVM.friendAdd(userVM.username.value,friend.username)
+                TextButton(onClick = { coroutineScope.launch {val friendAdd = friendVM.friendAdd(userVM.username.value,friend.username)
                     if (friendAdd) {
                         // 追蹤成功後刷新好友列表
                         friendVM.refreshFriends2(userVM.username.value)
@@ -261,10 +266,12 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewMode
                     // 隱藏對話框
                     showDialog = false
                 }
-                }) { Text("確定") }
+                }) { Text("確定",
+                    color = colorResource(id = R.color.orange_1st)) }
             },
             dismissButton = {
-                Button(onClick = { showDialog = false }) { Text("取消") }
+                TextButton(onClick = { showDialog = false }) { Text("取消",
+                    color = colorResource(id = R.color.black)) }
             }
         )
     }
