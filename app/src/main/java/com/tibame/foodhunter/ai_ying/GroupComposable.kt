@@ -306,7 +306,7 @@ fun GroupSingleInputWithIcon(
 ) {
     GroupTextInputField(
         defaultInput = defaultInput,
-        modifier = modifier,
+        modifier = Modifier.fillMaxWidth(),
         placeholder = placeholder,
         trailingIcon = trailingIcon,
         singleLine = true,

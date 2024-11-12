@@ -1,30 +1,12 @@
 package com.tibame.foodhunter.sharon.components.card
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import com.tibame.foodhunter.sharon.data.CardContentType
-
-
-@Preview
-@Composable
-fun CardContentPreview(){
-
-}
-
-fun String.limitChineseLength(maxLength: Int = 15): String {
-    return if (this.length > maxLength) {
-        "${this.take(maxLength)}..."
-    } else {
-        this
-    }
-}
 
 @Composable
 fun CardContent(
@@ -38,8 +20,8 @@ fun CardContent(
     // Group 特有參數
     restaurantName: String? = null,
     restaurantAddress: String? = null,
-//    headcount: Int? = null,
-    isPublic: Int,
+    headcount: Int? = null,
+    isPublic: Boolean? = null,
     // Note 特有參數
     content: String? = null,
     imageResId: Int? = null
@@ -57,23 +39,24 @@ fun CardContent(
         when (type) {
             CardContentType.GROUP -> {
                 GroupTextContent(
-                    title = title.limitChineseLength(10),
-                    restaurantName = restaurantName?.limitChineseLength() ?: "",
-                    restaurantAddress = restaurantAddress?.limitChineseLength(14) ?: "",
-//                    headcount = headcount ?: 3,
+                    title = title,
+                    restaurantName = restaurantName ?: "",
+                    restaurantAddress = restaurantAddress ?: "",
+                    headcount = headcount ?: 3,
                 )
                 // 揪團才需要顯示公開/私密切換
-                Row(
-                    modifier = modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ){ GroupVisibilityToggle(isPublic = isPublic) }
+                isPublic?.let {
+                    GroupVisibilityToggle(isPublic = it)
+                }
             }
+
             CardContentType.NOTE -> {
                 NoteTextContent(
-                    title = title.limitChineseLength(),
-                    content = content?.limitChineseLength() ?: "",
+                    title = title,
+                    content = content ?: "",
                     modifier = Modifier.weight(1f)
                 )
+                // 筆記才需要顯示圖片
                 imageResId?.let {
                     NoteImage(imageResId = it)
                 }
