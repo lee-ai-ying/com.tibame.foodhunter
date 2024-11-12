@@ -105,13 +105,13 @@ fun SearchBar(
                     ) {
                         IconButton(
                             onClick = { onQueryChange("") },
-                            modifier = Modifier.fillMaxSize()
+//                            modifier = Modifier.fillMaxSize()
                         ) {
                             Icon(
+                                modifier = Modifier.size(24.dp),
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = stringResource(id = R.string.str_clear),
                                 tint = FColor.Dark_80,
-                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
