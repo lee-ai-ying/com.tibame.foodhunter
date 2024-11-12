@@ -291,7 +291,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = {}
+                onClick = {navController.navigate(route = context.getString(R.string.str_calendar))}
             ) {
 
             }
