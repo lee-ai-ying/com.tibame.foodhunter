@@ -171,16 +171,16 @@ fun PostHeader(
 
             if (!isCurrentUser) {
                 if (!isCurrentUser) {
-                    IconButton(
-                        onClick = { /* 點擊私訊按鈕時的處理 */ },
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                            contentDescription = "Chat Bubble",
-                            modifier = Modifier.size(25.dp)
-                        )
-                    }
+//                    IconButton(
+//                        onClick = { /* 點擊私訊按鈕時的處理 */ },
+//                        modifier = Modifier.padding(end = 8.dp)
+//                    ) {
+//                        Icon(
+//                            painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+//                            contentDescription = "Chat Bubble",
+//                            modifier = Modifier.size(25.dp)
+//                        )
+//                    }
 
                     Button(
                         onClick = { if (!isFollowing) onFollowClick() },

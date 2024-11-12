@@ -5,7 +5,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Button
@@ -43,11 +46,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -351,7 +357,7 @@ fun NewPost(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.tag),
+                            painter = painterResource(id = R.drawable.outline_local_offer_24),
                             contentDescription = "Select Tag",
                             modifier = Modifier.size(22.dp)
                         )
@@ -362,21 +368,17 @@ fun NewPost(
                         )
                     }
                 }
-
-                // Submit button
-                Button(
+                CapsuleButton(
+                    text = stringResource(id = R.string.str_post),
                     onClick = {
                         postEditorViewModel.updatePublisher(membernameState.value)
                         postEditorViewModel.submitPost(context)
                         navController.navigate(context.getString(R.string.str_Recommended_posts))
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        colorResource(id = R.color.orange_2nd)
-                    ),
-                    modifier = Modifier.fillMaxWidth(0.8f)
-                ) {
-                    Text(text = stringResource(id = R.string.str_post))
-                }
+                     modifier = Modifier.fillMaxWidth(0.8f)
+                )
+
+
             }
         }
     }
@@ -503,7 +505,44 @@ fun TagSelectionSheet(
             Text(text = "確定", color = Color.White)
         }
     }
+
 }
-
-
-
+@Composable
+fun CapsuleButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = FColor.Orange_1st,
+    enabled: Boolean = true,
+    shadowElevation: Dp = 4.dp,
+    shadowColor: Color = FColor.Orange_3rd
+) {
+    Box(
+        modifier = modifier
+            .shadow(
+                elevation = shadowElevation,
+                shape = RoundedCornerShape(50), // 使用百分比而不是dp
+                spotColor = shadowColor,
+                ambientColor = shadowColor,
+                clip = true
+            )
+    ) {
+        Button(
+            onClick = onClick,
+            enabled = enabled,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = containerColor,
+                disabledContainerColor = containerColor.copy(alpha = 0.5f)
+            ),
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(50) // 使用百分比而不是dp
+        ) {
+            Text(
+                text = text,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+        }
+    }
+}

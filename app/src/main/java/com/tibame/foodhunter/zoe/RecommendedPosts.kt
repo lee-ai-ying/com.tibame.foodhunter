@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -200,39 +201,52 @@ fun PostItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FavoriteIcon()
-                        IconButton(
-                            onClick = {
-                                Log.d("PostItem", "Comment button clicked")
-                                showBottomSheet = true
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f) // 使這個 Row 佔滿可用空間
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.chat_bubble_outline_24),
-                                contentDescription = "Chat Bubble",
-                                modifier = Modifier.size(24.dp)
-                            )
+                            FavoriteIcon()
+                            IconButton(
+                                onClick = {
+                                    Log.d("PostItem", "Comment button clicked")
+                                    showBottomSheet = true
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.chat_bubble_outline_24),
+                                    contentDescription = "Chat Bubble",
+                                    modifier = Modifier.size(22.dp),
+                                    tint = FColor.Dark_66
+                                )
+                            }
 
+                            Text(
+                                text = "${post.comments.size}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = FColor.Dark_66
+                            )
                         }
 
-                        Text(
-                            text = "${post.comments.size}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Box(
-                            modifier = Modifier
-                                .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) // 添加灰色邊框
-                                .background(Color.White) // 背景顏色
-                                .padding(8.dp) // 內部間距
+                        Spacer(modifier = Modifier.weight(1f)) // 將標籤推到右側
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End // 將標籤的排列方式設置為靠右
                         ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_local_offer_24),
+                                contentDescription = "Select Tag",
+                                modifier = Modifier.size(22.dp),
+                                tint = FColor.Dark_66 // 加入灰色
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = post.postTag,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                                color = FColor.Dark_66
                             )
                         }
                     }
