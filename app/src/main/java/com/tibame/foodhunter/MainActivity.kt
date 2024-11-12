@@ -284,7 +284,9 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController, userViewModel)
+                LoginScreen(navController = navController, userViewModel){
+                    currectScene = context.getString(R.string.str_Recommended_posts)
+                }
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController, userViewModel)
