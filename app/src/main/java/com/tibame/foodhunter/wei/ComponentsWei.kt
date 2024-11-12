@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -115,13 +117,14 @@ fun RestaurantInfoDetail(
 
         Column(
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier.width(190.dp),
         ) {
             //星星
 
             Text(
                 text = restaurant?.name.toString(),
-                fontSize = 20.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = FColor.Dark_80
             )
@@ -162,17 +165,21 @@ fun RestaurantInfoDetail(
 //        }
 
         //更多功能
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_more_vert_24),
-                contentDescription = "更多功能",
-                modifier = Modifier.size(30.dp),
-            )
-        }
+        Box(
+            modifier = Modifier.wrapContentSize(Alignment.TopEnd)
+        ) {
+            IconButton(onClick = { expanded = !expanded }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_more_vert_24),
+                    contentDescription = "更多功能",
+                    modifier = Modifier.size(30.dp),
+                )
+            }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier //.offset(x = (-8).dp) //向左偏移
         ) {
             // 下拉選單內容由DropdownMenuItem選項元件組成
             options.forEach { option ->
@@ -191,6 +198,8 @@ fun RestaurantInfoDetail(
                 )
             }
         }
+        }
+        Spacer(modifier = Modifier)
     }
 
     var selectedTab by remember { mutableIntStateOf(-1) }

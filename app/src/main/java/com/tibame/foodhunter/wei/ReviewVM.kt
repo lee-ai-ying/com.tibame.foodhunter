@@ -22,9 +22,12 @@ import kotlinx.coroutines.launch
 
 class ReviewVM : ViewModel() {
 
-    // MutableStateFlow用來監控指定資料狀態，當資料一改變即可通知對應畫面更新
+    // MutableStateFlow監控指定資料狀態，當資料一改變即可通知對應畫面更新
     // MutableStateFlow常與ViewModel搭配，可以讓UI元件在生命週期期間作出適當更新
     private val repository = ReviewRepository.getInstance()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     // 用來監控評論列表資料狀態
     private val _reviewState = MutableStateFlow<List<Reviews>>(emptyList())
@@ -51,6 +54,8 @@ class ReviewVM : ViewModel() {
     val currentReview: StateFlow<Reviews?> = _currentReview.asStateFlow()
 
 
+
+
     fun setRestaurantId(id:Int){
         loadReviews(id)  // 預設載入評論資料
     }
@@ -72,10 +77,18 @@ class ReviewVM : ViewModel() {
         sortReviews()  // 更新排序
     }
 
+
+
     /** 根據餐廳ID載入所有評論 */
     fun loadReviews(restaurantId: Int) {
         viewModelScope.launch {
+            _isLoading.update { true }   // 開始載入
             try {
+                if (restaurantId <= 0) {
+                    Log.e("ReviewVM", "Invalid restaurant ID: $restaurantId")
+                    return@launch
+                }
+                Log.d("ReviewVM", "Loading reviews for restaurant ID: $restaurantId")
                 val reviewsResponse = repository.fetchReviewByRestId(restaurantId)
                 _reviewState.value = reviewsResponse.map { review ->
                     Reviews(
@@ -101,11 +114,13 @@ class ReviewVM : ViewModel() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading reviews for restaurant $restaurantId", e)
             }
+            _isLoading.update { false }
         }
     }
 
     fun loadReviewById(reviewId: Int) {
         viewModelScope.launch {
+            _isLoading.update { true }
             try {
                 if (reviewId == null) {
                     // 處理 reviewId 為空的情況
@@ -140,7 +155,9 @@ class ReviewVM : ViewModel() {
             } catch (e: Exception) {
                 Log.e("ReviewVM", "Error loading review $reviewId", e)
                 _currentReview.value = null
+
             }
+            _isLoading.update { false }
         }
     }
 

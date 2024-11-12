@@ -74,17 +74,16 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    val reviewVM: ReviewVM = viewModel()
+    //val reviewVM: ReviewVM = viewModel()
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
     val restaurantId by reviewVM.reviewState.collectAsState()
-    LaunchedEffect(restaurant) { postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
-//    Log.d(relatedPosts, )
+    //val isLoading by reviewVM.isLoading.collectAsState()
     LaunchedEffect(restaurant) {
-        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)
-    }
+        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
+//    Log.d(relatedPosts, )
 
     // 根據餐廳 ID 載入評論
     LaunchedEffect(restaurantId) {
@@ -92,6 +91,7 @@ fun RestaurantDetail(
             reviewVM.loadReviews(restaurantId)
         }
     }
+
 
     reviewId?.let { id ->
         // 當 reviewId 不為 null 時Launch
@@ -103,6 +103,7 @@ fun RestaurantDetail(
     LaunchedEffect(reviews) {
         Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
     }
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -129,26 +130,25 @@ fun RestaurantDetail(
 
                 RestaurantInfoDetail(navController,restaurantVM)
 
-
                 RelatedPost(relatedPosts, navController)
-
 
                 HorizontalDivider(
                     modifier = Modifier,
                     thickness = 1.5.dp,
                     color = FColor.Orange_1st
                 )
-                Spacer(modifier = Modifier.size(10.dp))
+                //Spacer(modifier = Modifier.size(10.dp))
 
                 //評論顯示區
                 Text(
                     text = "評論(${reviews.size})",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = FColor.Dark_80
                 )
+
                 ReviewZone(
-                    navController = navController, reviewVM, 0, reviewId = 0
+                    navController = navController, reviewVM, 0, 0
                 )
             }
         }

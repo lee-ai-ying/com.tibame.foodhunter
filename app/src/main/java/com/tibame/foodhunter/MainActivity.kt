@@ -403,7 +403,7 @@ fun Main(
 
             composable(context.getString(R.string.reviewDetail)){
                 ReviewDetail(
-                    navController = navController, reviewVM =reviewVM
+                    navController = navController, reviewVM = reviewVM , restaurantVM = searchVM,0
                 )
             }
 
