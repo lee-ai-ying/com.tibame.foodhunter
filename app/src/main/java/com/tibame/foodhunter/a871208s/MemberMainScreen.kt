@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -58,7 +59,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MemberMainScreen(
-    navController: NavHostController = rememberNavController(),userVM: UserViewModel
+    navController: NavHostController = rememberNavController(), userVM: UserViewModel
 ) {
     val context = LocalContext.current
     val usernameState = remember { mutableStateOf("") }
@@ -85,17 +86,28 @@ fun MemberMainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         //color = ,
         modifier = Modifier
-            .fillMaxSize().background(Color.White)
-            .padding(16.dp, 32.dp).verticalScroll(rememberScrollState())
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp, 32.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Box(
             // 設定內容物對齊方式為置中對齊
             contentAlignment = Alignment.Center,
 
-            modifier = Modifier.fillMaxWidth(0.9f)
-                .background(colorResource(R.color.orange_5th))
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .background(colorResource(R.color.orange_5th), shape = RoundedCornerShape(12.dp))
+            /*
+                            .shadow(
+                                elevation = 2.dp, // 設置陰影的高度，8.dp 也可以根據需要調整
+                                shape = RoundedCornerShape(12.dp), // 使用相同的圓角形狀
+                                spotColor = Color.LightGray, // 陰影的顏色（可以根據需要調整）
+                                ambientColor = Color.LightGray, // 陰影的環境顏色
+                                clip = true // 不裁剪陰影（如果你希望陰影被裁剪，可以設置為 true）
+                            )*/
         ) {
-            Row{
+            Row {
                 Column(
                     modifier = Modifier.size(150.dp, 180.dp),
                     verticalArrangement = Arrangement.Center,
@@ -108,18 +120,18 @@ fun MemberMainScreen(
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .size(120.dp)
-                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                                .border(BorderStroke(10.dp, Color.White), CircleShape)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         // 顯示占位符圖片
                         Image(
-                            painter = painterResource(id = R.drawable.image),
+                            painter = painterResource(id = R.drawable.account_circle),
                             contentDescription = "Default Image",
                             modifier = Modifier
                                 .size(120.dp)
-                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                                .border(BorderStroke(10.dp, Color.White), CircleShape)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
@@ -133,15 +145,25 @@ fun MemberMainScreen(
                 ) {
 
                     Text(
-                        text =usernameState.value,
-                        fontSize = 20.sp,
-                        color = Color.Blue,
+                        text = "帳號",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
                     )
-                    Spacer(modifier = Modifier.size(40.dp))
+                    Text(
+                        text = usernameState.value,
+                        fontSize = 20.sp,
+                        color = Color.Black,
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(
+                        text = "暱稱",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                    )
                     Text(
                         text = nicknameState.value,
                         fontSize = 20.sp,
-                        color = Color.Blue,
+                        color = Color.Black,
                     )
                 }
             }
@@ -153,26 +175,34 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(context.getString(R.string.str_member)+"/2")}
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate(context.getString(R.string.str_member) + "/2") }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "member",
-                modifier = Modifier.size(50.dp)
-            )
-            Text(text = "會員資料",
-                fontSize = 24.sp)
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "member",
+                    modifier = Modifier.size(50.dp)
+                )
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+
+                Text(
+                    text = "會員資料",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -182,26 +212,33 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(context.getString(R.string.str_member)+"/6")}
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate(context.getString(R.string.str_member) + "/6") }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "好友管理",
-                    fontSize = 24.sp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "好友管理",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -211,55 +248,33 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(route = context.getString(R.string.str_note))}
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate(route = context.getString(R.string.str_note)) }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "我的手札",
-                    fontSize = 24.sp)
-            }
-        }
-        Spacer(modifier = Modifier.size(16.dp))
-        Box(
-            // 設定內容物對齊方式為置中對齊
-            contentAlignment = Alignment.CenterStart,
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
-            TextButton(
-                modifier = Modifier
-                    .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate("person_homepage/$currentUserId")}
-            ) {
-
-            }
-            Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "member",
-                    modifier = Modifier.size(50.dp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
                 )
-                Text(text = "我的日曆",
-                    fontSize = 24.sp)
+                Text(
+                    text = "我的手札",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -269,26 +284,70 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(12.dp),
                 onClick = {}
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "member",
+                    modifier = Modifier.size(50.dp)
+                )
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "我的日曆",
+                    fontSize = 20.sp
+                )
+            }
+        }
+        Spacer(modifier = Modifier.size(16.dp))
+        Box(
+            // 設定內容物對齊方式為置中對齊
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .size(60.dp)
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp),
+
+            ) {
+            TextButton(
+                modifier = Modifier
+                    .fillMaxSize(),
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate("person_homepage/$currentUserId") }
+            ) {
+
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.AccountBox,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "我的貼文",
-                    fontSize = 24.sp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "我的貼文",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -298,26 +357,33 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(route = context.getString(R.string.randomFood))}
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate(route = context.getString(R.string.randomFood)) }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "美食轉盤",
-                    fontSize = 24.sp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "美食轉盤",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -327,26 +393,33 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {navController.navigate(context.getString(R.string.str_member)+"/5")}
+                shape = RoundedCornerShape(12.dp),
+                onClick = { navController.navigate(context.getString(R.string.str_member) + "/5") }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "其他設定",
-                    fontSize = 24.sp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "其他設定",
+                    fontSize = 20.sp
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -356,32 +429,38 @@ fun MemberMainScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .size(60.dp)
-                .background(Color.LightGray).padding(10.dp)
-        ){
+                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .padding(10.dp)
+        ) {
             TextButton(
                 modifier = Modifier
                     .fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
-                onClick = {userVM.username.value =""
-                    navController.navigate(context.getString(R.string.str_login))}
+                shape = RoundedCornerShape(12.dp),
+                onClick = {
+                    userVM.username.value = ""
+                    navController.navigate(context.getString(R.string.str_login))
+                }
             ) {
 
             }
             Row(
-                verticalAlignment= Alignment.CenterVertically
-            ){
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.ExitToApp,
                     contentDescription = "member",
                     modifier = Modifier.size(50.dp)
                 )
-                Text(text = "登出帳號",
-                    fontSize = 24.sp)
+                Text(
+                    text = "  ",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "登出帳號",
+                    fontSize = 20.sp
+                )
             }
         }
-
-
-
 
 
     }
@@ -389,14 +468,9 @@ fun MemberMainScreen(
 }
 
 
-
-
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MemberMainScreen(rememberNavController(),viewModel())
+    MemberMainScreen(rememberNavController(), viewModel())
 
 }

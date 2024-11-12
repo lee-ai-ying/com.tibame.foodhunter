@@ -11,7 +11,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +27,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,9 +61,12 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.gson.JsonObject
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun MemberInformationScreen(navController: NavHostController = rememberNavController(),userVM: UserViewModel) {
@@ -118,7 +129,7 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
                 nicknameState.value = user.nickname
                 emailState.value = user.email
                 phoneState.value = user.phone
-                birthdayState.value = user.birthday
+                birthdayState.value = user.birthday2
                 genderState.value = user.gender
                user1?.profileImageBase64?.let { base64 ->
                    profileBitmap = userVM.decodeBase64ToBitmap(base64)
@@ -152,202 +163,237 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
         modifier = Modifier
             .fillMaxSize().verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "會員資料",
-            modifier = Modifier.padding(8.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Blue
-        )
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
-        //Spacer(modifier = Modifier.padding(2.dp))
-        Text(
-            text = "個人頭像",
-            modifier = Modifier.padding(16.dp, 8.dp),
-            fontSize = 16.sp,
-            color = Color.Blue
-        )
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(FColor.Orange_3rd)
         ) {
-            Box(
-                // 設定內容物對齊方式為置中對齊
-                contentAlignment = Alignment.Center,
-                //modifier = Modifier.fillMaxWidth()
-
-            ) {
-                if (selectedImageUri == null) {
-                    if (profileBitmap != null) {
-                        Image(
-                            bitmap = profileBitmap!!.asImageBitmap(),
-                            contentDescription = "Profile Image",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        // 顯示占位符圖片
-                        Image(
-                            painter = painterResource(id = R.drawable.image),
-                            contentDescription = "Default Image",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                } else {
-                    Image(
-                        painter = rememberAsyncImagePainter(selectedImageUri),
-                        contentDescription = "image",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                // 如果有 Base64 图片数据，则显示解码后的图片，否则显示默认图片
-
-
-                TextButton(
-                    modifier = Modifier
-                        .size(120.dp),
-                    shape = RoundedCornerShape(360.dp),
-                    onClick = {
-                        pickImageLauncher.launch(
-                            PickVisualMediaRequest(
-                                // 設定只能挑選圖片
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
-                    }
-                ){}
-
-
-            }
+            Text(
+                text = "會員資料",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
 
+        Box(
+            // 設定內容物對齊方式為置中對齊
+            contentAlignment = Alignment.Center,
 
+            modifier = Modifier.fillMaxWidth().padding(32.dp,16.dp)
+                .background(colorResource(R.color.orange_5th), shape = RoundedCornerShape(12.dp))
+
+            /*
+                            .shadow(
+                                elevation = 2.dp, // 設置陰影的高度，8.dp 也可以根據需要調整
+                                shape = RoundedCornerShape(12.dp), // 使用相同的圓角形狀
+                                spotColor = Color.LightGray, // 陰影的顏色（可以根據需要調整）
+                                ambientColor = Color.LightGray, // 陰影的環境顏色
+                                clip = true // 不裁剪陰影（如果你希望陰影被裁剪，可以設置為 true）
+                            )*/
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().size(180.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    // 設定內容物對齊方式為置中對齊
+                    modifier = Modifier
+                        .size(120.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (selectedImageUri == null) {
+                        if (profileBitmap != null) {
+                            Image(
+                                bitmap = profileBitmap!!.asImageBitmap(),
+                                contentDescription = "Profile Image",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .border(BorderStroke(10.dp, Color.White), CircleShape)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // 顯示占位符圖片
+                            Image(
+                                painter = painterResource(id = R.drawable.account_circle),
+                                contentDescription = "Default Image",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .border(BorderStroke(10.dp, Color.White), CircleShape)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    } else {
+                        Image(
+                            painter = rememberAsyncImagePainter(selectedImageUri),
+                            contentDescription = "image",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .border(BorderStroke(1.dp, Color(0xFFFF9800)), CircleShape)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // 如果有 Base64 图片数据，则显示解码后的图片，否则显示默认图片
+
+
+                    TextButton(
+                        modifier = Modifier
+                            .size(120.dp),
+                        shape = RoundedCornerShape(360.dp),
+                        onClick = {
+                            pickImageLauncher.launch(
+                                PickVisualMediaRequest(
+                                    // 設定只能挑選圖片
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
+                            )
+                        }
+                    ) {}
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.End,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = "Image",
+                            modifier = Modifier.size(20.dp, 20.dp)
+                        )
+                    }
+                }
+            }
+
+        }
 
 
 
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "帳號",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = usernameState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
-        }
 
+        }
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "暱稱",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = nicknameState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
         }
-
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "電子郵件",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = emailState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
         }
-
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "手機",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = phoneState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
         }
-
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "生日",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = birthdayState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
         }
-
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
-                .padding(16.dp, 2.dp)
+                .padding(32.dp, 2.dp)
         ) {
             Text(
                 text = "性別",
-                fontSize = 16.sp,
-                color = Color.Blue
+                fontSize = 18.sp,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.size(2.dp))
             Text(
                 text = genderState.value,
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 color = Color.Black
             )
         }
-
+        Spacer(modifier = Modifier.size(3.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(32.dp, 2.dp),color =Color.LightGray)
+        Spacer(modifier = Modifier.size(3.dp))
 
         Row(
             modifier = Modifier
@@ -359,7 +405,11 @@ fun MemberInformationScreen(navController: NavHostController = rememberNavContro
                 modifier = Modifier
                     .size(220.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_member) + "/3") }
+                onClick = { navController.navigate(context.getString(R.string.str_member) + "/3") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.orange_1st), // 背景顏色
+                    contentColor = Color.White // 文字顏色
+                )
 
             ) {
                 Text(text = "修改資料")

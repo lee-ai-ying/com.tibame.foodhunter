@@ -104,7 +104,7 @@ fun BottomFunctionBar(
             label = {
                 Text(stringResource(id = R.string.str_home))
             },
-            selected = selectScene == stringResource(id = R.string.str_home),
+            selected = selectScene == stringResource(id = R.string.str_Recommended_posts),
             onClick = {
                 onHomeClick()
             },
