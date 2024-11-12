@@ -5,11 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +31,8 @@ import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.ui.theme.FColor
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -81,6 +87,8 @@ fun CalendarScreen(
     LaunchedEffect(selectedDate, filteredItems) {
         selectedDate?.let { date ->
             dayItems = filteredItems.filter { item ->
+                Log.d("CalendarScreen", "filteredItems = empt ${filteredItems.size}")
+
                 when (item) {
                     is Note -> {
                         val calendar = Calendar.getInstance().apply {
@@ -90,6 +98,7 @@ fun CalendarScreen(
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.YEAR) == date.year
                     }
+
                     is Group -> {
                         val calendar = Calendar.getInstance().apply {
                             time = item.groupDate
@@ -98,16 +107,21 @@ fun CalendarScreen(
                                 (calendar.get(Calendar.MONTH) + 1) == date.month &&
                                 calendar.get(Calendar.YEAR) == date.year
                     }
+
                     else -> false
                 }
             }
         } ?: run {
             // 如果 selectedDate 為空，則清空 dayItems，避免不必要的計算
+            Log.d("CalendarScreen", "dayItems = empt ${dayItems.size}")
             dayItems = emptyList()
         }
-
-        Log.d("CalendarScreen", "過濾後項目數量: ${dayItems.size}")
+//        Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
+//        Log.d("CalendarScreen", "過濾後項目數量:filteredItems ${filteredItems.size}")
     }
+    Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
+    Log.d("CalendarScreen", "過濾後項目數量:filteredItems ${filteredItems.size}")
+
 
     Column {
         // 日曆部分
@@ -120,7 +134,6 @@ fun CalendarScreen(
                 } ?: false
             )
         }
-
         CalendarWidget(
             days = DateUtil.daysOfWeek,
             yearMonth = uiState.yearMonth,
@@ -133,7 +146,7 @@ fun CalendarScreen(
             onNextMonthButtonClicked = { nextMonth ->
                 calendarVM.toNextMonth(nextMonth)
             },
-            // 點擊日期時更新選擇的日期和顯示的書籍
+            // 點擊日期時更新選擇的日期和顯示的筆記或揪團
             onDateClickListener = { date ->
                 selectedDate = date ?: return@CalendarWidget // 確保 selectedDate 不為空
             },
@@ -147,11 +160,12 @@ fun CalendarScreen(
             when {
                 isLoading && filteredItems.isEmpty() -> {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
+                        color = FColor.Orange_1st
                     )
                 }
 
-                filteredItems.isEmpty() -> {
+                filteredItems.isEmpty() || dayItems.isEmpty() -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -159,9 +173,55 @@ fun CalendarScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("目前沒有資料")
+                        Column(
+                            modifier = Modifier.height(110.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+
+//                        contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier,
+                            ) {
+                                Text(text = "${stringResource(id = R.string.str_note_back_home_click)} ")
+                                Icon(
+                                    modifier = Modifier.padding(top = 1.dp),
+                                    imageVector = Icons.Outlined.AddCircleOutline,
+                                    contentDescription = stringResource(id = R.string.str_note_add)
+                                )
+                                Text(text = " ${stringResource(id = R.string.str_note_add_group)}")
+                            }
+                            Text(modifier = Modifier.padding(vertical = 3.dp),
+                                text = "或")
+
+                            Row(
+                                modifier = Modifier,
+                            ) {
+                                Text(text = "${stringResource(id = R.string.str_click)} ")
+                                Icon(
+                                    modifier = Modifier,
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = stringResource(id = R.string.str_note_add)
+                                )
+                                Text(text = " ${stringResource(id = R.string.str_note_add)}")
+                            }
+                        }
                     }
                 }
+//                dayItems.isEmpty() -> {
+//                    Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
+//                    Row(
+//                        modifier = Modifier,
+////                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text("請點擊 ")
+//                        Icon(
+//                            modifier = Modifier.fillMaxSize(),
+//                            imageVector = Icons.Outlined.Edit,
+//                            contentDescription = stringResource(id = R.string.str_note_add)
+//                        )
+//                        Text(" 新增筆記")
+//                    }
+//                }
                 // 卡片列表部分
                 else -> {
                     LazyColumn(
@@ -206,14 +266,15 @@ fun CalendarScreen(
                                         restaurantName = item.restaurantName,
                                         restaurantAddress = item.restaurantAddress,
                                         isPublic = item.isPublic,
-                                        onClick = { /**navController.navigate("GroupChatRoom/${item.groupId}")**/ },
+                                        onClick = { navController.navigate("GroupChatRoom/${item.groupId}") },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 10.dp)
                                     )
                                 }
 
-                                else -> {} // 處理其他可能的情況
+                                else -> {
+                                } // 處理其他可能的情況
                             }
                         }
                     }
