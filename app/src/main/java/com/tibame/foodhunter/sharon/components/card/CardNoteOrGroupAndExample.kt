@@ -21,7 +21,7 @@ import com.tibame.foodhunter.sharon.data.CardContentType
 @Composable
 fun CardPreview() {
     GroupCardExample()
-    NoteCardExample()
+//    NoteCardExample()
 }
 
 @Composable
@@ -35,8 +35,8 @@ fun NoteOrGroupCard(
     // Group 特有參數
     restaurantName: String? = null,
     restaurantAddress: String? = null,
-    headcount: Int? = null,
-    isPublic: Boolean? = null,
+//    headcount: Int? = null,
+    isPublic: Int = 0,
     // Note 特有參數
     content: String? = null,
     imageResId: Int? = null
@@ -77,7 +77,6 @@ fun NoteOrGroupCard(
             title = title,
             restaurantName = restaurantName,
             restaurantAddress = restaurantAddress,
-            headcount = headcount,
             isPublic = isPublic,
             content = content,
             imageResId = imageResId
@@ -93,11 +92,11 @@ fun GroupCardExample() {
         type = CardContentType.GROUP,
         date = "10/17",
         day = "星期四",
-        title = "說好的減肥呢",
+        title = "說好",
         restaurantName = "麥噹噹",
         restaurantAddress = "台北市中山區南京東路三段222號",
-        headcount = 4,
-        isPublic = true
+//        headcount = 4,
+        isPublic = 0
     )
 }
 

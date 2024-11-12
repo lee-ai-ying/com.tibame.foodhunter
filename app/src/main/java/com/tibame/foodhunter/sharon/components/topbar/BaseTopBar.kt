@@ -4,19 +4,17 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -73,7 +71,7 @@ fun BaseTopBar(
     searchQuery: String = "",
     onSearchQueryChange: (String) -> Unit = {},
     onToggleSearchVisibility: () -> Unit,
-    showFilter: Boolean,
+    hasFilter: Boolean,
     onFilter: () -> Unit = {},
 ) {
     TopAppBar(
@@ -86,8 +84,8 @@ fun BaseTopBar(
                     placeholder = { Text("搜尋", color = FColor.Gary, fontSize = 16.sp) },
                     active = isSearchVisible,
                     onActiveChange = { onToggleSearchVisibility() },
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.padding(end = if (hasFilter) 0.dp else 30.dp)
+//                        .fillMaxWidth()
                 )
             } else {
                 // 正常情況下的標題
@@ -119,14 +117,17 @@ fun BaseTopBar(
                 IconButton(onClick = onToggleSearchVisibility) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
-                if(showFilter) {
+                if(hasFilter) {
                     IconButton(onClick = onFilter) {
-                        Icon(Icons.Rounded.FilterList, contentDescription = "Filter")
+                        Icon(Icons.Rounded.FilterList,
+                            contentDescription = stringResource(id = R.string.str_filter))
                     }
+                } else {
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             } else {
                 // 搜尋狀態 > 顯示篩選時，顯示篩選按鈕
-                if (showFilter) {
+                if (hasFilter) {
                     IconButton(onClick = onFilter) {
                         Icon(
                             imageVector = Icons.Rounded.FilterList,
@@ -170,7 +171,7 @@ fun CalendarTopBar(
                 // 切換搜尋框顯示狀態
                 personalToolsVM.toggleSearchVisibility()
             },
-            showFilter = true,
+            hasFilter = true,
             onFilter = {
                 personalToolsVM.toggleFilterChipVisibility()
             }
@@ -258,7 +259,7 @@ fun NoteTopBar(
             onToggleSearchVisibility = {
                 Log.d("NoteTopBar", "切換搜尋欄位顯示")
                 personalToolsVM.toggleSearchVisibility() },
-            showFilter = false,
+            hasFilter = false,
         )
 
 //        if (isFilterChipVisible) {

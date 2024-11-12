@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +31,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.ui.theme.FoodHunterFont
+
 
 
 // 邊條顏色
@@ -119,7 +119,7 @@ fun GroupTextContent(
     title: String,
     restaurantName: String,
     restaurantAddress: String,
-    headcount: Int
+//    headcount: Int
 ) {
     Column(
         modifier = Modifier
@@ -143,15 +143,15 @@ fun GroupTextContent(
             )
             Spacer(modifier = Modifier.size(6.dp))
             // 揪團人數
-            Text(
-                text = "($headcount)",
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontFamily = Roboto,  // 使用定義的 Roboto 字體系列
-                    fontWeight = FontWeight.Normal, // 使用 SemiBold (700)
-                    color = colorResource(id = R.color.orange_1st)
-                )
-            )
+//            Text(
+//                text = "($headcount)",
+//                style = TextStyle(
+//                    fontSize = 15.sp,
+//                    fontFamily = Roboto,  // 使用定義的 Roboto 字體系列
+//                    fontWeight = FontWeight.Normal, // 使用 SemiBold (700)
+//                    color = colorResource(id = R.color.orange_1st)
+//                )
+//            )
         }
         // 餐廳名稱
         Text(
@@ -180,7 +180,7 @@ fun GroupTextContent(
 
 // 揪團是否為公開狀態
 @Composable
-fun GroupVisibilityToggle(isPublic: Boolean) {
+fun GroupVisibilityToggle(isPublic: Int) {
     Box(
         modifier = Modifier
             .wrapContentHeight()
@@ -193,12 +193,13 @@ fun GroupVisibilityToggle(isPublic: Boolean) {
                 shape = RoundedCornerShape(8.dp)
             )
             .background(
-                color = if (isPublic) colorResource(id = R.color.white) else colorResource(id = R.color.orange_6th)
+                color = if (isPublic == 1) colorResource(id = R.color.white) else colorResource(id = R.color.orange_6th)
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+
     ) {
         Text(
-            text = if (isPublic) "公開" else "私人",
+            text = if (isPublic == 1) "公開" else "私人",
             color = colorResource(id = R.color.orange_1st),
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
             style = TextStyle(

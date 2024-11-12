@@ -30,7 +30,6 @@ import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 import java.time.LocalDate
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController,
@@ -206,8 +205,8 @@ fun CalendarScreen(
                                         title = item.groupName,
                                         restaurantName = item.restaurantName,
                                         restaurantAddress = item.restaurantAddress,
-                                        isPublic = item.isPublic == 1,
-                                        onClick = {},
+                                        isPublic = item.isPublic,
+                                        onClick = { /**navController.navigate("GroupChatRoom/${item.groupId}")**/ },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 10.dp)

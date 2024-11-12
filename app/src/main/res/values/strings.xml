@@ -13,6 +13,7 @@
     <string name="str_login">登入</string>
     <string name="str_calendar">日曆</string>
     <string name="str_clear">清除</string>
+    <string name="str_filter">篩選器</string>
     <string name="str_note">手札</string>
     <string name="str_note_edit">編輯筆記</string>
     <string name="str_note_cancel_add">取消新增筆記</string>
