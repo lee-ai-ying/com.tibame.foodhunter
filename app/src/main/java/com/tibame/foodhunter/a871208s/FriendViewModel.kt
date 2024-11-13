@@ -1,7 +1,6 @@
 package com.tibame.foodhunter.a871208s
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject

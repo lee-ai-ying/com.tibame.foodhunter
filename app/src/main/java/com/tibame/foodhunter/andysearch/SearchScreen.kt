@@ -1,11 +1,14 @@
 package com.tibame.foodhunter.andysearch
 
+import android.location.Geocoder
+import android.location.Location
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,10 +29,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,7 +41,6 @@ import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
@@ -96,12 +99,21 @@ fun SearchScreen(
     }
 
     if (delayScreen) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text("載入中") },
-            text = { Text("正在準備餐廳資訊，請稍候...") },
-            confirmButton = {}
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(50.dp),
+                color = FColor.Orange_1st
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "載入中...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = FColor.Orange_1st
+            )
+        }
     } else {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -256,17 +268,11 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    Log.d("Restaurant", "$restaurants")
+    val geocoder = Geocoder(context)
+    Log.d("Restaurant", "restaurants : $restaurants")
 
-    val sortedRestaurants = restaurants.sortedBy { restaurant ->
-        currentLocation?.let { location ->
-            haversine(
-                location.latitude, location.longitude,
-                restaurant!!.latitude, restaurant.longitude
-            )
-        } ?: restaurant!!.restaurant_id.toString()
-    }
+    val sortedRestaurants = sortedByDistance(restaurants, currentLocation)
+    Log.d("Restaurant", "sorted restaurants :$sortedRestaurants")
     if (state) {
         Row(
             modifier = Modifier
@@ -283,7 +289,7 @@ fun ShowRestaurantLists(
             Spacer(modifier = Modifier.weight(0.6f))
             Button(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp)),
+                    .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp) ),
                 onClick = { navController.navigate(route = context.getString(R.string.randomFood)) },
                 colors = ButtonColors(
                     contentColor = Color.White,
@@ -299,8 +305,9 @@ fun ShowRestaurantLists(
                         .clickable {
                             navController.navigate(route = context.getString(R.string.randomFood))
                         }
-//                        .padding(start = 8.dp, end = 4.dp)
+
                 )
+                Spacer(modifier = Modifier.padding(4.dp))
                 Text(
                     text = "美食轉盤", style = TextStyle(
                         fontSize = 16.sp,
@@ -321,7 +328,7 @@ fun ShowRestaurantLists(
             items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
-                    restaurant = restaurant!!,
+                    restaurant = restaurant,
                     navController = navController,
                     currentLocation = currentLocation,
                     cardClick = null,
@@ -347,7 +354,7 @@ fun ShowRestaurantLists(
             items(sortedRestaurants) { restaurant ->
                 RestCard(
                     searchTextVM = searchTextVM,
-                    restaurant = restaurant!!,
+                    restaurant = restaurant,
                     navController = navController,
                     currentLocation = currentLocation,
                     cardClick = cardClick,
@@ -375,7 +382,7 @@ fun RestCard(
     currentLocation: LatLng?,  //傳入當前位子
     cardClick: ((Restaurant) -> Unit)?, // 對這個Card點擊要做的動作 沒有的話會到餐廳詳細的頁面
     trailingIcon: @Composable () -> Unit = {},
-    cardPadding: Dp = 8.dp
+    cardPadding: Dp = 12.dp
 ) {
     val distance = currentLocation?.let { location ->
         haversine(
@@ -386,7 +393,7 @@ fun RestCard(
     val context = LocalContext.current
     Card(modifier = Modifier
         .fillMaxWidth()
-        .padding(cardPadding)
+        .padding(vertical = 8.dp, horizontal = cardPadding)
         .shadow(elevation = 8.dp)
         .clickable {
             searchTextVM.updateChoiceOneRest(restaurant)
@@ -408,14 +415,14 @@ fun RestCard(
             },
             supportingContent = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "$distance 公里",
                         )
                         Icon(
                             painter = painterResource(R.drawable.baseline_location_pin_24),
                             contentDescription = "calculator KM",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(16.dp)
                         )
 
                         val averageScore = if (restaurant.total_review != 0) {
@@ -423,28 +430,51 @@ fun RestCard(
                         } else {
                             0.0
                         }
-                        Log.d("rating", "$restaurant, ${restaurant.total_review}, ${restaurant.total_review}")
+                        Log.d(
+                            "rating",
+                            "$restaurant, ${restaurant.total_review}, ${restaurant.total_review}"
+                        )
                         val formattedAverageScore = String.format("%.1f", averageScore)
                         val text = formattedAverageScore
                         Text(
                             text = text,
                         )
-                        Icon(
-                            painter = painterResource(R.drawable.baseline_star),
-                            contentDescription = "rating",
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center // 使兩層 Icon 居中對齊
+                        ) {
+                            // 底層的黑色描邊 Icon（比上層的 Icon 稍大）
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_star),
+                                contentDescription = "rating",
+                                modifier = Modifier.size(16.dp), // 比上層的 Icon 大一點
+                                tint = Color.Black // 黑色作為描邊
+                            )
+
+                            // 上層的黃色 Icon
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_star),
+                                contentDescription = "rating",
+                                modifier = Modifier.size(12.dp), // 內層 Icon 稍小
+                                tint = Color.Yellow // 設置 Icon 顏色為黃色
+                            )
+                        }
 
                     }
-                    Text(
-                        text = extractAddressPart(restaurant.address) ?: "",
-                        modifier = Modifier.widthIn(min = 100.dp, max = 200.dp), // 限制宽度
-                        maxLines = 1,
-                        overflow = TextOverflow.Visible
-                    )
+                    extractAddress(address = restaurant.address, regexState = 0)?.let {
+                        Text(
+                            text = it,
+                             // 限制宽度
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible
+                        )
+                    }
                 }
             },
-            leadingContent = { ImageScreen() }, // 預計放的預覽圖片
+            leadingContent = { ImageScreen(
+                restaurant.restaurant_id,
+                Modifier
+                    .size(80.dp)
+                    .clip(shape = RoundedCornerShape(12.dp))) }, // 預計放的預覽圖片
             trailingContent = {
                 Row {
                     Image(
@@ -501,11 +531,21 @@ fun RestCard(
 
 // 照片顯示 url 版
 @Composable
-fun DisplayImage(modifier: Modifier = Modifier) {
+fun DisplayImage(modifier: Modifier = Modifier, restaurantId: Int
+) {
     // 使用 Coil 的 rememberImagePainter 加载图片
+
+    val context = LocalContext.current
+    val photoUrlList = parsePhotoUrlJson(context, "prePhoto.json")
+    val photoUrl = photoUrlList.find{it.restaurant_id == restaurantId}?.photo_url
+    Log.d("photoUrl", "iiii: $photoUrlList")
+    val painter = if (photoUrl != null){
+        rememberAsyncImagePainter(photoUrl)
+    } else {
+        painterResource(R.drawable.steak_image)
+    }
     Image(
-        painter = painterResource(R.drawable.steak_image),
-//        painter = rememberAsyncImagePainter(imageUrl),
+        painter = painter,
         contentDescription = null,
         modifier = modifier,
         contentScale = ContentScale.Crop // 根据需要设置内容比例
@@ -513,8 +553,9 @@ fun DisplayImage(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageScreen() {
+fun ImageScreen(restaurantId: Int, modifier: Modifier = Modifier) {
     DisplayImage(
-        modifier = Modifier.size(80.dp, 60.dp)
+        modifier = modifier,
+        restaurantId
     )
 }

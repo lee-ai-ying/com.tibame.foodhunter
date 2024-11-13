@@ -3,16 +3,17 @@ package com.tibame.foodhunter.a871208s
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import com.tibame.foodhunter.ai_ying.GroupChatHistory
 import com.tibame.foodhunter.global.CommonPost
 import com.tibame.foodhunter.global.serverUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class PrivateViewModel : ViewModel() {
     var friend = mutableStateOf("")
@@ -50,6 +51,13 @@ class PrivateViewModel : ViewModel() {
 
     suspend fun refreshmessage(username: String,friend: String) {
         _messageState.value = messageFetch(username,friend) ?: emptyList()
+
+    }
+
+    fun refreshmessage2(username: String,friend: String) {
+        viewModelScope.launch {
+            _messageState.value = messageFetch(username, friend) ?: emptyList()
+        }
 
     }
     // 已追踪好友
@@ -91,10 +99,10 @@ class PrivateViewModel : ViewModel() {
             val jsonObject = JsonObject()
 
             // 將註冊資料轉成 JSON
+            jsonObject.addProperty("username", message_id)
             jsonObject.addProperty("message_id", message_id)
             jsonObject.addProperty("receiver_id", receiver_id)
             jsonObject.addProperty("message", message)
-
 
             // 發出 POST 請求，取得註冊結果
             val result = CommonPost(url, jsonObject.toString())

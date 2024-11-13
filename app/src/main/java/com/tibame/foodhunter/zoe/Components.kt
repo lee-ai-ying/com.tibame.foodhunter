@@ -241,31 +241,11 @@ fun ImageList(
 
 
 @Composable
-fun ImageItem(imageResId: Int, contentDescription: String) {
-    Card(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .aspectRatio(1f)  // 確保圖片是正方形的
-            .fillMaxWidth(),  // 填滿可用寬度
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Image(
-            painter = painterResource(id = imageResId),
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
-@Composable
 fun FavoriteIcon() {
-    // 使用 remember 保存按下的狀態
     var isFavorite by remember { mutableStateOf(false) }
 
-    // IconButton 包裹 Icon
     IconButton(onClick = {
-        isFavorite = !isFavorite  // 切換狀態
+        isFavorite = !isFavorite
     }) {
         Icon(
             painter = painterResource(
@@ -273,10 +253,15 @@ fun FavoriteIcon() {
                 else R.drawable.baseline_favorite_border_24
             ),
             contentDescription = if (isFavorite) "favorite" else "not_favorite",
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(22.dp),
+            // 加入 tint 參數來設定顏色
+            tint = if (isFavorite)  FColor.Orange_1st
+            else FColor.Dark_66// 未選中時為灰色
         )
     }
 }
+
+
 
 @Composable
 fun RestaurantList(
@@ -344,7 +329,7 @@ private fun RestaurantItem(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Select",
-                tint = FColor.Dark_80
+                tint = FColor.Dark_66
             )
         }
     }

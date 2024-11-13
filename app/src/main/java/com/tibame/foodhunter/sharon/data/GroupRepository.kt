@@ -56,6 +56,7 @@ class GroupRepository private constructor() {
                     Log.d(TAG, "單個群組JSON: $groupObj")
 
                     val apiResponse = GroupApiResponse(
+                        group_id = groupObj.get("group_id").asInt,
                         name = groupObj.get("name").asString,
                         restaurant_name = groupObj.get("restaurant_name")?.asString,
                         address = groupObj.get("address")?.asString,
@@ -87,6 +88,7 @@ class GroupRepository private constructor() {
      * API回應的資料結構
      */
     data class GroupApiResponse(
+        val group_id: Int,
         val name: String,
         val restaurant_name: String?,
         val address: String?,
@@ -105,6 +107,7 @@ class GroupRepository private constructor() {
         }
 
         return Group(
+            groupId = group_id,
             groupName = name,
             restaurantName = restaurant_name,
             restaurantAddress = address,

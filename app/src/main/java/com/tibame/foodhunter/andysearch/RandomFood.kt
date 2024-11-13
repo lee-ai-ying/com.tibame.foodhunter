@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,6 +59,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
@@ -99,7 +101,7 @@ fun RandomFood(
 
 
     val options by randomFoodVM.settingRandomFood.collectAsState()
-    val colors = listOf(FColor.Banana_Yellow, FColor.Orange_5th)
+    val colors = listOf(FColor.Yellow_2, FColor.Orange_5th)
     val optionsSize = options.size
 
     var showDialog by remember { mutableStateOf(false) }
@@ -131,7 +133,7 @@ fun RandomFood(
     ) {
         Button(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(16.dp).shadow(elevation = 4.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showCitySettingDialog = !showCitySettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
@@ -147,8 +149,15 @@ fun RandomFood(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
+                    .shadow(elevation = 12.dp, shape = CircleShape)
                     .rotate(animatedRotationAngle) // 旋轉動畫
             ) {
+                drawCircle(
+                    color = Color.Black, // 設定外圍圓的顏色
+                    radius = size.minDimension / 2, // 圓的半徑
+                    style = Stroke(width = 4.dp.toPx()) // 設定外圈的寬度
+                )
+
                 options.forEachIndexed { index, content ->
                     // 繪製弧形
                     drawArc(
@@ -158,6 +167,7 @@ fun RandomFood(
                         useCenter = true,
                         size = size
                     )
+
 
                     val radians = Math.toRadians(optionNumber.toDouble()) // 轉換為弧度
 
@@ -175,7 +185,7 @@ fun RandomFood(
                         color = FColor.Dark,
                         start = Offset(centerX, centerY),  // 圓心作為開始點
                         end = Offset(endX, endY),          // 計算的終點
-                        strokeWidth = 5f
+                        strokeWidth = 1f
                     )
 
                     // 繪製文字
@@ -234,7 +244,7 @@ fun RandomFood(
 
         Button(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(16.dp).shadow(elevation = 4.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showSettingDialog = !showSettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
@@ -282,25 +292,11 @@ fun CityDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
                 .background(Color.White)
                 .padding(16.dp)
         ) {
-
-            Column {
-
-                Button(
-                    onClick = { citySet = !citySet },
-                    colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
-                ) {
-                    Text(choiceCity, style = MaterialTheme.typography.bodyLarge)
-                }
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                    thickness = 2.dp,
-                    color = Color.Black
-                )
+            Spacer(modifier = Modifier.padding(16.dp))
 
 
-                if (citySet) {
-                    CityLabel(cities, randomFoodVM, onDismiss)
-                }
+            if (citySet) {
+                CityLabel(cities, randomFoodVM, onDismiss)
             }
             IconButton(
                 modifier = Modifier.align(Alignment.TopEnd),
@@ -311,7 +307,6 @@ fun CityDialog(onDismiss: () -> Unit, randomFoodVM: RandomFoodVM) {
                     contentDescription = "Close"
                 )
             }
-
         }
     }
 }

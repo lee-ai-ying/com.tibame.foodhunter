@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -74,6 +75,7 @@ import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
+import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.wei.RestaurantDetailTopAppBar
 import com.tibame.foodhunter.wei.ReviewDetail
@@ -171,7 +173,7 @@ fun Main(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var currectScene by remember { mutableStateOf(context.getString(R.string.str_Recommended_posts)) }
+    var currectScene by remember { mutableStateOf(context.getString(R.string.str_login)) }
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val locationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         rememberPermissionState(
@@ -187,8 +189,8 @@ fun Main(
             }
         }
         GroupRepository.gChatVM = gChatVM
+        GroupRepository.pChatVM = pChatVM
         gChatVM.userVM = userViewModel
-        gChatVM.getTokenSendServer()
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -227,11 +229,19 @@ fun Main(
         },
         bottomBar = {
             if (destination?.route == "GroupChatRoom/{groupId}") {
-                GroupChatRoomBottomBar(navController, gChatVM)
+                NavigationBar(
+                    containerColor = Color.White
+                ){
+                    GroupChatRoomBottomBar(navController, gChatVM)
+                }
                 return@Scaffold
             }
             if (destination?.route == "PrivateChatRoom/{roomId}") {
-                PrivateChatRoomBottomBar(pChatVM,userViewModel)
+                NavigationBar(
+                    containerColor = Color.White
+                ){
+                    PrivateChatRoomBottomBar(pChatVM, userViewModel)
+                }
                 return@Scaffold
             }
             if (checkBottomButtonShow(destination)) {
@@ -273,7 +283,10 @@ fun Main(
         ) {
 
             composable(context.getString(R.string.str_login)) {
-                LoginScreen(navController = navController, userViewModel)
+                LoginScreen(navController = navController, userViewModel){
+                    currectScene = context.getString(R.string.str_Recommended_posts)
+                    gChatVM.getTokenSendServer()
+                }
             }
             composable(context.getString(R.string.str_login) + "/2") {
                 RegisterScreen(navController = navController, userViewModel)

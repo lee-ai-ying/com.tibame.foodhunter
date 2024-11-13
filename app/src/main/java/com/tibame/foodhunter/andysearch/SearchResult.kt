@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,39 +31,43 @@ fun SearchResult(
     val selectRest by searchTextVM.selectRestList.collectAsState()
     val choiceRest by searchTextVM.choiceOneRest.collectAsState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    Box(modifier = Modifier.fillMaxSize()) {
+    var currentRestaurant by remember { mutableStateOf<List<Restaurant>>(emptyList()) }
+    LaunchedEffect(choiceRest) {
+        if (choiceRest != null) {
+            currentRestaurant = listOf(choiceRest!!)
+        }
+    }
+
+    LaunchedEffect(selectRest) {
+        currentRestaurant = selectRest
+    }
+
+    Box(modifier = Modifier.fillMaxSize()
+    ) {
         Column(modifier = Modifier.align(Alignment.TopCenter)) {
             ShowSearchBar(
                 cities = cities,
                 searchTextVM = searchTextVM,
                 navController = navController
             )
-
             ShowGoogleMap(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
-                restaurants = selectRest,
+                modifier = Modifier.padding(8.dp),
+                restaurants = currentRestaurant,
                 restaurantVM = searchTextVM,
-                onLocationUpdate = { location -> currentLocation = location })
+                onLocationUpdate = { location -> currentLocation = location }
+            )
         }
+
+
         Column(modifier = Modifier.align(Alignment.BottomCenter)) {
 
-            if (choiceRest != null) {
-                ShowRestaurantLists(
-                    restaurants = listOf(choiceRest!!),
-                    state = false,
-                    navController = navController,
-                    currentLocation = currentLocation,
-                    searchTextVM = searchTextVM
-                )
-            } else {
-                ShowRestaurantLists(
-                    restaurants = selectRest,
-                    state = false,
-                    navController = navController,
-                    currentLocation = currentLocation,
-                    searchTextVM = searchTextVM
-                )
-            }
+            ShowRestaurantLists(
+                restaurants = currentRestaurant,
+                state = false,
+                navController = navController,
+                currentLocation = currentLocation,
+                searchTextVM = searchTextVM
+            )
         }
     }
 
