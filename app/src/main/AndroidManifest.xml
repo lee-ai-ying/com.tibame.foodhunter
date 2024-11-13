@@ -16,6 +16,7 @@
         android:roundIcon="@mipmap/foodhunter"
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodHunterTheme"
+        android:largeHeap="true"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 

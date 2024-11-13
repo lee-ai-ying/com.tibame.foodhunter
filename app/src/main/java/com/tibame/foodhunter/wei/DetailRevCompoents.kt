@@ -232,12 +232,15 @@ fun DetailReviewItem(review: Reviews) {
     Row(
         modifier = Modifier
             .padding(8.dp)
-            .background(FColor.Orange_6th),
+            .background(FColor.Orange_5th),
+
+
     ) {
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
             modifier = Modifier.weight(1f)
+                .padding(10.dp)
         ) {
             Spacer(modifier = Modifier.size(8.dp))
 
@@ -370,7 +373,7 @@ fun DetailReviewItem(review: Reviews) {
                     ),
                     contentDescription = "倒讚",
                     modifier = Modifier.size(30.dp),
-                    // 加入 tint 參數來設定顏色
+                    //設定icon顏色
                     tint = if (isDisliked) FColor.Orange_1st
                     else FColor.Dark_80 // 未選中時的顏色
                 )
@@ -400,23 +403,25 @@ fun DetailReviewItem(review: Reviews) {
 /** 虛假的評論 */
 @Composable
 fun DummyReviewList(reviews: List<Reviews>) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    // 為每個評論生成隨機回覆
     val reviewsWithReplies = reviews.map { review ->
-        review.copy(replies = generateDummyReplies())  // 為每個評論生成回覆
+        review.copy(replies = generateDummyReplies())
     }
 
-    var searchQuery by remember { mutableStateOf("") }
-    val filteredReviews = remember(reviews, searchQuery) {
+    val filteredReviews = remember(reviewsWithReplies, searchQuery) {
         if (searchQuery.isEmpty()) {
-            reviews
+            reviewsWithReplies
         } else {
-            reviews.filter { review ->
+            reviewsWithReplies.filter { review ->
                 review.content.contains(searchQuery, ignoreCase = true) ||
                         review.reviewer.name.contains(searchQuery, ignoreCase = true)
             }
         }
     }
+
     Column {
-        // 搜尋欄
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -424,17 +429,9 @@ fun DummyReviewList(reviews: List<Reviews>) {
             onActiveChange = { }
         )
 
-        // 顯示過濾後的評論列表
         filteredReviews.forEach { review ->
             DetailReviewItem(review = review)
             Spacer(modifier = Modifier.size(10.dp))
-        }
-
-        Column {
-            reviewsWithReplies.forEach { review ->
-                DetailReviewItem(review = review)
-                Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
-            }
         }
     }
 }
@@ -483,9 +480,9 @@ fun ReplyItem(reply: Reply) {
 @Composable
 fun DetailRevCompoentsPreview() {
     //DummyReviewList(dummyReviewList)
-    val reviewVM = remember { ReviewVM() }
-    ReviewInfoDetail(reviewVM = reviewVM)
+//    val reviewVM = remember { ReviewVM() }
+//    ReviewInfoDetail(reviewVM = reviewVM)
 
-    //DetailReviewItem(review = longReview)
+    DetailReviewItem(review = longReview)
 
 }

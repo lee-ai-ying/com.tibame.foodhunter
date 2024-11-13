@@ -60,7 +60,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MemberMainScreen(
-    navController: NavHostController = rememberNavController(), userVM: UserViewModel, personalToolsVM: PersonalToolsVM = viewModel()
+    navController: NavHostController = rememberNavController(),
+    userVM: UserViewModel,
+    personalToolsVM: PersonalToolsVM = viewModel()
 ) {
     val context = LocalContext.current
     val usernameState = remember { mutableStateOf("") }
@@ -294,7 +296,7 @@ fun MemberMainScreen(
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
                 onClick = {//personalToolsVM.goToCalendarTab()
-                     }
+                }
             ) {
 
             }
@@ -464,7 +466,6 @@ fun MemberMainScreen(
                 )
             }
         }
-
 
     }
 
