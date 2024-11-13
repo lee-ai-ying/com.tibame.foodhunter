@@ -104,9 +104,13 @@ fun NewPost(
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var selectedCarouselItems by remember { mutableStateOf<List<CarouselItem>>(emptyList()) }
     var isEditing by remember { mutableStateOf(false) }
-    val restaurantVM: RandomFoodVM = viewModel()
-    val foodLabel by restaurantVM.foodLabel.collectAsState()
-    restaurantVM.loadFoodLabel(context)
+    // Available tags
+    val availableTags = remember {
+        listOf("早午餐", "健康餐", "韓式", "日式", "義式", "美式", "中式",  "下午茶", "甜點", "素食")
+    }
+
+
+
     LaunchedEffect(choiceRest) {
         choiceRest?.let { restaurant ->
             Log.d("LocationSelection", "更新貼文位置: restaurantId = ${restaurant.restaurant_id}, name = ${restaurant.name}")
@@ -180,7 +184,7 @@ fun NewPost(
         ) {
             when (currentSheet) {
                 NewPostSheetContent.TAGS -> TagSelectionSheet(
-                    availableTags = foodLabel["restaurant_tags"]?: emptyList(),
+                    availableTags = availableTags,
                     selectedTags = selectedTag,
                     onFilterChange = { newTag ->
                         selectedTag = newTag

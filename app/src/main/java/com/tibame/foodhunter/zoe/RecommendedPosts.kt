@@ -71,7 +71,7 @@ fun RecommendedPosts(
 
     Column {
         FilterChips(
-            filters = listOf("早午餐", "午餐", "晚餐", "韓式", "日式", "義式", "美式", "中式", "法式", "下午茶", "甜點", "素食", "清真", "高級料理", "平價餐廳", "家庭聚餐", "快餐"),
+            filters = listOf("早午餐", "健康餐", "韓式", "日式", "義式", "美式", "中式",  "下午茶", "甜點", "素食"),
             selectedFilters = selectedFilters,
             onFilterChange = { updatedFilters ->
                 postViewModel.updateFilters(updatedFilters)
