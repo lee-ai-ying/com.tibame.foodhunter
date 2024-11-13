@@ -2,7 +2,9 @@ package com.tibame.foodhunter.wei
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -38,63 +42,59 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.firebase.BuildConfig
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
-import com.tibame.foodhunter.zoe.FilterChips
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import kotlin.random.Random
+
 
 /**詳細評論內容*/
 @Composable
 fun ReviewInfoDetail(
     reviewVM: ReviewVM,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
-
 ) {
-    val review by reviewVM.reviewState.collectAsState()
-    val sortOrder by reviewVM.sortOrder.collectAsState()
-    // 控制收藏狀態(icon圖示及snackbar文字)
-    //var isBookmarked by remember { mutableStateOf(false) }
-    val options = listOf("最新發布", "最多好評", "最高評分")
-
-    // 回傳CoroutineScope物件以適用於此compose環境
-    val scope = rememberCoroutineScope()
-
-    var searchQuery by remember { mutableStateOf("") }
+    val searchKeyword by reviewVM.searchKeyWord.collectAsState()
     var isActive by remember { mutableStateOf(false) }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.height(120.dp)
-
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.height(60.dp)
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                placeholder = { Text("在評論中搜尋") },
-                onActiveChange = { isActive }
-            )
 
-            FilterChips(
-                filters = listOf("服務", "環境", "價格", "清潔"),
-                selectedFilters = listOf(""),
-                onFilterChange = { },
-            )
+            Row(modifier = Modifier)
+            {
+                SearchBar(
+                    query = searchKeyword,
+                    onQueryChange = {
+                        reviewVM.updateSearchKeyword(it)
+                    },
+                    onSearch = { isActive = false },
+                    onActiveChange = { isActive = it },
+                    placeholder = { Text("在評論中搜尋") },
+
+                    //清除按鈕
+//                trailingIcon = {
+//                    if (searchKeyword.isNotEmpty()) {
+//                        IconButton(onClick = { reviewVM.updateSearchKeyword("")}) {
+//                            Icon(
+//                                imageVector = Icons.Default.Clear,
+//                                contentDescription = "清除搜尋"
+//                            )
+//                        }
+//                    }
+//                }
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.size(10.dp))
     }
 }
 
@@ -102,7 +102,7 @@ fun ReviewInfoDetail(
 /**詳細評論顯示區*/
 @Composable
 fun DetailReviewZone(
-    navController: NavHostController,
+    navController: NavHostController?,
     viewModel: ReviewVM,
     restaurantId: Int,
     reviewId: Int? = null
@@ -113,20 +113,24 @@ fun DetailReviewZone(
             viewModel.loadReviewById(id)
         }
     }
-    val review by viewModel.reviewState.collectAsState()
-    val context = LocalContext.current
     // 收集評論狀態
     val currentReview by viewModel.currentReview.collectAsState()
-
-
+    val options = listOf("最新發布", "最多好評", "最高評分")
+    var expanded by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-        var expanded by remember { mutableStateOf(false) }
-        val options = listOf("最新發布", "最多好評", "最高評分")
+        HorizontalDivider(
+            modifier = Modifier,
+            thickness = 2.dp,
+            color = Color(0xFFFE724C)
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+
+
         // DropDownMenu開關按鈕
         Box(
             modifier = Modifier.wrapContentSize(Alignment.TopEnd)
@@ -150,9 +154,9 @@ fun DetailReviewZone(
                         onClick = {
                             // 根據選擇更新排序方式
                             when (option) {
-                                "Newest" -> viewModel.updateSortOrder(SortOrder.NEWEST)
-                                "Most Liked" -> viewModel.updateSortOrder(SortOrder.MOST_LIKED)
-                                "Highest Rating" -> viewModel.updateSortOrder(SortOrder.HIGHEST_RATING)
+                                "最新發布" -> viewModel.updateSortOrder(SortOrder.NEWEST)
+                                "最多好評" -> viewModel.updateSortOrder(SortOrder.MOST_LIKED)
+                                "最高評分" -> viewModel.updateSortOrder(SortOrder.HIGHEST_RATING)
                             }
                             expanded = false // 選擇後關閉下拉選單
                         }
@@ -160,12 +164,7 @@ fun DetailReviewZone(
                 }
             }
         }
-        HorizontalDivider(
-            modifier = Modifier,
-            thickness = 2.dp,
-            color = Color(0xFFFE724C)
-        )
-        Spacer(modifier = Modifier.size(8.dp))
+
         currentReview?.let { review ->
             DetailReviewItem(review = review)
         } ?: run {
@@ -175,10 +174,15 @@ fun DetailReviewZone(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())    // 添加垂直捲動功能
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 10.dp)
         ) {
-            // 確保從 viewModel 中載入評論，並傳遞正確的 restaurantId
-            DetailReviewList(restaurantId = restaurantId, viewModel = viewModel)
+            if (BuildConfig.DEBUG && navController == null) {
+                // 在Preview模式下使用假資料
+                DummyReviewList(dummyReviewList)
+            } else {
+                // 在實際運行時使用真實資料
+                DetailReviewList(restaurantId = restaurantId, viewModel = viewModel)
+            }
         }
     }
 }
@@ -199,11 +203,10 @@ fun DetailReviewList(restaurantId: Int, viewModel: ReviewVM) {
         review.copy(replies = generateDummyReplies())
     }
 
-
-    Column{
-        reviews.forEach { review ->
+    Column {
+        reviewsWithReplies.forEach { review -> // 使用包含回覆的評論列表
             DetailReviewItem(review)
-            Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+            Spacer(modifier = Modifier.size(10.dp))
         }
     }
 }
@@ -214,7 +217,7 @@ fun DetailReviewItem(review: Reviews) {
     var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
     var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
     var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
-    var rememberRating by remember { mutableStateOf(review.rating) }
+    var isExpanded by remember { mutableStateOf(false) }  // 控制內容展開/摺疊
     var showReplies by remember { mutableStateOf(false) }
     if (review == null) {
         Text(
@@ -226,8 +229,11 @@ fun DetailReviewItem(review: Reviews) {
         return
     }
 
-    Row {
-
+    Row(
+        modifier = Modifier
+            .padding(2.dp)
+            .background(FColor.Orange_6th),
+    ) {
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
@@ -251,13 +257,38 @@ fun DetailReviewItem(review: Reviews) {
                 onRatingChanged = { }  //顯示用，不需改變
             )
 
-            // 顯示評論內容
-            Text(
-                text = review.content,
-                fontSize = 16.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            Column {
+                if (isExpanded) {
+                    // 顯示評論內容
+                    Text(
+                        text = review.content,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(vertical = 5.dp)
+                    )
+                } else {
+                    // 最多顯示3行
+                    Text(
+                        text = review.content,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(vertical = 5.dp)
+                    )
+                }
+                // 如果內容超過3行，顯示展開/收起按鈕
+                if (review.content.lines().size > 3) {
+                    Text(
+                        text = if (isExpanded) "收起" else "...更多",
+                        color = FColor.Orange_1st,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .clickable { isExpanded = !isExpanded }
+                            .padding(vertical = 4.dp)
+                    )
+                }
+            }
 
             // 顯示評論時間
             Text(
@@ -272,6 +303,19 @@ fun DetailReviewItem(review: Reviews) {
             verticalArrangement = Arrangement.Bottom,
             modifier = Modifier.padding(top = 32.dp)
         ) {
+            // 展開/收起回覆的按鈕
+            TextButton(
+                onClick = { showReplies = !showReplies },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = FColor.Orange_1st
+                )
+            ) {
+                Text(
+                    text = if (showReplies) "收起回覆" else "顯示回覆(${review.replies.size})",
+                    fontSize = 14.sp
+                )
+            }
+
             // 按讚按鈕
             Button(
                 onClick = {
@@ -298,8 +342,10 @@ fun DetailReviewItem(review: Reviews) {
                     tint = if (isLiked) FColor.Orange_1st //
                     else FColor.Dark_80 // 未選中時的顏色
                 )
-                Text(text = " $thumbsUpCount",
-                    modifier = Modifier.padding(start = 8.dp))
+                Text(
+                    text = " $thumbsUpCount",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
 
             // 倒讚按鈕
@@ -328,21 +374,11 @@ fun DetailReviewItem(review: Reviews) {
                     tint = if (isDisliked) FColor.Orange_1st
                     else FColor.Dark_80 // 未選中時的顏色
                 )
-                Text(text = " $thumbsDownCount",
-                    modifier = Modifier.padding(start = 8.dp))
+                Text(
+                    text = " $thumbsDownCount",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
-        }
-        // 展開/收起回覆的按鈕
-        TextButton(
-            onClick = { showReplies = !showReplies },
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = FColor.Orange_1st
-            )
-        ) {
-            Text(
-                text = if (showReplies) "收起回覆" else "顯示回覆(${review.replies.size})",
-                fontSize = 14.sp
-            )
         }
     }
 
@@ -361,6 +397,47 @@ fun DetailReviewItem(review: Reviews) {
     }
 }
 
+/** 虛假的評論 */
+@Composable
+fun DummyReviewList(reviews: List<Reviews>) {
+    val reviewsWithReplies = reviews.map { review ->
+        review.copy(replies = generateDummyReplies())  // 為每個評論生成回覆
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredReviews = remember(reviews, searchQuery) {
+        if (searchQuery.isEmpty()) {
+            reviews
+        } else {
+            reviews.filter { review ->
+                review.content.contains(searchQuery, ignoreCase = true) ||
+                        review.reviewer.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+    Column {
+        // 搜尋欄
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = { Text("在評論中搜尋") },
+            onActiveChange = { }
+        )
+
+        // 顯示過濾後的評論列表
+        filteredReviews.forEach { review ->
+            DetailReviewItem(review = review)
+            Spacer(modifier = Modifier.size(10.dp))
+        }
+
+        Column {
+            reviewsWithReplies.forEach { review ->
+                DetailReviewItem(review = review)
+                Spacer(modifier = Modifier.size(10.dp)) // 每筆評論間的間距
+            }
+        }
+    }
+}
 
 
 @Composable
@@ -401,30 +478,14 @@ fun ReplyItem(reply: Reply) {
     }
 }
 
-// 假資料生成函數
-fun generateDummyReplies(): List<Reply> {
-    val replyContents = listOf(
-        "餐點真的很美味，特別是他們的招牌料理！",
-        "服務態度非常好，氣氛也很棒。",
-        "價格稍微高了一點，但是品質絕對對得起這個價位。",
-        "環境很乾淨，座位也很舒適。",
-        "等待時間有點長，但食物的品質值得等待。"
-    )
 
-    val replierNames = listOf("小明", "小華", "小菁", "小芳", "小強")
+@Preview(showBackground = true)
+@Composable
+fun DetailRevCompoentsPreview() {
+    //DummyReviewList(dummyReviewList)
+    val reviewVM = remember { ReviewVM() }
+    ReviewInfoDetail(reviewVM = reviewVM)
 
-    return List(5) { index ->
-        Reply(
-            id = index + 1,
-            replier = Replier(
-                id = index + 1,
-                name = replierNames[index],
-                avatarImage = null
-            ),
-            content = replyContents[index],
-            timestamp = LocalDateTime.now()
-                .minusDays(Random.nextLong(1, 30))
-                .format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
-        )
-    }
+    //DetailReviewItem(review = longReview)
+
 }

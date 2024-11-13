@@ -1,7 +1,9 @@
 package com.tibame.foodhunter.wei
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,8 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -70,13 +74,13 @@ fun PreviewInfoDetail() {
 /**餐廳資訊*/
 @Composable
 fun RestaurantInfoDetail(
-    //snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    //navController: NavController,
+    navController: NavController,
     restaurantVM : SearchScreenVM
 ) {
-    var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("建立揪團", "建立筆記", "建立貼文")
+
+    val context = LocalContext.current
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
 
     Row(
@@ -91,6 +95,19 @@ fun RestaurantInfoDetail(
                 Modifier
                     .size(100.dp)
                     .clip(shape = RoundedCornerShape(12.dp))
+                    .border(
+                        BorderStroke(3.dp, Brush.sweepGradient(
+                        listOf(
+                            Color(0xFFC6826F),
+                            Color(0xFFFE8160),
+                            Color(0xFFFFC529),
+                            Color(0xFFFFEFC3),
+                            Color(0xFFFFC529),
+                            Color(0xFFFE8160),
+                        )
+                    )
+                    ), RoundedCornerShape(12))
+                    .clip(RoundedCornerShape(12)),
             )
         }
 
@@ -173,35 +190,34 @@ fun RestaurantInfoDetail(
 //        Spacer(modifier = Modifier.weight(1f))
 
         /**加入收藏(擱置)*/
-
-
-        //更多功能
-//        IconButton(onClick = { expanded = !expanded }) {
-//            Icon(
-//                painter = painterResource(id = R.drawable.baseline_more_vert_24),
-//                contentDescription = "更多功能",
-//                modifier = Modifier.size(30.dp),
-//            )
-//        }
-
-//        DropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false },
+//        Column(
+//            horizontalAlignment = Alignment.End,
+//            verticalArrangement = Arrangement.Top,
+//            modifier = Modifier.weight(0.5f)
 //        ) {
-//            // 下拉選單內容由DropdownMenuItem選項元件組成
-//            options.forEach { option ->
-//                DropdownMenuItem(
-//                    text = { Text(option) },
-//                    // 點選項目後呼叫
-//                    onClick = {
-//                        // 跳到各功能
-//                        expanded = false
-//                        when (option) {
-//                            "建立揪團" -> navController.navigate("建立揪團")
-//                            "建立筆記" -> navController.navigate("手札")
-//                            "建立貼文" -> navController.navigate("發文")
-//                        }
+//
+//            //加入收藏
+//            IconButton(
+//                onClick = {
+//                    isBookmarked = !isBookmarked
+//                    val message = if (isBookmarked) {
+//                        "收藏成功"
+//                    } else {
+//                        "取消收藏"
 //                    }
+//
+//                    scope.launch {
+//                        Log.e("TAG", "showSnackBar")
+//                        snackbarHostState.showSnackbar(
+//                            message,
+//                            withDismissAction = true
+//                        )
+//                    }
+//                }) {
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    painter = painterResource(if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_border),
+//                    contentDescription = if (isBookmarked) "已收藏" else "未收藏",
 //                )
 //            }
 //        }

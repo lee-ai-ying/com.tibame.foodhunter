@@ -65,7 +65,7 @@ class ReviewVM : ViewModel() {
         _reviewState.update { reviews ->
             when (_sortOrder.value) {
                 SortOrder.NEWEST -> reviews.sortedByDescending { it.timestamp } // 根據時間排序
-                SortOrder.MOST_LIKED -> reviews.sortedByDescending { it.isLiked } // 根據讚數排序
+                SortOrder.MOST_LIKED -> reviews.sortedByDescending { it.thumbsup ?: 0 } // 根據讚數排序
                 SortOrder.HIGHEST_RATING -> reviews.sortedByDescending { it.rating } // 根據評分排序
             }
         }
@@ -176,17 +176,11 @@ class ReviewVM : ViewModel() {
         }
     }
 
-    /** 載入評論及回覆 */
-//    fun loadReviewsWithReplies(restaurantId: Int) {
-//        viewModelScope.launch {
-//            try {
-//                val reviewsWithReplies = repository.loadReviewsWithReplies(restaurantId)
-//                _reviewState.value = reviewsWithReplies
-//            } catch (e: Exception) {
-//                Log.e(TAG, "Error loading reviews and replies for restaurant $restaurantId", e)
-//            }
-//        }
-//    }
+    /** 標籤相關的狀態 */
+    private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
+    val selectedTags: StateFlow<Set<String>> = _selectedTags.asStateFlow()
+    // 保存原始評論列表
+    private val _originalReviews = MutableStateFlow<List<Reviews>>(emptyList())
 
     /** 添加一個新的評論 */
     fun addReview(item: Reviews) {
@@ -204,13 +198,19 @@ class ReviewVM : ViewModel() {
     }
 
     /** 過濾評論（根據搜尋關鍵字） */
-    private fun filterReviews() {
+     fun filterReviews() {
         val keyword = _searchKeyWord.value
         _reviewState.update { currentReviews ->
             currentReviews.filter { review ->
                 review.content.contains(keyword, ignoreCase = true)
             }
         }
+    }
+
+    /** 清空搜尋關鍵字 */
+    fun resetSearch() {
+        _searchKeyWord.update { "" }
+        filterReviews()  // 清空搜尋後重新過濾評論
     }
 
     /** 創建回覆 */
@@ -232,11 +232,6 @@ class ReviewVM : ViewModel() {
         _reviewCreateData.update { data }
     }
 
-    /** 清空搜尋關鍵字 */
-    fun resetSearch() {
-        _searchKeyWord.update { "" }
-        filterReviews()  // 清空搜尋後重新過濾評論
-    }
 }
 
 // 定義篩選條件的類型

@@ -79,36 +79,34 @@ fun ReviewZone(
 
     // 當 reviewId 不為 null 時才載入評論
     LaunchedEffect(reviewId) {
-        reviewId?.let { id ->
-            viewModel.loadReviewById(id)
+        if (reviewId != null && reviewId > 0) {
+            viewModel.loadReviewById(reviewId)
         }
     }
 
+    HorizontalDivider(
+        modifier = Modifier,
+        thickness = 1.5.dp,
+        color = Color(0xFFFE724C)
+    )
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
+            .padding(16.dp)
     ) {
-        HorizontalDivider(
-            modifier = Modifier,
-            thickness = 2.dp,
-            color = Color(0xFFFE724C)
-        )
-        Spacer(modifier = Modifier.size(8.dp))
 
         // 顯示評論內容
         currentReview?.let { review ->
             ReviewItem(review = review)
-        } ?: run {
-            // 若沒有評論資料，顯示載入中或錯誤訊息
-            //Text("載入中...")
         }
 
         Button( // 點擊後導航到 ReviewDetail頁面
             onClick = {
                 // 記得傳遞餐廳 ID 參數到詳細頁面
                 navController.navigate(context.getString(R.string.reviewDetail))
+                Log.d("ReviewDetail", "Navigate reviews for restaurantId: $restaurantId")
             },
             modifier = Modifier
                 .width(150.dp)
@@ -126,10 +124,12 @@ fun ReviewZone(
                 fontWeight = FontWeight.SemiBold
             )
         }
-        Spacer(modifier = Modifier.size(5.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
-        // 確保從 viewModel 中載入評論，並傳遞正確的 restaurantId
-        ReviewList(restaurantId = restaurantId, viewModel = viewModel)
+        // 顯示評論列表
+        if (restaurantId > 0) {
+            ReviewList(restaurantId = restaurantId, viewModel = viewModel)
+        }
     }
 }
 
