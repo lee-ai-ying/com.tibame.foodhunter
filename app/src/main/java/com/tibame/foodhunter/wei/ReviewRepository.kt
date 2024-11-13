@@ -12,17 +12,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.security.Timestamp
 
 class ReviewRepository {
 
 
-    private val _reviewList = MutableStateFlow<List<Review>>(emptyList())
-    val reviewList: StateFlow<List<Review>> = _reviewList.asStateFlow()
+    private val _reviewList = MutableStateFlow<List<Reviews>>(emptyList())
+    val reviewList: StateFlow<List<Reviews>> = _reviewList.asStateFlow()
 
     private val _replyList = MutableStateFlow<List<Reply>>(emptyList())
     val replyList: StateFlow<List<Reply>> = _replyList.asStateFlow()
 
     private val gson = Gson()
+
+    // 建立自定義的 Gson 實例來處理日期格式
+    private val gsonDate: Gson = Gson().newBuilder()
+        .setDateFormat("MMM dd, yyyy, hh:mm:ss a") //根據服務器返回的日期格式設置
+        .create()
 
     // 根據評論 ID 獲取該評論的回覆列表
     private suspend fun fetchReplies(reviewId: Int): List<ReplyResponse> {
@@ -54,48 +60,72 @@ class ReviewRepository {
     // 根據餐廳ID獲取評論列表
     suspend fun fetchReviewByRestId(restaurantId: Int): List<ReviewResponse?> {
         val url = "${serverUrl}/review/preLoadController"
-        // 加入請求前的日誌
         Log.d("ReviewRepository", "Fetching reviews for restaurant ID: $restaurantId")
         Log.d("ReviewRepository", "Request URL: $url")
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("restaurantId", restaurantId)
-        val result = CommonPost(url, jsonObject.toString())
-        // 加入接收到回應的日誌
-        Log.d("ReviewRepository", "Received response: $result")
-        val type = object : TypeToken<List<ReviewResponse>>() {}.type
+
         return try {
-            val reviews = gson.fromJson<List<ReviewResponse>>(result, type)
-            Log.d("Repository", "Parsed reviews: ${reviews?.size}")
-            reviews?.forEach {
-                Log.d("Repository", "Review: $it")
+            val result = CommonPost(url, jsonObject.toString())
+            Log.d("ReviewRepository", "Received response: $result")
+
+            if (result.isNullOrEmpty()) {
+                Log.d("ReviewRepository", "Empty response from server")
+                return emptyList()
             }
-            reviews ?: emptyList()
-            gson.fromJson(result, type)
+
+            // 使用自定義的 TypeToken 來處理日期格式
+            val type = object : TypeToken<List<ReviewResponse>>() {}.type
+            val reviews = gsonDate.fromJson<List<ReviewResponse>>(result, type)
+
+            Log.d("Repository", "Parsed reviews: ${reviews.size}")
+            reviews.forEach { review ->
+                Log.d("Repository", "Review: $review")
+            }
+
+            reviews
         } catch (e: Exception) {
             Log.e("ReviewRepository", "Error fetching reviews for restaurant $restaurantId", e)
-            emptyList() // 若發生錯誤，返回空列表
+            emptyList()
         }
+
     }
 
 
     // 根據評論ID 獲取評論的詳細資料
-    private suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {
-        val url = "${serverUrl}/review/get?reviewId=$reviewId"
-        Log.d("ReviewRepository", "Fetching reviews for review ID: $reviewId")
-        Log.d("ReviewRepository", "Request URL: $url")
-        val result = CommonPost(url, "")
+    suspend fun fetchReviewById(reviewId: Int): ReviewResponse? {
+        val url = "${serverUrl}/review/getReviewById"
 
-        return try {
-            val response = gson.fromJson(result, ApiResponse::class.java)
-            if (response.success) {
-                gson.fromJson(gson.toJson(response.data), ReviewResponse::class.java)
-            } else {
-                Log.e("ReviewRepository", "Error fetching review: ${response.message}")
+        try {
+            val jsonObject = JsonObject().apply {
+                addProperty("reviewId", reviewId)
+            }
+            val result = CommonPost(url, jsonObject.toString())
+            Log.d("ReviewRepository", "Fetching review ID: $reviewId")
+            Log.d("ReviewRepository", "Response: $result")
+
+            // 檢查回應是否為空
+            if (result.isNullOrEmpty()) {
+                Log.e("ReviewRepository", "Empty response from server")
+                return null
+            }
+            // 解析回應
+            return try {
+                val response = gson.fromJson(result, ApiResponse::class.java)
+                if (response?.success == true) {
+                    gson.fromJson(gson.toJson(response.data), ReviewResponse::class.java)
+                } else {
+                    Log.e("ReviewRepository", "Error fetching review: ${response?.message}")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("ReviewRepository", "Error parsing response", e)
                 null
             }
         } catch (e: Exception) {
-            Log.e("ReviewRepository", "Error fetching review", e)
-            null
+            Log.e("ReviewRepository", "Error fetching review by ID", e)
+            return null
         }
     }
 
@@ -191,12 +221,20 @@ class ReviewRepository {
     // 數據類別
     data class ReviewResponse(
         val reviewId: Int,
-        val content: String,
+        val reviewer: Int,         // 對應資料庫的 reviewer
+        val restaurantId: Int,
         val rating: Int,
-        val reviewTime: String,
-        val userId: Int,
-        val userNickname: String
+        val comments: String,      // 對應資料庫的評論內容
+        val reviewDate: String,
+        val thumbsUp: Int,
+        val thumbsDown: Int,
+        val priceRangeMax: Int,
+        val priceRangeMin: Int,
+        val serviceCharge: Int,
+        val reviewerNickname: String,
+        val restaurantName: String
     )
+
 
     data class ReplyResponse(
         val replyId: Int,

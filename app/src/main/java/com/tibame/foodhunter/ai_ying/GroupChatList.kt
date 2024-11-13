@@ -52,7 +52,7 @@ fun GroupChatList(
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        items(groupChats.filter { it.name.contains(searchInput) }) { groupChat ->
+        items(groupChats.filter { it.name.contains(searchInput,true) }) { groupChat ->
             if (groupChat.state == 99 && searchInput.isEmpty()) {
                 Column(
                     modifier = Modifier

@@ -1,11 +1,13 @@
 package com.tibame.foodhunter.ai_ying
 
+import com.tibame.foodhunter.a871208s.PrivateViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 object GroupRepository {
     var gChatVM: GroupViewModel? = null
+    var pChatVM: PrivateViewModel? = null
     private val _groupChatList = MutableStateFlow(emptyList<GroupChat>())
     val groupChatList = _groupChatList.asStateFlow()
     fun updateGroupChatList(input: List<GroupChat>) {

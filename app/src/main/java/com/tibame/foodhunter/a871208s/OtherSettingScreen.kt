@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.a871208s
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,63 +14,68 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.ui.theme.FColor
 
 @Composable
-fun OtherSettingScreen(navController: NavHostController = rememberNavController(),pChatVM: PrivateViewModel) {
+fun OtherSettingScreen(
+    navController: NavHostController = rememberNavController(),
+    pChatVM: PrivateViewModel
+) {
     val context = LocalContext.current
     var sw1 = pChatVM.wall.value
 
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
-            .fillMaxSize().verticalScroll(rememberScrollState())
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "其他設定",
-            modifier = Modifier.padding(8.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Blue
-        )
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
-        //Spacer(modifier = Modifier.padding(2.dp))
+        Column(
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(FColor.Orange_3rd)
+        ) {
+            Text(
+                text = "其他設定",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
 
-        Text(
-            text = "私聊",
-            modifier = Modifier.padding(8.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Blue
-        )
-        HorizontalDivider(
-            modifier = Modifier.size(500.dp, 1.dp),
-            color = Color.Blue
-        )
+        Column(
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(FColor.Orange_4th)
+        ) {
+            Text(
+                text = "私聊",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
         Row {
 
 
@@ -81,13 +87,13 @@ fun OtherSettingScreen(navController: NavHostController = rememberNavController(
 
                 Text(
                     text = "阻擋訊息",
-                    fontSize = 16.sp,
-                    color = Color.Blue
+                    fontSize = 20.sp,
+                    color = Color.Black
                 )
                 Text(
                     text = "開啟功能後可以阻擋非好友的訊息",
                     fontSize = 16.sp,
-                    color = Color.Blue
+                    color = Color.Black
                 )
                 Spacer(modifier = Modifier.size(2.dp))
 
@@ -117,21 +123,16 @@ fun OtherSettingScreen(navController: NavHostController = rememberNavController(
                 modifier = Modifier
                     .size(120.dp, 60.dp)
                     .padding(8.dp),
-                onClick = { navController.navigate(context.getString(R.string.str_member)) }
+                onClick = { navController.navigate(context.getString(R.string.str_member)) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.orange_1st), // 背景顏色
+                    contentColor = Color.White // 文字顏色
+                )
 
             ) {
                 Text(text = "確定")
             }
         }
-
-
-        val result = if (sw1) {
-            "Taiwan"
-        } else {
-            ""
-        }
-        Text(text = result, modifier = Modifier.padding(top = 32.dp))
-
 
     }
 }
@@ -167,7 +168,7 @@ fun SwitchWithText(
             // 設定顏色
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = Color.Green,
+                checkedTrackColor = colorResource(id = R.color.orange_1st),
                 uncheckedThumbColor = Color.DarkGray,
                 uncheckedTrackColor = Color.LightGray
             )

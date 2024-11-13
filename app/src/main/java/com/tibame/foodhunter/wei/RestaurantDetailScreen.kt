@@ -44,11 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
@@ -62,10 +58,12 @@ import com.tibame.foodhunter.zoe.PostViewModel
 fun RestaurantDetail(
     navController: NavHostController,
     restaurantVM: SearchScreenVM,
-    reviewVM: ReviewVM
+    reviewVM: ReviewVM,
+    reviewId: Int? = null
 
 ) {
 
+    val reviewVM: ReviewVM = viewModel()
     val context = LocalContext.current
     var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -73,7 +71,7 @@ fun RestaurantDetail(
     val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
-    val reviewVM: ReviewVM = viewModel()
+    //val reviewVM: ReviewVM = viewModel()
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
@@ -81,9 +79,10 @@ fun RestaurantDetail(
     val restaurantId by reviewVM.reviewState.collectAsState()
     LaunchedEffect(restaurant) { postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
 //    Log.d(relatedPosts, )
+    //val isLoading by reviewVM.isLoading.collectAsState()
     LaunchedEffect(restaurant) {
-        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7)
-    }
+        postVM.fetchRestRelatedPosts(restaurant?.restaurant_id ?: 7) }
+//    Log.d(relatedPosts, )
 
     // 根據餐廳 ID 載入評論
     LaunchedEffect(restaurantId) {
@@ -92,9 +91,18 @@ fun RestaurantDetail(
         }
     }
 
+
+    reviewId?.let { id ->
+        // 當 reviewId 不為 null 時Launch
+        LaunchedEffect(id) {
+            reviewVM.loadReviewById(id)
+        }
+    }
+
     LaunchedEffect(reviews) {
         Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
     }
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -107,44 +115,45 @@ fun RestaurantDetail(
         )
         Column(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(15.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
 
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(15.dp)
-            ) {
-                Spacer(modifier = Modifier)
+//            Column(
+//                modifier = Modifier.padding(12.dp),
+//                verticalArrangement = Arrangement.spacedBy(4.dp)
+//            ) {
+//                Spacer(modifier = Modifier)
 
                 RestaurantInfoDetail(restaurantVM)
 
-
                 RelatedPost(relatedPosts, navController)
 
-
                 HorizontalDivider(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxWidth(),
                     thickness = 1.5.dp,
                     color = FColor.Orange_1st
                 )
-                Spacer(modifier = Modifier.size(10.dp))
+                Spacer(modifier = Modifier.size(4.dp))
 
                 //評論顯示區
                 Text(
                     text = "評論(${reviews.size})",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    modifier = Modifier.padding(12.dp),
+                    color = FColor.Dark_80
                 )
-                ReviewZone(navController = navController, reviewVM, 0)
+
+                ReviewZone(
+                    navController = navController, reviewVM, 0, 0
+                )
             }
         }
-    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantDetailTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
@@ -155,8 +164,7 @@ fun RestaurantDetailTopAppBar(
         title = {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 12.dp), // 給右邊的叉叉留空間
+                    .fillMaxWidth() ,// 給右邊的叉叉留空間
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -187,10 +195,12 @@ fun RestaurantDetailPreview() {
     val navController = rememberNavController()
     val restaurantVM = SearchScreenVM() // 根據需要替換成模擬或預設的 ViewModel
     val reviewVM = ReviewVM()
+    val reviewId: Int
 
     RestaurantDetail(
         navController = navController,
         restaurantVM = restaurantVM,
-        reviewVM = reviewVM
+        reviewVM = reviewVM,
+        reviewId = 0
     )
 }

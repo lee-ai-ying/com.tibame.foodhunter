@@ -125,7 +125,7 @@ fun RegisterScreen(
             Text(
                 text = "建立新帳號",
                 modifier = Modifier.padding(8.dp),
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -501,17 +501,19 @@ fun MyDatePickerDialog(
     DatePickerDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            Button(
+            TextButton(
                 onClick = {
                     onConfirm(datePickerState.selectedDateMillis)
                 }
             ) {
-                Text("OK")
+                Text("確定",
+                    color = colorResource(id = R.color.orange_1st))
             }
         },
         dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(onClick = onDismiss) {
+                Text("取消",
+                    color = colorResource(id = R.color.black))
             }
         }
     ) {

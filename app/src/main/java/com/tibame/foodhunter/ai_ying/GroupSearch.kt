@@ -84,8 +84,8 @@ fun GroupSearch(
                 }
                 GroupText(text = stringResource(R.string.str_create_location))
                 GroupSingleInput(
-                    /*defaultInput = inputData.location,
-                    placeholder = {
+                    defaultInput = inputData.location,
+                    /*placeholder = {
                         Text(inputData.location)
                     },
                     trailingIcon = {

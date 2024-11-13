@@ -6,7 +6,6 @@ import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
@@ -136,6 +135,7 @@ class UserViewModel : ViewModel() {
         val profileimage: InputStream?,
         val gender: String,
         val birthday: String,
+        val birthday2: String,
         val profileImageBase64: String? = null
     )
 

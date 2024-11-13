@@ -1,7 +1,12 @@
 package com.tibame.foodhunter.a871208s
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -29,9 +35,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,7 +59,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     navController: NavHostController = rememberNavController(),
-    userVM: UserViewModel
+    userVM: UserViewModel,
+    func:()->Unit
 ) {
 
     val context = LocalContext.current
@@ -62,127 +72,149 @@ fun LoginScreen(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },  // 點擊對話框以外區域，關閉對話框
-            text = { Text(text = "帳號或密碼錯誤",
-                    color = colorResource(id = R.color.black))
-                },
+            text = {
+                Text(
+                    text = "帳號或密碼錯誤",
+                    color = colorResource(id = R.color.black)
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = { showDialog = false }  // 點擊確定按鈕，關閉對話框
                 ) {
-                    Text("確定",
-                        color = colorResource(id = R.color.orange_1st))
+                    Text(
+                        "確定",
+                        color = colorResource(id = R.color.orange_1st)
+                    )
 
                 }
             },
-                    containerColor = Color.White
+            containerColor = Color.White
         )
     }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        // 設定內容物對齊方式為置中對齊
+        contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp)
+
     ) {
-        Spacer(modifier = Modifier.size(80.dp))
-
-        Text(
-            text = stringResource(R.string.app_name),
-            fontSize = 30.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = titleFamily,
-            color = colorResource(R.color.orange_1st)
-        )
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text(text = "User ID") },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+        Image(
+            painter = painterResource(id = R.drawable.login),
+            contentDescription = "Default Image",
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
+                .fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text(text = "password") },
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "clear",
-                    modifier = Modifier.clickable {
-                        password = ""
-                    }
-                )
-            },
-            shape = RoundedCornerShape(16.dp),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            singleLine = true,
 
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        )
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.End
-
+                .fillMaxSize()
+                .padding(32.dp)
         ) {
-            TextButton(
+            Spacer(modifier = Modifier.size(120.dp))
+
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = titleFamily,
+                color = colorResource(R.color.orange_1st)
+            )
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text(text = "User ID") },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text(text = "password") },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "clear",
+                        modifier = Modifier.clickable {
+                            password = ""
+                        }
+                    )
+                },
+                shape = RoundedCornerShape(16.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
 
                 modifier = Modifier
-                    .size(90.dp, 35.dp),
-
-                onClick = { navController.navigate(context.getString(R.string.str_login) + "/3") }
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.End
 
             ) {
+                TextButton(
 
-                Text(text = "忘記密碼?")
-            }
-        }
+                    modifier = Modifier
+                        .size(90.dp, 35.dp),
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                modifier = Modifier
-                    .size(120.dp, 60.dp)
-                    .padding(8.dp),
-                colors = ButtonDefaults. buttonColors(colorResource(R.color.orange_2nd)),
-                onClick = {
+                    onClick = { navController.navigate(context.getString(R.string.str_login) + "/3") }
 
-                    coroutineScope.launch {
-                        val logged = userVM.login(username, password)
-                        if (logged) {
-                            userVM.username.value = username
-                            navController.navigate(context.getString(R.string.str_Recommended_posts))
-                        }else
-                        {showDialog=true}
-                    }
+                ) {
+
+                    Text(text = "忘記密碼?")
                 }
-            ) {
-                Text(text = "登入")
             }
-            Button(
-                modifier = Modifier
-                    .size(120.dp, 60.dp)
-                    .padding(8.dp),
-                colors = ButtonDefaults. buttonColors(colorResource(R.color.orange_2nd)),
-                onClick = { navController.navigate(context.getString(R.string.str_login) + "/2") }
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(text = "註冊")
+                Button(
+                    modifier = Modifier
+                        .size(120.dp, 60.dp)
+                        .padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(colorResource(R.color.orange_2nd)),
+                    onClick = {
+
+                        coroutineScope.launch {
+                            val logged = userVM.login(username, password)
+                            if (logged) {
+                                userVM.username.value = username
+                                navController.navigate(context.getString(R.string.str_Recommended_posts))
+                                func()
+                            } else {
+                                showDialog = true
+                            }
+                        }
+                    }
+                ) {
+                    Text(text = "登入")
+                }
+                Button(
+                    modifier = Modifier
+                        .size(120.dp, 60.dp)
+                        .padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(colorResource(R.color.orange_2nd)),
+                    onClick = { navController.navigate(context.getString(R.string.str_login) + "/2") }
+
+                ) {
+                    Text(text = "註冊")
+                }
             }
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {

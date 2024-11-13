@@ -5,15 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,10 +28,10 @@ import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
 import com.tibame.foodhunter.ui.theme.FColor
-import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController,
@@ -130,6 +126,7 @@ fun CalendarScreen(
                 } ?: false
             )
         }
+
         CalendarWidget(
             days = DateUtil.daysOfWeek,
             yearMonth = uiState.yearMonth,
@@ -170,38 +167,9 @@ fun CalendarScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier.height(110.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Row(
-                                modifier = Modifier,
-                            ) {
-                                Text(text = "${stringResource(id = R.string.str_note_back_home_click)} ")
-                                Icon(
-                                    modifier = Modifier.padding(top = 1.dp),
-                                    imageVector = Icons.Outlined.AddCircleOutline,
-                                    contentDescription = stringResource(id = R.string.str_note_add)
-                                )
-                                Text(text = " ${stringResource(id = R.string.str_note_add_group)}")
-                            }
-                            Text(modifier = Modifier.padding(vertical = 3.dp),
-                                text = "或")
-                            Row(
-                                modifier = Modifier,
-                            ) {
-                                Text(text = "${stringResource(id = R.string.str_click)} ")
-                                Icon(
-                                    modifier = Modifier,
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = stringResource(id = R.string.str_note_add)
-                                )
-                                Text(text = " ${stringResource(id = R.string.str_note_add)}")
-                            }
-                        }
+                        Text("目前沒有資料")
                     }
                 }
-//
                 // 卡片列表部分
                 else -> {
                     LazyColumn(
@@ -245,8 +213,8 @@ fun CalendarScreen(
                                         title = item.groupName,
                                         restaurantName = item.restaurantName,
                                         restaurantAddress = item.restaurantAddress,
-                                        isPublic = item.isPublic,
-                                        onClick = { navController.navigate("GroupChatRoom/${item.groupId}") },
+                                        isPublic = item.isPublic == 1,
+                                        onClick = {},
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 10.dp)

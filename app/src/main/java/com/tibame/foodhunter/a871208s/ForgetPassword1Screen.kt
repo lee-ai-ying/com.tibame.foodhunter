@@ -130,7 +130,7 @@ fun ForgetPassword1Screen(
             Text(
                 text = "忘記密碼",
                 modifier = Modifier.padding(8.dp),
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )

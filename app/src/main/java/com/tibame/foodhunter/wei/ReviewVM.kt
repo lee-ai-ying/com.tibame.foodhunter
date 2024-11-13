@@ -22,9 +22,12 @@ import kotlinx.coroutines.launch
 
 class ReviewVM : ViewModel() {
 
-    // MutableStateFlow用來監控指定資料狀態，當資料一改變即可通知對應畫面更新
+    // MutableStateFlow監控指定資料狀態，當資料一改變即可通知對應畫面更新
     // MutableStateFlow常與ViewModel搭配，可以讓UI元件在生命週期期間作出適當更新
     private val repository = ReviewRepository.getInstance()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     // 用來監控評論列表資料狀態
     private val _reviewState = MutableStateFlow<List<Reviews>>(emptyList())
@@ -45,6 +48,12 @@ class ReviewVM : ViewModel() {
     // 目前的篩選條件，預設為最新
     private val _sortOrder = MutableStateFlow(SortOrder.NEWEST)
     val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
+
+    // 新增一個 StateFlow 來保存單一評論的狀態
+    private val _currentReview = MutableStateFlow<Reviews?>(null)
+    val currentReview: StateFlow<Reviews?> = _currentReview.asStateFlow()
+
+
 
 
     fun setRestaurantId(id:Int){
@@ -68,38 +77,91 @@ class ReviewVM : ViewModel() {
         sortReviews()  // 更新排序
     }
 
+
+
     /** 根據餐廳ID載入所有評論 */
     fun loadReviews(restaurantId: Int) {
         viewModelScope.launch {
+            _isLoading.update { true }   // 開始載入
             try {
+                if (restaurantId <= 0) {
+                    Log.e("ReviewVM", "Invalid restaurant ID: $restaurantId")
+                    return@launch
+                }
+                Log.d("ReviewVM", "Loading reviews for restaurant ID: $restaurantId")
                 val reviewsResponse = repository.fetchReviewByRestId(restaurantId)
                 _reviewState.value = reviewsResponse.map { review ->
                     Reviews(
                         reviewId = review?.reviewId ?: 0,
                         reviewer = Reviewer(
-                            id = review?.userId ?: 0,
-                            name = review?.userNickname.orEmpty(),
-                            avatarImage = null,  // 若有頭像可設定
-                            followers = 0,  // 可加入追蹤者人數
-                            following = 0   // 可加入追蹤中人數
+                            id = review?.reviewer ?: 0,
+                            name = review?.reviewerNickname.orEmpty(),
                         ),
-                        restaurantId = 0,  // 假設評論的餐廳ID會在這裡填充
+                        restaurantId = review?.restaurantId ?: 0,
                         rating = review?.rating ?: 0,
-                        content = review?.content.orEmpty(),
-                        timestamp = review?.reviewTime.orEmpty(),
-                        isLiked = false,  // 可以根據需要初始化
-                        isDisliked = false,  // 可以根據需要初始化
-                        replies = emptyList(),  // 初始回覆列表為空，稍後載入
-                        maxPrice = 0,  // 假設有價格範圍
-                        minPrice = 0,  // 假設有價格範圍
-                        serviceCharge = 0  // 可以根據需求設置
+                        content = review?.comments.orEmpty(),
+                        timestamp = review?.reviewDate?.toString().orEmpty(),
+                        thumbsup = review?.thumbsUp ?: 0,
+                        thumbsdown = review?.thumbsDown ?: 0,
+                        isLiked = false,
+                        isDisliked = false,
+                        replies = emptyList(),
+                        maxPrice = review?.priceRangeMax ?: 0,
+                        minPrice = review?.priceRangeMin ?: 0,
+                        serviceCharge = review?.serviceCharge ?: 0
                     )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading reviews for restaurant $restaurantId", e)
             }
+            _isLoading.update { false }
         }
     }
+
+    fun loadReviewById(reviewId: Int) {
+        viewModelScope.launch {
+            _isLoading.update { true }
+            try {
+                if (reviewId == null) {
+                    // 處理 reviewId 為空的情況
+                    _currentReview.value = null
+                    return@launch
+                }
+                val reviewResponse = repository.fetchReviewById(reviewId)
+
+                // 將 ReviewResponse 轉換為 Reviews 物件
+                reviewResponse?.let { response ->
+                    val review = Reviews(
+                        reviewId = response.reviewId,
+                        reviewer = Reviewer(
+                            id = response.reviewer,
+                            name = response.reviewerNickname
+                        ),
+                        restaurantId = response.restaurantId,
+                        rating = response.rating,
+                        content = response.comments,
+                        timestamp = response.reviewDate.toString(),
+                        thumbsup = response.thumbsUp,
+                        thumbsdown = response.thumbsDown,
+                        isLiked = false,  // 可以根據需求設定
+                        isDisliked = false,  // 可以根據需求設定
+                        replies = emptyList(),  // 稍後可以載入回覆
+                        maxPrice = response.priceRangeMax,
+                        minPrice = response.priceRangeMin,
+                        serviceCharge = response.serviceCharge
+                    )
+                    _currentReview.value = review
+                }
+            } catch (e: Exception) {
+                Log.e("ReviewVM", "Error loading review $reviewId", e)
+                _currentReview.value = null
+
+            }
+            _isLoading.update { false }
+        }
+    }
+
+
 
     /** 根據評論ID載入該評論的回覆 */
     fun loadRepliesOfReview(reviewId: Int) {
