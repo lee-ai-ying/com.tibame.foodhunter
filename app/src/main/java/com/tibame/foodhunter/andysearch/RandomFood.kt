@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
@@ -100,7 +101,7 @@ fun RandomFood(
 
 
     val options by randomFoodVM.settingRandomFood.collectAsState()
-    val colors = listOf(FColor.Banana_Yellow, FColor.Orange_5th)
+    val colors = listOf(FColor.Yellow_2, FColor.Orange_5th)
     val optionsSize = options.size
 
     var showDialog by remember { mutableStateOf(false) }
@@ -132,7 +133,7 @@ fun RandomFood(
     ) {
         Button(
             modifier = Modifier
-                .padding(16.dp).shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp)),
+                .padding(16.dp).shadow(elevation = 4.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showCitySettingDialog = !showCitySettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {
@@ -148,8 +149,14 @@ fun RandomFood(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
+                    .shadow(elevation = 12.dp, shape = CircleShape)
                     .rotate(animatedRotationAngle) // 旋轉動畫
             ) {
+                drawCircle(
+                    color = Color.Black, // 設定外圍圓的顏色
+                    radius = size.minDimension / 2, // 圓的半徑
+                    style = Stroke(width = 4.dp.toPx()) // 設定外圈的寬度
+                )
 
                 options.forEachIndexed { index, content ->
                     // 繪製弧形
@@ -178,7 +185,7 @@ fun RandomFood(
                         color = FColor.Dark,
                         start = Offset(centerX, centerY),  // 圓心作為開始點
                         end = Offset(endX, endY),          // 計算的終點
-                        strokeWidth = 5f
+                        strokeWidth = 1f
                     )
 
                     // 繪製文字
@@ -237,7 +244,7 @@ fun RandomFood(
 
         Button(
             modifier = Modifier
-                .padding(16.dp).shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp)),
+                .padding(16.dp).shadow(elevation = 4.dp, shape = RoundedCornerShape(20.dp)),
             onClick = { showSettingDialog = !showSettingDialog },
             colors = ButtonDefaults.buttonColors(FColor.Orange_3rd)
         ) {

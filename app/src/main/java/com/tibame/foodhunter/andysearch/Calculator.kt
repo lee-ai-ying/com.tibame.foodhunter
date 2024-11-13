@@ -1,6 +1,11 @@
 package com.tibame.foodhunter.andysearch
 
+import android.location.Geocoder
+import android.location.Location
+import android.os.Build
 import android.util.Log
+import com.google.android.gms.maps.model.LatLng
+import java.io.IOException
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -14,8 +19,8 @@ import kotlin.math.sqrt
 
 fun IsOpenNow(openingHours: String): Boolean {
     val now = LocalDateTime.now()
-    val currentDay = when(now.dayOfWeek.name.lowercase(Locale.getDefault())
-    ){
+    val currentDay = when (now.dayOfWeek.name.lowercase(Locale.getDefault())
+    ) {
         "monday" -> "星期一"
         "tuesday" -> "星期二"
         "wednesday" -> "星期三"
@@ -26,14 +31,14 @@ fun IsOpenNow(openingHours: String): Boolean {
         else -> ""
     }
     val currentTime = now.toLocalTime()
-    val dayOfHoursList = openingHours.split(";").map{it.trim()}
+    val dayOfHoursList = openingHours.split(";").map { it.trim() }
 
-    for (dayHours in dayOfHoursList){
-        if (dayHours.startsWith(currentDay)){
+    for (dayHours in dayOfHoursList) {
+        if (dayHours.startsWith(currentDay)) {
             val timeRanges = dayHours.substringAfter(":").split(",").map { it.trim() }
-            for (timeRange in timeRanges){
+            for (timeRange in timeRanges) {
                 val times = timeRange.replace("–", "-").split("-").map { it.trim() }
-                if (times.size == 2 ) {
+                if (times.size == 2) {
                     val openingTime =
                         LocalTime.parse(times[0], DateTimeFormatter.ofPattern("HH:mm"))
                     var closeTime = LocalTime.parse(times[1], DateTimeFormatter.ofPattern("HH:mm"))
@@ -79,6 +84,7 @@ fun extractAddress(address: String, regexState: Int): String? {
                 Log.d("Address", "road: $road")
                 "$city, $district, $road"
             }
+
             else -> {
                 val restOfAddress = it.groupValues.getOrNull(1) ?: ""
                 Log.d("Address", "rest of address: $restOfAddress")
@@ -112,5 +118,51 @@ fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): String {
 }
 
 
+fun sortedByDistance(restaurants: List<Restaurant>, currentLocation: LatLng?): List<Restaurant> {
+    return restaurants.sortedBy { restaurant ->
+        currentLocation?.let { location ->
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                location.latitude,
+                location.longitude,
+                restaurant.latitude,
+                restaurant.longitude,
+                results
+            )
+            results[0] // 使用距離結果進行排序
+        } ?: Float.MAX_VALUE // 當 currentLocation 為 null 時，使用最大值
+    }
+}
+
+
+private fun geocode(
+    geocoder: Geocoder,
+    locationName: String,
+    onComplete: (Double, Double) -> Unit
+) {
+    /* API 33開始改呼叫getFromLocationName(String, int, Geocoder.GeocodeListener)
+        避免因等待結果而導致阻礙執行緒運行 */
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // geocode
+        geocoder.getFromLocationName(locationName, 1) { addressList ->
+            // 因為maxResults指定1所以只取第一個address
+            val latitude = addressList[0].latitude
+            val longitude = addressList[0].longitude
+            onComplete(latitude, longitude)
+        }
+    } else {
+        // 舊式寫法在API 33列為Deprecated
+        try {
+            // geocode
+            geocoder.getFromLocationName(locationName, 1)?.let { addressList ->
+                val latitude = addressList[0].latitude
+                val longitude = addressList[0].longitude
+                onComplete(latitude, longitude)
+            }
+        } catch (e: IOException) {
+            Log.e("tag_geocode", e.toString())
+        }
+    }
+}
 
 

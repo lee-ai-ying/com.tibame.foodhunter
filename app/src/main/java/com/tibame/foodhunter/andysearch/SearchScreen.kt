@@ -1,5 +1,7 @@
 package com.tibame.foodhunter.andysearch
 
+import android.location.Geocoder
+import android.location.Location
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -266,17 +268,11 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    Log.d("Restaurant", "$restaurants")
+    val geocoder = Geocoder(context)
+    Log.d("Restaurant", "restaurants : $restaurants")
 
-    val sortedRestaurants = restaurants.sortedBy { restaurant ->
-        currentLocation?.let { location ->
-            haversine(
-                location.latitude, location.longitude,
-                restaurant.latitude, restaurant.longitude
-            )
-        } ?: restaurant.restaurant_id.toString()
-    }
+    val sortedRestaurants = sortedByDistance(restaurants, currentLocation)
+    Log.d("Restaurant", "sorted restaurants :$sortedRestaurants")
     if (state) {
         Row(
             modifier = Modifier
@@ -293,7 +289,7 @@ fun ShowRestaurantLists(
             Spacer(modifier = Modifier.weight(0.6f))
             Button(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp)),
+                    .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp) ),
                 onClick = { navController.navigate(route = context.getString(R.string.randomFood)) },
                 colors = ButtonColors(
                     contentColor = Color.White,
@@ -419,14 +415,14 @@ fun RestCard(
             },
             supportingContent = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "$distance 公里",
                         )
                         Icon(
                             painter = painterResource(R.drawable.baseline_location_pin_24),
                             contentDescription = "calculator KM",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(16.dp)
                         )
 
                         val averageScore = if (restaurant.total_review != 0) {
