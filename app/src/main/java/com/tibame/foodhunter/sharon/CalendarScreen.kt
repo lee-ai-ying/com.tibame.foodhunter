@@ -27,6 +27,7 @@ import com.tibame.foodhunter.sharon.data.Note
 import com.tibame.foodhunter.sharon.util.DateUtil
 import com.tibame.foodhunter.sharon.viewmodel.BookViewModel
 import com.tibame.foodhunter.sharon.viewmodel.CalendarVM
+import com.tibame.foodhunter.ui.theme.FColor
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -57,7 +58,7 @@ fun CalendarScreen(
         }
     }
 
-// 選中日期的狀態
+    // 選中日期的狀態
     var selectedDate by remember {
         mutableStateOf<CalendarUiState.Date?>(null)
     }
@@ -82,6 +83,8 @@ fun CalendarScreen(
     LaunchedEffect(selectedDate, filteredItems) {
         selectedDate?.let { date ->
             dayItems = filteredItems.filter { item ->
+                Log.d("CalendarScreen", "filteredItems = empt ${filteredItems.size}")
+
                 when (item) {
                     is Note -> {
                         val calendar = Calendar.getInstance().apply {
@@ -104,11 +107,13 @@ fun CalendarScreen(
             }
         } ?: run {
             // 如果 selectedDate 為空，則清空 dayItems，避免不必要的計算
+            Log.d("CalendarScreen", "dayItems = empt ${dayItems.size}")
             dayItems = emptyList()
         }
-
-        Log.d("CalendarScreen", "過濾後項目數量: ${dayItems.size}")
     }
+    Log.d("CalendarScreen", "過濾後項目數量:dayItems ${dayItems.size}")
+    Log.d("CalendarScreen", "過濾後項目數量:filteredItems ${filteredItems.size}")
+
 
     Column {
         // 日曆部分
@@ -134,7 +139,7 @@ fun CalendarScreen(
             onNextMonthButtonClicked = { nextMonth ->
                 calendarVM.toNextMonth(nextMonth)
             },
-            // 點擊日期時更新選擇的日期和顯示的書籍
+            // 點擊日期時更新選擇的日期和顯示的筆記或揪團
             onDateClickListener = { date ->
                 selectedDate = date ?: return@CalendarWidget // 確保 selectedDate 不為空
             },
@@ -148,11 +153,13 @@ fun CalendarScreen(
             when {
                 isLoading && filteredItems.isEmpty() -> {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center),
+                        color = FColor.Orange_1st
                     )
                 }
-
-                filteredItems.isEmpty() -> {
+                filteredItems.isEmpty() || dayItems.isEmpty() -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()

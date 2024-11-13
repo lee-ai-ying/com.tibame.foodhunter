@@ -59,7 +59,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     navController: NavHostController = rememberNavController(),
-    userVM: UserViewModel
+    userVM: UserViewModel,
+    func:()->Unit
 ) {
 
     val context = LocalContext.current
@@ -191,6 +192,7 @@ fun LoginScreen(
                             if (logged) {
                                 userVM.username.value = username
                                 navController.navigate(context.getString(R.string.str_Recommended_posts))
+                                func()
                             } else {
                                 showDialog = true
                             }
