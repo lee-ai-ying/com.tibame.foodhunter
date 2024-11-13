@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -119,7 +117,7 @@ fun GroupTextContent(
     title: String,
     restaurantName: String,
     restaurantAddress: String,
-    headcount: Int
+//    headcount: Int = 0
 ) {
     Column(
         modifier = Modifier
@@ -143,15 +141,15 @@ fun GroupTextContent(
             )
             Spacer(modifier = Modifier.size(6.dp))
             // 揪團人數
-            Text(
-                text = "($headcount)",
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontFamily = Roboto,  // 使用定義的 Roboto 字體系列
-                    fontWeight = FontWeight.Normal, // 使用 SemiBold (700)
-                    color = colorResource(id = R.color.orange_1st)
-                )
-            )
+//            Text(
+//                text = "($headcount)",
+//                style = TextStyle(
+//                    fontSize = 15.sp,
+//                    fontFamily = Roboto,  // 使用定義的 Roboto 字體系列
+//                    fontWeight = FontWeight.Normal, // 使用 SemiBold (700)
+//                    color = colorResource(id = R.color.orange_1st)
+//                )
+//            )
         }
         // 餐廳名稱
         Text(
@@ -180,7 +178,7 @@ fun GroupTextContent(
 
 // 揪團是否為公開狀態
 @Composable
-fun GroupVisibilityToggle(isPublic: Int) {
+fun GroupVisibilityToggle(isPublic: Int?) {
     Box(
         modifier = Modifier
             .wrapContentHeight()
