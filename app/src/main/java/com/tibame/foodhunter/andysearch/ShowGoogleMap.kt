@@ -115,15 +115,15 @@ fun ShowGoogleMap(
         ) {
 
             // 定位的圖案
-            currentLocation?.let { location ->
-                Circle(
-                    center = location,
-                    radius = 2000.0,
-                    strokeColor = Color.Red,
-                    strokeWidth = 2f,
-                    fillColor = Color(0x220000FF)
-                )
-            }
+//            currentLocation?.let { location ->
+//                Circle(
+//                    center = location,
+//                    radius = 2000.0,
+//                    strokeColor = Color.Red,
+//                    strokeWidth = 2f,
+//                    fillColor = Color(0x220000FF)
+//                )
+//            }
 
             // 如果有選餐廳的話就單一標點
             if (choiceOneRest != null){
