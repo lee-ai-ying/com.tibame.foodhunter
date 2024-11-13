@@ -7,16 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,7 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.ui.theme.FColor
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewDetail(
@@ -48,8 +39,6 @@ fun ReviewDetail(
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
     val restaurantId by reviewVM.reviewState.collectAsState()
-
-
 
     // 確保從餐廳獲取正確的 ID
     LaunchedEffect(restaurant) {
@@ -67,7 +56,6 @@ fun ReviewDetail(
     LaunchedEffect(reviews) {
         Log.d("RestaurantDetail", "Current reviews count: ${reviews.size}")
     }
-
 
     Column(
         modifier = Modifier

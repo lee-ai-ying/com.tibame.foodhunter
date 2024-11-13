@@ -215,12 +215,12 @@ fun ReviewItem(review: Reviews?) {
             )
 
             // 顯示評論內容
-            Text(
-                text = review.content,
-                fontSize = 16.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+//            Text(
+//                text = review.content,
+//                fontSize = 16.sp,
+//                color = Color.Black,
+//                modifier = Modifier.padding(vertical = 8.dp)
+//            )
 
             // 顯示評論時間
             Text(
