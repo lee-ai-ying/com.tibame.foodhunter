@@ -26,8 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerColors
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -218,7 +221,7 @@ fun NoteEdit(
 
     Log.d("NoteEdit", "當前UI狀態: $uiState")  // 加入日誌
 
-// 2. 檢查是否有內容要顯示
+    // 2. 檢查是否有內容要顯示
     if (!isNewNote && uiState.title.isEmpty()) {
         Log.d("NoteEdit", "等待內容載入...")
         // 可以顯示載入指示器
@@ -285,6 +288,7 @@ fun NoteEdit(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
             ) {
+                VerticalLine()
 //                // 只在有選中餐廳時顯示 DisplayRestaurantChip
 //                if (uiState.restaurantId?.isNotEmpty() == true) {
 //                    DisplayRestaurantChip(
@@ -403,33 +407,60 @@ fun DisplayDateChip(
         label = {
             Text(text = displayFormatter.format(currentDate))
         },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = FColor.Orange_5th,
+            selectedLabelColor = FColor.Dark_80,
+            containerColor = Color.White
+        ),
         selected = true,
     )
 
     if (showDatePicker) {
         DatePickerDialog(
+            colors = DatePickerDefaults.colors(
+                containerColor = FColor.Orange_6th
+            ),
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(
+                Button(
+                    // 點擊確定按鈕時呼叫onConfirm(Long?)並將選取日期傳入以回饋給原畫面
                     onClick = {
                         datePickerState.selectedDateMillis?.let { milliseconds ->
                             val newDate = Date(milliseconds)  // 轉換成 Date
                             currentDate = newDate
                             onDateSelected(newDate)
                         }
-                        showDatePicker = false
-                    }
-                ) { Text("確認") }
+                        showDatePicker = false                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FColor.Orange_1st
+                    )
+                ) {
+                    Text("確認")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
+                Button(
+                    onClick = { showDatePicker = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FColor.Orange_5th
+                    )
+                ) {
+                    Text("取消", color = Color.Black)
                 }
             }
+
         ) {
             DatePicker(
                 state = datePickerState,
-                showModeToggle = false
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = FColor.Orange_6th,
+                    todayContentColor = FColor.Dark_80,
+                    selectedDayContainerColor = FColor.Orange_1st,
+                    disabledSelectedDayContainerColor = FColor.Orange_1st,
+                    todayDateBorderColor = FColor.Orange_1st
+                )
+
             )
         }
     }
