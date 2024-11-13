@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.ui.theme.FColor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -260,8 +261,8 @@ fun SFriendListItem(friend: Friend, onItemClick: () -> Unit,userVM: UserViewMode
                 TextButton(onClick = { coroutineScope.launch {val friendAdd = friendVM.friendAdd(userVM.username.value,friend.username)
                     if (friendAdd) {
                         // 追蹤成功後刷新好友列表
-                        friendVM.refreshFriends2(userVM.username.value)
                         friendVM.refreshFriends(userVM.username.value)
+                        friendVM.refreshFriends2(userVM.username.value)
                     }
                     // 隱藏對話框
                     showDialog = false
