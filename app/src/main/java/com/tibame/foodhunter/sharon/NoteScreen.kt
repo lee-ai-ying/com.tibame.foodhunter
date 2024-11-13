@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.a871208s.UserViewModel
 import com.tibame.foodhunter.sharon.components.card.NoteOrGroupCard
 import com.tibame.foodhunter.sharon.viewmodel.NoteVM
+import com.tibame.foodhunter.ui.theme.FColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +70,10 @@ fun NoteScreen(
             isLoading && filteredNotes.isEmpty() -> {
                 Log.d("NoteScreen", "顯示載入中狀態")
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center),
+                    color = FColor.Orange_1st
                 )
             }
             filteredNotes.isEmpty() -> {
