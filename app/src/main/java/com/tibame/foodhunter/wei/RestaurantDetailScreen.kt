@@ -68,10 +68,6 @@ fun RestaurantDetail(
 ) {
 
     val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf(context.getString(R.string.restaurantDetail)) }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val destination = navController.currentBackStackEntryAsState().value?.destination
-    val snackbarHostState = remember { SnackbarHostState() }
     // 回傳CoroutineScope物件以適用於此compose環境
     val scope = rememberCoroutineScope()
     //val reviewVM: ReviewVM = viewModel()
@@ -91,7 +87,6 @@ fun RestaurantDetail(
             reviewVM.loadReviews(restaurantId)
         }
     }
-
 
     reviewId?.let { id ->
         // 當 reviewId 不為 null 時Launch

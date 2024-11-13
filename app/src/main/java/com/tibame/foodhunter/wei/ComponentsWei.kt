@@ -75,16 +75,12 @@ fun PreviewInfoDetail() {
 /**餐廳資訊*/
 @Composable
 fun RestaurantInfoDetail(
-    //snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     navController: NavController,
     restaurantVM : SearchScreenVM
 ) {
-    var isBookmarked by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("建立揪團", "建立筆記", "建立貼文")
     // 回傳CoroutineScope物件以適用於此compose環境
-    val scope = rememberCoroutineScope()
-    // 控制收藏狀態(icon圖示及snackbar文字)
     val context = LocalContext.current
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
 

@@ -5,7 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
@@ -39,35 +43,23 @@ fun ReviewDetail(
     navController: NavHostController,
     reviewVM: ReviewVM = remember { ReviewVM() },
     restaurantVM: SearchScreenVM,
-    restaurantsId: Int,
     reviewId: Int? = null
 ) {
-
-    val restaurantsId = navController.previousBackStackEntry?.arguments?.getInt("restaurantId") ?: 0
-    val context = LocalContext.current
-    var mainSceneName by remember { mutableStateOf("評論頁面") }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val destination = navController.currentBackStackEntryAsState().value?.destination
-    val snackbarHostState = remember { SnackbarHostState() }
-    var searchQuery by remember { mutableStateOf("") }
-    var isActive by remember { mutableStateOf(false) }
-    // 回傳CoroutineScope物件以適用於此compose環境
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
     val restaurant by restaurantVM.choiceOneRest.collectAsState()
     val restaurantId by reviewVM.reviewState.collectAsState()
 
 
-    // 根據餐廳 ID 載入評論
-    LaunchedEffect(restaurantId) {
-        restaurant?.restaurant_id?.let { restaurantId ->
-            reviewVM.loadReviews(restaurantId)
+    // 確保從餐廳獲取正確的 ID
+    LaunchedEffect(restaurant) {
+        restaurant?.restaurant_id?.let { id ->
+            reviewVM.loadReviews(id)
         }
     }
-
-    reviewId?.let { id ->
-        // 當 reviewId 不為 null 時Launch
-        LaunchedEffect(id) {
-            reviewVM.loadReviewById(id)
+    // 如果有特定評論 ID，載入該評論
+    LaunchedEffect(reviewId) {
+        if (reviewId != null && reviewId != 0) {
+            reviewVM.loadReviewById(reviewId)
         }
     }
 
@@ -76,39 +68,45 @@ fun ReviewDetail(
     }
 
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.5.dp,
+            color = FColor.Orange_1st
+        )
+        LazyColumn(
             modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .weight(1f),
-            topBar = {},
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .background(Color.White)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(15.dp)
-                ) {
-                    ReviewInfoDetail(reviewVM = reviewVM)
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp)
+        ) {
+            item {
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.5.dp,
+                    color = FColor.Orange_1st
+                )
+            }
+            item {
+                ReviewInfoDetail(reviewVM = reviewVM)
 
-//                            HorizontalDivider(
-//                                modifier = Modifier,
-//                                thickness = 1.dp,
-//                                color = FColor.Orange_1st
-//                            )
 
-                    DetailReviewZone(navController = navController, reviewVM, 0, reviewId = 0)
+                DetailReviewZone(navController = navController, reviewVM, restaurantId = 1)
 
-                    HorizontalDivider(
-                        modifier = Modifier,
-                        thickness = 2.5.dp,
-                        color = FColor.Orange_1st
-                    )
-                }
+
+                // 使用假資料
+                //DummyReviewList(dummyReviewList)
+
+                HorizontalDivider(
+                    modifier = Modifier,
+                    thickness = 1.dp,
+                    color = FColor.Orange_1st
+                )
             }
         }
     }
@@ -118,8 +116,14 @@ fun ReviewDetail(
 @Preview(showBackground = true)
 @Composable
 fun ReviewDetailScreenPreview() {
-    // 提供一個模擬的 NavHostController 和 ReviewVM
-//    val navController = rememberNavController()
-//    val reviewVM = remember { ReviewVM() } // 使用模擬的 ReviewVM
-//    ReviewDetail(navController = navController, reviewVM = reviewVM)
+    val navController =
+        rememberNavController()  // 使用 rememberNavController() 來建立一個模擬的 NavController
+    val reviewVM = remember { ReviewVM() }        // 使用模擬的 ReviewVM
+    val restaurantVM = remember { SearchScreenVM() } // 使用模擬的 SearchScreenVM
+
+    ReviewDetail(
+        navController = navController,
+        reviewVM = reviewVM,
+        restaurantVM = restaurantVM,
+    )
 }

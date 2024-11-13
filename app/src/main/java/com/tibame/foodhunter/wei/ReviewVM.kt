@@ -65,7 +65,7 @@ class ReviewVM : ViewModel() {
         _reviewState.update { reviews ->
             when (_sortOrder.value) {
                 SortOrder.NEWEST -> reviews.sortedByDescending { it.timestamp } // 根據時間排序
-                SortOrder.MOST_LIKED -> reviews.sortedByDescending { it.isLiked } // 根據讚數排序
+                SortOrder.MOST_LIKED -> reviews.sortedByDescending { it.thumbsup ?: 0 } // 根據讚數排序
                 SortOrder.HIGHEST_RATING -> reviews.sortedByDescending { it.rating } // 根據評分排序
             }
         }
@@ -213,6 +213,12 @@ class ReviewVM : ViewModel() {
         }
     }
 
+    /** 清空搜尋關鍵字 */
+    fun resetSearch() {
+        _searchKeyWord.update { "" }
+        filterReviews()  // 清空搜尋後重新過濾評論
+    }
+
     /** 創建回覆 */
     fun createReply(reviewId: Int, userId: Int, content: String) {
         viewModelScope.launch {
@@ -232,11 +238,6 @@ class ReviewVM : ViewModel() {
         _reviewCreateData.update { data }
     }
 
-    /** 清空搜尋關鍵字 */
-    fun resetSearch() {
-        _searchKeyWord.update { "" }
-        filterReviews()  // 清空搜尋後重新過濾評論
-    }
 }
 
 // 定義篩選條件的類型
