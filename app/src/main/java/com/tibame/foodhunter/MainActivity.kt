@@ -75,6 +75,7 @@ import com.tibame.foodhunter.andysearch.SearchScreen
 import com.tibame.foodhunter.andysearch.SearchScreenVM
 import com.tibame.foodhunter.sharon.NoteEditNavigation
 import com.tibame.foodhunter.sharon.NoteEditRoute
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.wei.RestaurantDetailTopAppBar
@@ -170,6 +171,7 @@ fun Main(
     postViewModel: PostViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     reviewVM: ReviewVM = viewModel(),
+    personalToolsVM: PersonalToolsVM = viewModel()
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -486,10 +488,12 @@ fun Main(
                 route = "personal_tools"
             ) {
                 composable(context.getString(R.string.str_calendar)) {
-                    PersonalToolsScreen(navController, userViewModel)
+                    personalToolsVM.goToCalendarTab()
+                    PersonalToolsScreen(navController, userViewModel, personalToolsVM)
                 }
                 composable(context.getString(R.string.str_note)) {
-                    PersonalToolsScreen(navController, userViewModel)
+                    personalToolsVM.goToNoteTab()
+                    PersonalToolsScreen(navController, userViewModel, personalToolsVM)
                 }
 
                 composable("note/add") {

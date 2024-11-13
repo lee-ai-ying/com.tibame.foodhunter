@@ -44,13 +44,13 @@ import com.tibame.foodhunter.sharon.viewmodel.NoteVM
 fun PersonalToolsScreen(
     navController: NavHostController,
     userVM: UserViewModel,
+    personalToolsVM: PersonalToolsVM
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val noteVM: NoteVM = viewModel()
     val calendarVM: CalendarVM = viewModel()
 
-    val personalToolsVM: PersonalToolsVM = viewModel()
     val uiState by personalToolsVM.uiState.collectAsState()
 
 
@@ -146,10 +146,10 @@ fun TabMainScreenPreview() {
     // 使用 rememberNavController() 創建一個模擬的 NavController
     val mockNavController = rememberNavController()
     FoodHunterTheme {
-        PersonalToolsScreen(
-            navController = mockNavController,
-            userVM = UserViewModel()
-        )
+//        PersonalToolsScreen(
+//            navController = mockNavController,
+//            userVM = UserViewModel()
+//        )
     }
 }
 

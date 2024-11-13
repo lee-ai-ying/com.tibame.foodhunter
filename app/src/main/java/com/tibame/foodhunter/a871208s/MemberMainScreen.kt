@@ -256,7 +256,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = { personalToolsVM.goToNoteTab() }
+                onClick = { navController.navigate(context.getString(R.string.str_note)) }
             ) {
 
             }
@@ -292,7 +292,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = {personalToolsVM.goToCalendarTab()}
+                onClick = { navController.navigate(context.getString(R.string.str_calendar)) }
             ) {
 
             }
