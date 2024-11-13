@@ -49,11 +49,11 @@ class PersonalToolsVM: ViewModel() {
     val calendarState = this.calendarVM.uiState
 
     fun goToCalendarTab() {
-        updateSelectedTab(TabConstants.NOTE)
+        updateSelectedTab(TabConstants.CALENDAR)
     }
 
     fun goToNoteTab() {
-        updateSelectedTab(TabConstants.CALENDAR)
+        updateSelectedTab(TabConstants.NOTE)
     }
 
     /**

@@ -55,11 +55,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tibame.foodhunter.R
+import com.tibame.foodhunter.sharon.viewmodel.PersonalToolsVM
 import kotlinx.coroutines.launch
 
 @Composable
 fun MemberMainScreen(
-    navController: NavHostController = rememberNavController(), userVM: UserViewModel
+    navController: NavHostController = rememberNavController(), userVM: UserViewModel, personalToolsVM: PersonalToolsVM = viewModel()
 ) {
     val context = LocalContext.current
     val usernameState = remember { mutableStateOf("") }
@@ -255,7 +256,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = { navController.navigate(route = context.getString(R.string.str_note)) }
+                onClick = { personalToolsVM.goToNoteTab() }
             ) {
 
             }
@@ -291,7 +292,7 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = {navController.navigate(route = context.getString(R.string.str_calendar))}
+                onClick = {personalToolsVM.goToCalendarTab()}
             ) {
 
             }
