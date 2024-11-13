@@ -146,7 +146,7 @@ class PostEditorViewModel : ViewModel() {
                     resetInputData()
                     repository.loadPosts()
                 } else {
-                    val message = if (_isEditMode.value) "貼文更新失敗" else "貼文發布成功"
+                    val message = if (_isEditMode.value) "貼文更新成功" else "貼文發布成功"
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
