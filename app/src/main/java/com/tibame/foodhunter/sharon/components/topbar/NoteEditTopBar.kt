@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Delete
@@ -73,18 +75,35 @@ fun NoteEditTopBar(
         actions = {
             when {
                 uiState.isFirstEntry && !uiState.hasTitle ->
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(FColor.Orange_1st),
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.str_note_cancel_add)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 18.dp)
+                            .size(30.dp)
+                            .background(
+                                color = FColor.Orange_6th,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = { navController.popBackStack() },
+                        ) {
+                            Icon(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(FColor.Orange_6th),
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = stringResource(id = R.string.str_clear),
+                                tint = FColor.Dark_80,
+                            )
+                        }
                     }
                 // 不是首次進入、有既有筆記
                 uiState.hasTitle || uiState.isExistingNote ->
                     IconButton(
+                        modifier = Modifier
+                            .padding(end = 18.dp),
                         onClick = {
                             showDeleteDialog = true
                         }
