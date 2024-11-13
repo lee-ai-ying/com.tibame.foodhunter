@@ -105,7 +105,7 @@ class SearchScreenVM: ViewModel() {
                 // 計算平均價
                 val calPrice = (minPrice + maxPrice) / 2
                 Log.d("Price", "maxPrice: $calPrice")
-                listOf(calPrice.toInt().toString(), cityPart, otherPart, inputPart)
+                listOf(minPrice.toInt().toString(), maxPrice.toInt().toString(), cityPart, otherPart, inputPart)
                     .filter { it.isNotBlank() } // 過濾掉空白的條件
                     .joinToString(" ")
             } else {

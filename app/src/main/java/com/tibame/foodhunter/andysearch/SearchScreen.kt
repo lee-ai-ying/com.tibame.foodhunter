@@ -268,7 +268,6 @@ fun ShowRestaurantLists(
     cardClick: ((Restaurant?) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val geocoder = Geocoder(context)
     Log.d("Restaurant", "restaurants : $restaurants")
 
     val sortedRestaurants = sortedByDistance(restaurants, currentLocation)
@@ -277,8 +276,9 @@ fun ShowRestaurantLists(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Bottom
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
 
             Text(
@@ -288,8 +288,7 @@ fun ShowRestaurantLists(
 
             Spacer(modifier = Modifier.weight(0.6f))
             Button(
-                modifier = Modifier
-                    .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp) ),
+                modifier = Modifier.padding(4.dp),
                 onClick = { navController.navigate(route = context.getString(R.string.randomFood)) },
                 colors = ButtonColors(
                     contentColor = Color.White,
@@ -340,7 +339,8 @@ fun ShowRestaurantLists(
                                 searchTextVM.updateChoiceOneRest(restaurant)
                                 navController.navigate(route = context.getString(R.string.SearchToGoogleMap))
                             })
-                    }
+                    },
+                    cardPadding = 8.dp
                 )
             }
         }
@@ -394,7 +394,7 @@ fun RestCard(
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 8.dp, horizontal = cardPadding)
-        .shadow(elevation = 8.dp)
+        .shadow(elevation = 8.dp, shape = RoundedCornerShape(8.dp))
         .clickable {
             searchTextVM.updateChoiceOneRest(restaurant)
             if (cardClick != null) {
@@ -414,7 +414,7 @@ fun RestCard(
                 )
             },
             supportingContent = {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.height(100.dp).fillMaxWidth()) {
                     Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "$distance 公里",
@@ -460,14 +460,15 @@ fun RestCard(
                         }
 
                     }
+
                     extractAddress(address = restaurant.address, regexState = 0)?.let {
                         Text(
                             text = it,
-                             // 限制宽度
-                            maxLines = 1,
-                            overflow = TextOverflow.Visible
+                            modifier = Modifier.fillMaxWidth(),// 限制宽度
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
+
                 }
             },
             leadingContent = { ImageScreen(
@@ -476,7 +477,8 @@ fun RestCard(
                     .size(80.dp)
                     .clip(shape = RoundedCornerShape(12.dp))) }, // 預計放的預覽圖片
             trailingContent = {
-                Row {
+                Row (verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center){
                     Image(
                         painter = painterResource(R.drawable.googlemap),
                         contentDescription = "open google map",
