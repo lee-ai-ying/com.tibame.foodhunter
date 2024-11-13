@@ -256,7 +256,8 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = { personalToolsVM.goToNoteTab() }
+                onClick = { //personalToolsVM.goToNoteTab()
+                }
             ) {
 
             }
@@ -292,7 +293,8 @@ fun MemberMainScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = RoundedCornerShape(12.dp),
-                onClick = {personalToolsVM.goToCalendarTab()}
+                onClick = {//personalToolsVM.goToCalendarTab()
+                     }
             ) {
 
             }

@@ -231,7 +231,7 @@ fun DetailReviewItem(review: Reviews) {
 
     Row(
         modifier = Modifier
-            .padding(2.dp)
+            .padding(8.dp)
             .background(FColor.Orange_6th),
     ) {
         Column(
@@ -311,7 +311,7 @@ fun DetailReviewItem(review: Reviews) {
                 )
             ) {
                 Text(
-                    text = if (showReplies) "收起回覆" else "顯示回覆(${review.replies.size})",
+                    text = if (showReplies) "收起回覆" else "顯示回覆",//(${review.replies.size})",
                     fontSize = 14.sp
                 )
             }
