@@ -50,6 +50,7 @@ fun ReviewDetail(
     val restaurantId by reviewVM.reviewState.collectAsState()
 
 
+
     // 確保從餐廳獲取正確的 ID
     LaunchedEffect(restaurant) {
         restaurant?.restaurant_id?.let { id ->
@@ -79,35 +80,45 @@ fun ReviewDetail(
             thickness = 1.5.dp,
             color = FColor.Orange_1st
         )
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-            item {
+            //items(1) {
                 HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
                     thickness = 1.5.dp,
                     color = FColor.Orange_1st
                 )
-            }
-            item {
+            //}
+
+            //items(1) {
                 ReviewInfoDetail(reviewVM = reviewVM)
+            //}
 
-
-                DetailReviewZone(navController = navController, reviewVM, restaurantId = 1)
-
-
+            //items(1) {
+                restaurant?.restaurant_id?.let { restaurantId ->
+                    DetailReviewZone(
+                        navController = navController,
+                        viewModel = reviewVM,
+                        restaurantId = restaurantId
+                    )
+                } ?: run {}
                 // 使用假資料
                 //DummyReviewList(dummyReviewList)
+            //    }
+
+            //items(1) {
 
                 HorizontalDivider(
                     modifier = Modifier,
                     thickness = 1.dp,
                     color = FColor.Orange_1st
                 )
-            }
+            //}
+
         }
     }
 }

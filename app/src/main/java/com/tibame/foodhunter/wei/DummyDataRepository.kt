@@ -225,10 +225,51 @@ fun generateDummyReplies(): List<Reply> {
         "服務態度非常好，氣氛也很棒。",
         "價格稍微高了一點，但是品質絕對對得起這個價位。",
         "環境很乾淨，座位也很舒適。",
+        "等待時間有點長，但食物的品質值得等待。",
+        "會推薦給朋友來試試！",
+        "讚哦~",
+        "在我家附近，改天來試試!",
+        "上次去等超久。",
+        "假日建議訂位",
+        "上餐速度很快!"
+    )
+
+    val replierNames = listOf("A咪", "B冷", "C咪", "A冷", "B咪", "G咪", "哈哈", "煞氣卍小鬼")
+
+    // 生成1-9條隨機回覆
+    val numberOfReplies = Random.nextInt(1, 10)
+
+    // 建立足夠大的索引範圍來對應內容列表
+    val contentIndices = (replyContents.indices).shuffled().take(numberOfReplies)
+    val nameIndices = (replierNames.indices).shuffled().take(numberOfReplies)
+
+    return contentIndices.mapIndexed { index, contentIndex ->
+        Reply(
+            id = index + 1,
+            replier = Replier(
+                id = index + 1,
+                name = replierNames[nameIndices[index % replierNames.size]], // 使用模運算確保不會超出範圍
+                avatarImage = null
+            ),
+            content = replyContents[contentIndex],
+            timestamp = LocalDateTime.now()
+                .minusDays(Random.nextLong(1, 30))
+                .format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
+        )
+    }
+}
+
+
+fun generateDummyRepliess(): List<Reply> {
+    val replyContents = listOf(
+        "餐點真的很美味，特別是他們的招牌料理！",
+        "服務態度非常好，氣氛也很棒。",
+        "價格稍微高了一點，但是品質絕對對得起這個價位。",
+        "環境很乾淨，座位也很舒適。",
         "等待時間有點長，但食物的品質值得等待。"
     )
 
-    val replierNames = listOf("A咪", "B冷", "C咪", "A冷", "B咪")
+    val replierNames = listOf("G咪", "B冷", "C咪", "A冷", "B咪")
 
     return List(5) { index ->
         Reply(

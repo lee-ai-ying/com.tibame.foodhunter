@@ -1,7 +1,9 @@
 package com.tibame.foodhunter.wei
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
@@ -92,6 +95,19 @@ fun RestaurantInfoDetail(
                 Modifier
                     .size(100.dp)
                     .clip(shape = RoundedCornerShape(12.dp))
+                    .border(
+                        BorderStroke(3.dp, Brush.sweepGradient(
+                        listOf(
+                            Color(0xFFC6826F),
+                            Color(0xFFFE8160),
+                            Color(0xFFFFC529),
+                            Color(0xFFFFEFC3),
+                            Color(0xFFFFC529),
+                            Color(0xFFFE8160),
+                        )
+                    )
+                    ), RoundedCornerShape(12))
+                    .clip(RoundedCornerShape(12)),
             )
         }
 
