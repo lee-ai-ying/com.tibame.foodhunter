@@ -64,9 +64,6 @@ fun RestaurantDetail(
 ) {
 
     val reviewVM: ReviewVM = viewModel()
-    val context = LocalContext.current
-    // 回傳CoroutineScope物件以適用於此compose環境
-    val scope = rememberCoroutineScope()
     val postVM: PostViewModel = viewModel()
     val relatedPosts by postVM.restRelatedPosts.collectAsState()
     val reviews by reviewVM.reviewState.collectAsState()  // 收集評論列表狀態
@@ -117,11 +114,6 @@ fun RestaurantDetail(
             verticalArrangement = Arrangement.spacedBy(12.dp)
 
         ) {
-//            Column(
-//                modifier = Modifier.padding(12.dp),
-//                verticalArrangement = Arrangement.spacedBy(4.dp)
-//            ) {
-//                Spacer(modifier = Modifier)
 
             RestaurantInfoDetail(navController, restaurantVM)
 

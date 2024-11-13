@@ -64,8 +64,8 @@ fun LoginScreen(
 ) {
 
     val context = LocalContext.current
-    var username by remember { mutableStateOf("000001") }
-    var password by remember { mutableStateOf("000001") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
 

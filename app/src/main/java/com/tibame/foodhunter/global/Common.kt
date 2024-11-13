@@ -7,7 +7,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-const val serverUrl = "http://10.2.16.225:8080/com.tibame.foodhunter_server"
+const val serverUrl = "http://10.2.17.40:8080/com.tibame.foodhunter_server"
 suspend fun CommonPost(
     url:String,
     dataOut: String
