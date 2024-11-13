@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -217,8 +218,11 @@ fun DetailReviewItem(review: Reviews) {
     var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
     var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
     var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
+    // 用來獲取 TextLayoutResult 的狀態
+    var textLayoutResult: TextLayoutResult? by remember { mutableStateOf(null) }
     var isExpanded by remember { mutableStateOf(false) }  // 控制內容展開/摺疊
     var showReplies by remember { mutableStateOf(false) }
+
     if (review == null) {
         Text(
             text = "目前尚無評論",
@@ -229,158 +233,165 @@ fun DetailReviewItem(review: Reviews) {
         return
     }
 
-    Row(
+    Column(
         modifier = Modifier
-            .padding(8.dp)
-            .background(FColor.Orange_5th),
-
-
+            .fillMaxWidth()
+            .background(FColor.Orange_5th)
     ) {
-        Column(
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier.weight(1f)
-                .padding(10.dp)
-        ) {
-            Spacer(modifier = Modifier.size(8.dp))
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .background(FColor.Orange_5th),
 
-            // 顯示評論者名稱
-            Text(
-                text = review.reviewer.name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = FColor.Dark_80
-            )
 
-            Spacer(modifier = Modifier.size(5.dp))
+            ) {
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier.weight(1f)
+                    .padding(10.dp)
+            ) {
+                Spacer(modifier = Modifier.size(8.dp))
 
-            // 顯示評分
-            RatingBar(
-                rating = review.rating,
-                onRatingChanged = { }  //顯示用，不需改變
-            )
+                // 顯示評論者名稱
+                Text(
+                    text = review.reviewer.name,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = FColor.Dark_80
+                )
 
-            Column {
-                if (isExpanded) {
-                    // 顯示評論內容
-                    Text(
-                        text = review.content,
-                        fontSize = 16.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(vertical = 5.dp)
+                Spacer(modifier = Modifier.size(5.dp))
+
+                // 顯示評分
+                RatingBar(
+                    rating = review.rating,
+                    onRatingChanged = { }  //顯示用，不需改變
+                )
+
+                Column {
+                    if (isExpanded) {
+                        // 顯示評論內容
+                        Text(
+                            text = review.content,
+                            fontSize = 16.sp,
+                            color = FColor.Dark_80,
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        )
+                    } else {
+                        // 最多顯示3行
+                        Text(
+                            text = review.content,
+                            fontSize = 16.sp,
+                            color = FColor.Dark_80,
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(vertical = 5.dp),
+                            onTextLayout = { textLayoutResult = it }
+                        )
+                    }
+                    // 如果內容超過3行，顯示展開/收起按鈕
+                    if (textLayoutResult?.hasVisualOverflow == true || isExpanded) {
+                        Text(
+                            text = if (isExpanded) "收起" else "...更多",
+                            color = FColor.Orange_1st,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .clickable { isExpanded = !isExpanded }
+                                .padding(vertical = 4.dp)
+                        )
+                    }
+                }
+
+                // 顯示評論時間
+                Text(
+                    text = review.timestamp,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier.padding(top = 32.dp)
+            ) {
+                // 展開/收起回覆的按鈕
+                TextButton(
+                    onClick = { showReplies = !showReplies },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = FColor.Orange_1st
                     )
-                } else {
-                    // 最多顯示3行
+                ) {
                     Text(
-                        text = review.content,
-                        fontSize = 16.sp,
-                        color = Color.Black,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(vertical = 5.dp)
+                        text = if (showReplies) "收起回覆" else "顯示回覆",//(${review.replies.size})",
+                        fontSize = 14.sp
                     )
                 }
-                // 如果內容超過3行，顯示展開/收起按鈕
-                if (review.content.lines().size > 3) {
+
+                // 按讚按鈕
+                Button(
+                    onClick = {
+                        isLiked = !isLiked
+                        thumbsUpCount += if (isLiked) 1 else -1
+                        if (isDisliked) {
+                            isDisliked = false
+                            thumbsDownCount--
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (isLiked) R.drawable.baseline_thumb_up_filled
+                            else R.drawable.baseline_thumb_up
+                        ),
+                        contentDescription = "讚",
+                        modifier = Modifier.size(30.dp),
+                        // 加入 tint 參數來設定顏色
+                        tint = if (isLiked) FColor.Orange_1st //
+                        else FColor.Dark_80 // 未選中時的顏色
+                    )
                     Text(
-                        text = if (isExpanded) "收起" else "...更多",
-                        color = FColor.Orange_1st,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .clickable { isExpanded = !isExpanded }
-                            .padding(vertical = 4.dp)
+                        text = " $thumbsUpCount",
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
-            }
 
-            // 顯示評論時間
-            Text(
-                text = review.timestamp,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        }
-
-        Column(
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier.padding(top = 32.dp)
-        ) {
-            // 展開/收起回覆的按鈕
-            TextButton(
-                onClick = { showReplies = !showReplies },
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = FColor.Orange_1st
-                )
-            ) {
-                Text(
-                    text = if (showReplies) "收起回覆" else "顯示回覆",//(${review.replies.size})",
-                    fontSize = 14.sp
-                )
-            }
-
-            // 按讚按鈕
-            Button(
-                onClick = {
-                    isLiked = !isLiked
-                    thumbsUpCount += if (isLiked) 1 else -1
-                    if (isDisliked) {
-                        isDisliked = false
-                        thumbsDownCount--
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                )
-            ) {
-                Icon(
-                    painter = painterResource(
-                        id = if (isLiked) R.drawable.baseline_thumb_up_filled
-                        else R.drawable.baseline_thumb_up
-                    ),
-                    contentDescription = "讚",
-                    modifier = Modifier.size(30.dp),
-                    // 加入 tint 參數來設定顏色
-                    tint = if (isLiked) FColor.Orange_1st //
-                    else FColor.Dark_80 // 未選中時的顏色
-                )
-                Text(
-                    text = " $thumbsUpCount",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            // 倒讚按鈕
-            Button(
-                onClick = {
-                    isDisliked = !isDisliked
-                    thumbsDownCount += if (isDisliked) 1 else -1
-                    if (isLiked) {
-                        isLiked = false
-                        thumbsUpCount--
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                )
-            ) {
-                Icon(
-                    painter = painterResource(
-                        id = if (isDisliked) R.drawable.baseline_thumb_down_filled
-                        else R.drawable.baseline_thumb_down
-                    ),
-                    contentDescription = "倒讚",
-                    modifier = Modifier.size(30.dp),
-                    //設定icon顏色
-                    tint = if (isDisliked) FColor.Orange_1st
-                    else FColor.Dark_80 // 未選中時的顏色
-                )
-                Text(
-                    text = " $thumbsDownCount",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                // 倒讚按鈕
+                Button(
+                    onClick = {
+                        isDisliked = !isDisliked
+                        thumbsDownCount += if (isDisliked) 1 else -1
+                        if (isLiked) {
+                            isLiked = false
+                            thumbsUpCount--
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (isDisliked) R.drawable.baseline_thumb_down_filled
+                            else R.drawable.baseline_thumb_down
+                        ),
+                        contentDescription = "倒讚",
+                        modifier = Modifier.size(30.dp),
+                        //設定icon顏色
+                        tint = if (isDisliked) FColor.Orange_1st
+                        else FColor.Dark_80 // 未選中時的顏色
+                    )
+                    Text(
+                        text = " $thumbsDownCount",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }
@@ -399,6 +410,7 @@ fun DetailReviewItem(review: Reviews) {
         }
     }
 }
+
 
 /** 虛假的評論 */
 @Composable
