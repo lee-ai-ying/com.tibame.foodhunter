@@ -180,7 +180,7 @@ fun GroupTextContent(
 
 // 揪團是否為公開狀態
 @Composable
-fun GroupVisibilityToggle(isPublic: Boolean) {
+fun GroupVisibilityToggle(isPublic: Int) {
     Box(
         modifier = Modifier
             .wrapContentHeight()
@@ -193,12 +193,12 @@ fun GroupVisibilityToggle(isPublic: Boolean) {
                 shape = RoundedCornerShape(8.dp)
             )
             .background(
-                color = if (isPublic) colorResource(id = R.color.white) else colorResource(id = R.color.orange_6th)
+                color = if (isPublic == 1) colorResource(id = R.color.white) else colorResource(id = R.color.orange_6th)
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = if (isPublic) "公開" else "私人",
+            text = if (isPublic == 1) "公開" else "私人",
             color = colorResource(id = R.color.orange_1st),
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
             style = TextStyle(

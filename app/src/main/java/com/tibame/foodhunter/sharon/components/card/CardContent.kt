@@ -21,7 +21,7 @@ fun CardContent(
     restaurantName: String? = null,
     restaurantAddress: String? = null,
     headcount: Int? = null,
-    isPublic: Boolean? = null,
+    isPublic: Int? = null,
     // Note 特有參數
     content: String? = null,
     imageResId: Int? = null

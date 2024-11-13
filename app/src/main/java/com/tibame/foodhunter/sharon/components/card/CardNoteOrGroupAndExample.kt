@@ -36,7 +36,7 @@ fun NoteOrGroupCard(
     restaurantName: String? = null,
     restaurantAddress: String? = null,
     headcount: Int? = null,
-    isPublic: Boolean? = null,
+    isPublic: Int? = null,
     // Note 特有參數
     content: String? = null,
     imageResId: Int? = null
@@ -97,7 +97,7 @@ fun GroupCardExample() {
         restaurantName = "麥噹噹",
         restaurantAddress = "台北市中山區南京東路三段222號",
         headcount = 4,
-        isPublic = true
+        isPublic = 0
     )
 }
 
