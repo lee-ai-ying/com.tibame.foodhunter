@@ -14,7 +14,9 @@ import kotlinx.coroutines.launch
  * Personal Tools 的 UI 狀態
  */
 data class PersonalToolsUiState(
-    val selectedTabIndex: Int = TabConstants.CALENDAR,
+    var selectedTabIndex: Int = TabConstants.CALENDAR,
+
+    // 顯示tab名稱用
     val tabList: List<Int> = listOf(
         R.string.str_calendar,
         R.string.str_note
@@ -31,7 +33,6 @@ data class TopBarState(
 )
 
 class PersonalToolsVM: ViewModel() {
-
     companion object {
         private const val TAG = "PersonalToolsVM"
     }
