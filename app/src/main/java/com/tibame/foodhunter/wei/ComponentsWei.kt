@@ -296,13 +296,11 @@ fun RelatedPost(posts: List<Post>, navController: NavController) {
 
     // 模擬加載過程，可以替換為實際的數據加載邏輯
     LaunchedEffect(posts) {
-        loading = true
-        delay(3500)
-        loading = false
+        loading = posts.isEmpty()
 
     }
     when {
-        loading -> {
+        loading && posts.isEmpty() -> {
             // 顯示轉圈進度指示器
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -322,7 +320,8 @@ fun RelatedPost(posts: List<Post>, navController: NavController) {
             }
         }
 
-        posts.isEmpty() -> {
+        !loading && posts.isEmpty() -> {
+            // 確定沒有貼文
             Text(
                 text = "尚無貼文",
                 style = MaterialTheme.typography.titleLarge,

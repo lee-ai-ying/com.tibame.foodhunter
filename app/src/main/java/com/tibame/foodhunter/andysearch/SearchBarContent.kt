@@ -1,7 +1,10 @@
 package com.tibame.foodhunter.andysearch
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +15,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FilterChip
@@ -30,6 +35,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tibame.foodhunter.R
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchBerContent(
     cities: List<City>,
@@ -152,13 +159,15 @@ fun SearchBerContent(
             )
         }
 
-        var action by remember { mutableStateOf(0) }
+        var action by remember { mutableStateOf(1) }
         if (foodLabelExpand){
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 60.dp),
-                modifier = Modifier.fillMaxWidth()
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(labelTags.take(7*action)) { filter ->
+                labelTags.take(7 * action).forEach { filter ->
                     var selected by remember { mutableStateOf(false) }
                     FilterChip(
                         selected = selected,
@@ -174,7 +183,7 @@ fun SearchBerContent(
                             searchTextVM.loadShowSearchText()
 //                            searchTextVM.updateSearchText()
                         },
-                        label = { Text(filter) } ,
+                        label = { Text(filter, maxLines = 1) } ,
                         colors =
                         FilterChipDefaults.filterChipColors(
                             containerColor = Color.White,
@@ -182,15 +191,21 @@ fun SearchBerContent(
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    IconButton(onClick = { action+=1 }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Reload Tags",
+                        )
+                    }
+                    Text(text = "更多選項", style = MaterialTheme.typography.bodySmall)
+                }
             }
 
-            IconButton(onClick = { action+=1 }) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Reload Tags",
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+
         }
 
     }
