@@ -48,14 +48,6 @@ class PersonalToolsVM: ViewModel() {
     private val calendarVM = CalendarVM()
     val calendarState = this.calendarVM.uiState
 
-    fun goToCalendarTab() {
-        updateSelectedTab(TabConstants.NOTE)
-    }
-
-    fun goToNoteTab() {
-        updateSelectedTab(TabConstants.CALENDAR)
-    }
-
     /**
      * 切換Tab時重置TopBar狀態
      */
