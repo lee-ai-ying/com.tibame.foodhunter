@@ -91,7 +91,8 @@ fun NewPost(
     searchScreenVM: SearchScreenVM = viewModel(),
     postEditorViewModel: PostEditorViewModel = viewModel(),
     userVM: UserViewModel,
-    postId: Int? = null
+    postId: Int? = null,
+    func:()->Unit
 ) {
     // State declarations
     val choiceRest by searchScreenVM.choiceOneRest.collectAsState()
@@ -378,8 +379,9 @@ fun NewPost(
                         postEditorViewModel.updatePublisher(membernameState.value)
                         postEditorViewModel.submitPost(context)
                         navController.navigate(context.getString(R.string.str_Recommended_posts))
+                        func()
                     },
-                     modifier = Modifier.fillMaxWidth(0.8f)
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 )
 
 

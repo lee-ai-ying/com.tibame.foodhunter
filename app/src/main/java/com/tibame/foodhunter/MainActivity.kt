@@ -343,6 +343,8 @@ fun Main(
                     postId = null,  // 新增模式
                     userVM = userViewModel
                 )
+                {currectScene = context.getString(R.string.str_Recommended_posts)}
+
             }
 
 
@@ -356,7 +358,7 @@ fun Main(
                     postViewModel = postViewModel,
                     userVM = userViewModel,
                     postId = postId  // 編輯模式
-                )
+                ) {}
             }
 
 
