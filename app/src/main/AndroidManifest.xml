@@ -34,7 +34,7 @@
 
         <meta-data
             android:name= "com.google.android.geo.API_KEY"
-            android:value= "AIzaSyCA4XKJJHIwPYRz13eUTwtFzAAL1ARuGhc" />
+            android:value= "GEO_API_KEY" />
         <service
             android:name=".ai_ying.MyFCMService"
             android:exported="false">
