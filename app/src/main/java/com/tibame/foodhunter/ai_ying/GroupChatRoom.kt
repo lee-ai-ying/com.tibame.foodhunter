@@ -85,7 +85,6 @@ fun GroupChatRoom(
     groupRoomId: Int,
     gChatVM: GroupViewModel
 ) {
-    Log.d("qqq",gChatVM.toString())
     val history by gChatVM.groupChatHistory.collectAsState()
     val self = gChatVM.getUserName()
     val avatars by gChatVM.groupChatAvatar.collectAsState()
