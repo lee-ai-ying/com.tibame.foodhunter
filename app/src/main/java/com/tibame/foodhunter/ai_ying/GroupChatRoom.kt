@@ -85,6 +85,7 @@ fun GroupChatRoom(
     groupRoomId: Int,
     gChatVM: GroupViewModel
 ) {
+    Log.d("qqq",gChatVM.toString())
     val history by gChatVM.groupChatHistory.collectAsState()
     val self = gChatVM.getUserName()
     val avatars by gChatVM.groupChatAvatar.collectAsState()
@@ -233,7 +234,7 @@ fun GroupChatRoomTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     gChatVM: GroupViewModel
 ) {
-    val chatRoom = gChatVM.chatRoom.collectAsState().value
+    val chatRoom by gChatVM.chatRoom.collectAsState()
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {

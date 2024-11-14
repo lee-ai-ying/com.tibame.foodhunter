@@ -1,5 +1,6 @@
 package com.tibame.foodhunter.ai_ying
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -196,13 +197,19 @@ class GroupViewModel : ViewModel() {
             var jsonObject = JsonObject()
             jsonObject.addProperty("id", "$groupRoomId")
             val result = CommonPost("$serverUrl/group/chat/get", jsonObject.toString())
-            jsonObject = gson.fromJson(result, JsonObject::class.java)
-            val collectionType = object : TypeToken<List<GroupChatHistory>>() {}.type
-            val list = gson.fromJson<List<GroupChatHistory>>(
-                jsonObject.get("result").asString,
-                collectionType
-            ) ?: emptyList()
-            repository.updateGroupChatHistory(list)
+            if (result.isBlank()){
+                repository.updateGroupChatHistory(emptyList())
+            }
+            else{
+                jsonObject = gson.fromJson(result, JsonObject::class.java)
+                val collectionType = object : TypeToken<List<GroupChatHistory>>() {}.type
+                val list = gson.fromJson<List<GroupChatHistory>>(
+                    jsonObject.get("result").asString,
+                    collectionType
+                ) ?: emptyList()
+                repository.updateGroupChatHistory(list)
+                getAvatarImageInGroupChat(groupRoomId)
+            }
             _isLoading.update { false }
 
         }
@@ -215,6 +222,7 @@ class GroupViewModel : ViewModel() {
 
     fun updateGroupChat() {
         getGroupChatHistory(_nowChatRoomId.value)
+        //getAvatarImageInGroupChat(_nowChatRoomId.value)
     }
 
     //    fun sendMessage(chatInput: String) {
@@ -247,22 +255,22 @@ class GroupViewModel : ViewModel() {
         }
     }
 
-    fun getTokenSendServer() {
+    fun getTokenSendServer(username:String) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 task.result?.let { token ->
                     // 複製token到Firebase的Cloud Messaging測試區
                     //Log.d("qq", "token: $token")
-                    sendTokenToServer(token)
+                    sendTokenToServer(username,token)
                 }
             }
         }
     }
 
     /** 將token送到server */
-    private fun sendTokenToServer(token: String) {
+    private fun sendTokenToServer(username:String,token: String) {
         val jsonObject = JsonObject()
-        jsonObject.addProperty("username", getUserName())
+        jsonObject.addProperty("username", username)
         jsonObject.addProperty("fcmToken", token)
         //Log.d("qq",jsonObject.toString())
         viewModelScope.launch {
