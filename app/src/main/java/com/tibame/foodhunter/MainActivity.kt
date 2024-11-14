@@ -287,7 +287,7 @@ fun Main(
             composable(context.getString(R.string.str_login)) {
                 LoginScreen(navController = navController, userViewModel){
                     currectScene = context.getString(R.string.str_Recommended_posts)
-                    gChatVM.getTokenSendServer()
+                    gChatVM.getTokenSendServer(it)
                 }
             }
             composable(context.getString(R.string.str_login) + "/2") {
