@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +39,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +55,8 @@ import com.google.firebase.BuildConfig
 import com.tibame.foodhunter.R
 import com.tibame.foodhunter.sharon.components.SearchBar
 import com.tibame.foodhunter.ui.theme.FColor
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 /**詳細評論內容*/
@@ -70,35 +72,22 @@ fun ReviewInfoDetail(
         modifier = Modifier.height(60.dp)
     ) {
         Column(modifier = Modifier.weight(1f)) {
-
-            Row(modifier = Modifier)
-            {
+            Row(modifier = Modifier) {
                 SearchBar(
                     query = searchKeyword,
-                    onQueryChange = {
-                        reviewVM.updateSearchKeyword(it)
-                    },
+                    onQueryChange = { reviewVM.updateSearchKeyword(it) },
                     onSearch = { isActive = false },
-                    onActiveChange = { isActive = it },
                     placeholder = { Text("在評論中搜尋") },
-
-                    //清除按鈕
-//                trailingIcon = {
-//                    if (searchKeyword.isNotEmpty()) {
-//                        IconButton(onClick = { reviewVM.updateSearchKeyword("")}) {
-//                            Icon(
-//                                imageVector = Icons.Default.Clear,
-//                                contentDescription = "清除搜尋"
-//                            )
-//                        }
-//                    }
-//                }
+                    active = isActive,
+                    onActiveChange = { isActive = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                 )
             }
         }
     }
 }
-
 
 /**詳細評論顯示區*/
 @Composable
@@ -155,9 +144,9 @@ fun DetailReviewZone(
                         onClick = {
                             // 根據選擇更新排序方式
                             when (option) {
-                                "最新發布" -> viewModel.updateSortOrder(SortOrder.NEWEST)
-                                "最多好評" -> viewModel.updateSortOrder(SortOrder.MOST_LIKED)
-                                "最高評分" -> viewModel.updateSortOrder(SortOrder.HIGHEST_RATING)
+                                "最新發布" -> viewModel.updateSortOrder(ReviewVM.SortOrder.NEWEST)
+                                "最多好評" -> viewModel.updateSortOrder(ReviewVM.SortOrder.MOST_LIKED)
+                                "最高評分" -> viewModel.updateSortOrder(ReviewVM.SortOrder.HIGHEST_RATING)
                             }
                             expanded = false // 選擇後關閉下拉選單
                         }
@@ -216,10 +205,19 @@ fun DetailReviewList(restaurantId: Int, viewModel: ReviewVM) {
 fun DetailReviewItem(review: Reviews) {
     var isLiked by remember { mutableStateOf(review?.isLiked ?: false) }
     var isDisliked by remember { mutableStateOf(review?.isDisliked ?: false) }
-    var thumbsUpCount by remember { mutableStateOf(review?.thumbsup ?: 0) }
-    var thumbsDownCount by remember { mutableStateOf(review?.thumbsdown ?: 0) }
+    var thumbsUpCount by remember (review.thumbsup) { mutableStateOf(review?.thumbsup ?: 0) }
+    var thumbsDownCount by remember (review.thumbsdown) { mutableStateOf(review?.thumbsdown ?: 0) }
     // 用來獲取 TextLayoutResult 的狀態
     var textLayoutResult: TextLayoutResult? by remember { mutableStateOf(null) }
+    // 時間格式化
+    val displayTime = try {
+        LocalDateTime.parse(
+            review.timestamp,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        ).format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
+    } catch (e: Exception) {
+        review.timestamp // 解析失敗則顯示原始時間字串
+    }
     var isExpanded by remember { mutableStateOf(false) }  // 控制內容展開/摺疊
     var showReplies by remember { mutableStateOf(false) }
 
@@ -240,7 +238,7 @@ fun DetailReviewItem(review: Reviews) {
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(5.dp)
                 .background(FColor.Orange_5th),
 
 
@@ -248,7 +246,8 @@ fun DetailReviewItem(review: Reviews) {
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
                     .padding(10.dp)
             ) {
                 Spacer(modifier = Modifier.size(8.dp))
@@ -305,14 +304,14 @@ fun DetailReviewItem(review: Reviews) {
 
                 // 顯示評論時間
                 Text(
-                    text = review.timestamp,
+                    text = displayTime,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
 
             Column(
-                horizontalAlignment = Alignment.Start,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,
                 modifier = Modifier.padding(top = 32.dp)
             ) {

@@ -80,6 +80,7 @@ import com.tibame.foodhunter.ui.theme.FColor
 import com.tibame.foodhunter.wei.RestaurantDetail
 import com.tibame.foodhunter.wei.RestaurantDetailTopAppBar
 import com.tibame.foodhunter.wei.ReviewDetail
+import com.tibame.foodhunter.wei.ReviewDetailTopAppBar
 import com.tibame.foodhunter.wei.ReviewVM
 import com.tibame.foodhunter.zoe.PersonHomepageScreen
 import com.tibame.foodhunter.zoe.PostDetailScreen
@@ -134,6 +135,7 @@ fun checkTopBarBackButtonShow(destination: NavDestination?): Boolean {
         context.getString(R.string.str_member) + "/7",
         context.getString(R.string.str_member) + "/8",
         context.getString(R.string.restaurantDetail),
+        context.getString(R.string.reviewDetail),
         "postDetail/{postId}",
         "person_homepage/{publisherId}"
     ).contains(destination?.route)
@@ -221,6 +223,15 @@ fun Main(
                 )
                 return@Scaffold
             }
+
+            if (destination?.route == context.getString(R.string.reviewDetail)){
+                ReviewDetailTopAppBar(
+                    TopAppBarDefaults.pinnedScrollBehavior(),
+                    navController
+                )
+                return@Scaffold
+            }
+
             if (checkTopBarNoShow(destination)) {
                 TopFunctionBar(
                     checkTopBarBackButtonShow(destination),
@@ -418,7 +429,9 @@ fun Main(
 
             composable(context.getString(R.string.reviewDetail)){
                 ReviewDetail(
-                    navController = navController, reviewVM = reviewVM , restaurantVM = searchVM,
+                    navController = navController,
+                    reviewVM = reviewVM ,
+                    restaurantVM = searchVM,
                 )
             }
 

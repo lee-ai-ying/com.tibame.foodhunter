@@ -31,7 +31,7 @@ object DummyDataRepository {
         }
     }
 
-    // 從伺服器獲取資料的假設方法（實際 API 調用的實現）
+    // 從伺服器獲取資料的假設方法
     private fun loadReviewsFromServer() {
         // 使用伺服器 API 獲取資料並更新 _reviewList
         // 假設此函數包含網路請求邏輯
@@ -61,7 +61,7 @@ val dummyReviewList = listOf(
         restaurantId = 101,
         rating = 4,
         content = "整體體驗不錯，但等位時間稍微長了一些。",
-        timestamp = "2024/11/11",
+        timestamp = "2024-10-13 08:17:50",
         thumbsup = 34,
         thumbsdown = 4,
         isLiked = true,
@@ -221,23 +221,25 @@ val longReview = Reviews(
 // 假資料生成函數
 fun generateDummyReplies(): List<Reply> {
     val replyContents = listOf(
-        "餐點真的很美味，特別是他們的招牌料理！",
-        "服務態度非常好，氣氛也很棒。",
-        "價格稍微高了一點，但是品質絕對對得起這個價位。",
-        "環境很乾淨，座位也很舒適。",
-        "等待時間有點長，但食物的品質值得等待。",
-        "會推薦給朋友來試試！",
+        "真心大推推推",
         "讚哦~",
         "在我家附近，改天來試試!",
         "上次去等超久。",
         "假日建議訂位",
-        "上餐速度很快!"
+        "騙人的吧...",
+        "尊嘟假嘟",
+        "約起來約起來~!!",
+        "上禮拜去覺得普通欸",
+        "就問一句你約不約?",
+        "會推薦給朋友！",
+        "該再訪了吧",
+        "下次一定",
     )
 
     val replierNames = listOf("A咪", "B冷", "C咪", "A冷", "B咪", "G咪", "哈哈", "煞氣卍小鬼")
 
-    // 生成1-9條隨機回覆
-    val numberOfReplies = Random.nextInt(1, 10)
+    // 生成1-5條隨機回覆
+    val numberOfReplies = Random.nextInt(1, 6)
 
     // 建立足夠大的索引範圍來對應內容列表
     val contentIndices = (replyContents.indices).shuffled().take(numberOfReplies)
@@ -253,7 +255,7 @@ fun generateDummyReplies(): List<Reply> {
             ),
             content = replyContents[contentIndex],
             timestamp = LocalDateTime.now()
-                .minusDays(Random.nextLong(1, 30))
+                .minusDays(Random.nextLong(1, 5))
                 .format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
         )
     }

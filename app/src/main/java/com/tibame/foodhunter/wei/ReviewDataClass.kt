@@ -61,7 +61,7 @@
         var restaurantId: Int,
         var rating: Int = 0,
         var content: String,
-        var timestamp: String,
+        var timestamp: String ,
         var thumbsup: Int?, //從資料庫中得到的累積鑽數
         var thumbsdown: Int?,
         var isLiked: Boolean = false,

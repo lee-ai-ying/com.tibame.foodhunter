@@ -251,47 +251,6 @@ class ReviewRepository {
         val data: T
     )
 
-//    data class ReviewResponse(
-//        val reviewId: Int,
-//        val content: String,
-//        val rating: Int,
-//        val reviewTime: String,
-//        val userId: Int,
-//        val userNickname: String
-//    ) {
-//        fun toReview(): Review {
-//            return Review(
-//                reviewId = reviewId,
-//                content = content,
-//                rating = rating,
-//                timestamp = reviewTime,
-//                reviewer = Reviewer(userId, userNickname, avatarImage = null),
-//                replies = emptyList() // 回覆列表稍後加載
-//            )
-//        }
-//    }
-//
-//    data class ReplyResponse(
-//        val replyId: Int,
-//        val reviewId: Int,
-//        val memberId: Int,
-//        val content: String,
-//        val replyTime: String,
-//        val memberNickname: String
-//    ) {
-//        fun toReply(): Reply {
-//            return Reply(
-//                id = replyId,
-//                content = content,
-//                timestamp = replyTime,
-//                replier = Replier(memberId, memberNickname, avatarImage = null)
-//            )
-//        }
-//    }
-
-//    data class DeleteResponse(
-//        val success: Boolean,
-//        val message: String)
 }
 
 //抓會員ID用
